@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlanIt - Admin</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <button class="btn-reload" onclick="location.reload()" title="Neu laden">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"/>
+            <path d="M3.51 15a9 9 0 1 0 .49-4.5"/>
+        </svg>
+    </button>
+    <div class="header-logo">PlanIt Admin</div>
+    <button class="btn-logout" onclick="logout()" title="Logout">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+    </button>
+</div>
+
+<!-- BOTTOM NAVIGATION -->
+<div class="bottom-nav">
+    <button class="bottom-nav-item active" onclick="switchTab('schichtplanung')" id="nav-schichtplanung">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Planung</span>
+    </button>
+    <button class="bottom-nav-item" onclick="switchTab('urlaub')" id="nav-urlaub">
+        <div style="position:relative; display:inline-flex;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <span id="urlaub-badge" style="display:none; position:absolute; top:-4px; right:-6px; background:var(--color-primary); color:white; border-radius:50%; font-size:0.6rem; font-weight:700; min-width:14px; height:14px; line-height:14px; text-align:center; padding:0 2px;"></span>
+        </div>
+        <span>Urlaub</span>
+    </button>
+    <button class="bottom-nav-item" onclick="switchTab('team')" id="nav-team">
+        <div style="position:relative; display:inline-flex;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span id="archive-badge" style="display:none; position:absolute; top:-4px; right:-6px; background:var(--color-primary); color:white; border-radius:50%; font-size:0.6rem; font-weight:700; min-width:14px; height:14px; line-height:14px; text-align:center; padding:0 2px;"></span>
+        </div>
+        <span>Team</span>
+    </button>
+    <button class="bottom-nav-item" onclick="switchTab('mehr')" id="nav-mehr">
+        <div style="position:relative; display:inline-flex;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            <span id="mehr-badge" style="display:none; position:absolute; top:-4px; right:-6px; background:var(--color-primary); color:white; border-radius:50%; font-size:0.6rem; font-weight:700; min-width:14px; height:14px; line-height:14px; text-align:center; padding:0 2px;"></span>
+        </div>
+        <span>Mehr</span>
+    </button>
+</div>
+
+<!-- MAIN -->
+<div class="main-content" style="max-width:900px;">
+
+    <!-- TAB 1: SCHICHTPLANUNG -->
+    <div id="tab-schichtplanung" class="tab-content active">
+        <div class="month-selector">
+            <button onclick="changeWeek(-1)">◀</button>
+            <span id="week-label"></span>
+            <button onclick="changeWeek(1)">▶</button>
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-bottom:0.75rem;">
+            <button id="planning-mode-btn" onclick="togglePlanningMode()" style="display:flex; align-items:center; gap:0.4rem; background:#C9A24D; border:none; border-radius:8px; padding:0.4rem 0.85rem; font-size:0.85rem; font-weight:600; cursor:pointer; color:white; height:2rem; transition:background-color 0.3s ease, opacity 0.3s ease;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Planungsmodus: AUS
+            </button>
+        </div>
+        <div style="overflow-x:auto;" id="week-grid-wrapper">
+            <div id="week-grid" class="week-grid"></div>
+        </div>
+    </div>
+
+    <!-- TAB 2: URLAUB -->
+    <div id="tab-urlaub" class="tab-content">
+        <!-- Kalender -->
+        <div class="section-title">Urlaubskalender</div>
+        <div class="month-selector">
+            <button onclick="changeAdminVacCalMonth(-1)">◀</button>
+            <span id="admin-vac-cal-month-label"></span>
+            <button onclick="changeAdminVacCalMonth(1)">▶</button>
+        </div>
+        <div id="admin-vac-calendar"></div>
+
+        <!-- Anträge -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin:1.5rem 0 1rem;">
+            <div class="section-title" style="margin-bottom:0;">Urlaubsanträge</div>
+            <button class="btn-small btn-pdf-view btn-icon" onclick="downloadAllVacations()" title="Alle herunterladen">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+        </div>
+        <div id="admin-vacation-list">
+            <div class="empty-state"><p>Keine Anträge vorhanden.</p></div>
+        </div>
+    </div>
+
+    <!-- TAB 3: VERFÜGBARKEITEN -->
+    <div id="tab-verfuegbarkeit" class="tab-content">
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom:1rem;">
+            <button onclick="switchTab('mehr')" style="background:none; border:none; color:var(--color-primary); font-size:0.95rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:0.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Mehr
+            </button>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--color-text); text-align:center;">Verfügbarkeiten</div>
+            <div></div>
+        </div>
+        <div class="form-group" style="max-width:300px;">
+            <label>Mitarbeiter</label>
+            <select id="avail-employee-select" onchange="loadAdminAvailability()"></select>
+        </div>
+        <div class="month-selector">
+            <button onclick="changeAdminAvailMonth(-1)">◀</button>
+            <span id="admin-avail-month-label"></span>
+            <button onclick="changeAdminAvailMonth(1)">▶</button>
+        </div>
+        <div id="admin-avail-grid" class="availability-grid"></div>
+    </div>
+
+    <!-- TAB 4: TEAM -->
+    <div id="tab-team" class="tab-content">
+        <div id="archive-pending-card" style="display:none; margin-bottom:1rem;"></div>
+        <div id="birthdays-this-month" style="margin-bottom:1.5rem;"></div>
+
+        <!-- Abteilungen -->
+        <div style="margin-bottom:1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; padding:0.75rem 1rem; background:var(--color-gray); border-radius:12px; margin-bottom:0.25rem;" onclick="toggleDepartmentsSection()">
+                <div style="font-size:0.85rem; font-weight:700; color:var(--color-primary); letter-spacing:0.05em;">ABTEILUNGEN</div>
+                <span id="departments-toggle" style="color:var(--color-text-light);">▶</span>
+            </div>
+            <div id="departments-body" style="display:none;">
+                <div id="departments-list" class="card" style="padding:0.5rem 0.75rem; margin-bottom:0.5rem;"></div>
+                <div style="display:flex; gap:0.5rem; margin-bottom:1.5rem;">
+                    <input id="new-department-name" type="text" placeholder="Abteilungsname" style="flex:1; padding:0.5rem 0.75rem; border:1px solid var(--color-border); border-radius:8px; font-size:0.9rem;">
+                    <button class="btn-primary" style="width:auto;" onclick="addDepartment()">+</button>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <div class="section-title" style="margin-bottom:0;">Team-Übersicht</div>
+            <button class="btn-primary" style="width:auto;" onclick="openNewEmployeeModal()">+ Mitarbeiter</button>
+        </div>
+        <div id="team-list">
+            <div class="empty-state"><p>Keine Mitarbeiter vorhanden.</p></div>
+        </div>
+
+        <!-- Archiv -->
+        <div style="margin-top:2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                <div class="section-title" style="margin-bottom:0; font-size:0.95rem; color:var(--color-text-light);">Alte Mitarbeiter</div>
+                <button class="btn-secondary" style="width:auto; font-size:0.85rem;" onclick="toggleArchive()">Anzeigen</button>
+            </div>
+            <div id="archive-list" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- TAB 5: SCHICHTEN -->
+    <div id="tab-tausch" class="tab-content">
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom:1rem;">
+            <button onclick="switchTab('mehr')" style="background:none; border:none; color:var(--color-primary); font-size:0.95rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:0.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Mehr
+            </button>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--color-text); text-align:center;">Schichten</div>
+            <div></div>
+        </div>
+        <div class="section-title">Schichttausch-Requests</div>
+        <div id="admin-swap-list">
+            <div class="empty-state"><p>Keine Requests vorhanden.</p></div>
+        </div>
+        <div style="margin-top:1.5rem;">
+            <div class="section-title">Schicht-Abgabe Requests</div>
+            <div id="admin-handover-list">
+                <div class="empty-state"><p>Keine Requests vorhanden.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: KRANKMELDUNGEN -->
+    <div id="tab-krankmeldungen" class="tab-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <button onclick="switchTab('mehr')" style="background:none; border:none; color:var(--color-primary); font-size:0.95rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:0.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Mehr
+            </button>
+            <div class="section-title" style="margin-bottom:0;">Krankmeldungen</div>
+            <button class="btn-primary" style="width:auto;" onclick="openSickLeaveModal()">+ Neu</button>
+        </div>
+        <div id="sick-leave-list">
+            <div class="empty-state"><p>Keine Krankmeldungen vorhanden.</p></div>
+        </div>
+    </div>
+
+    <!-- TAB: MEHR -->
+    <div id="tab-mehr" class="tab-content">
+        <div class="section-title">Mehr</div>
+        <div class="mehr-list">
+            <div class="mehr-item" onclick="switchTab('stunden')">
+                <span>Stundenkonto</span>
+                <span>›</span>
+            </div>
+            <div class="mehr-item" onclick="switchTab('urlaubsverwaltung')">
+                <span>Urlaubskonto</span>
+                <span>›</span>
+            </div>
+            <div class="mehr-item" onclick="switchTab('verfuegbarkeit')">
+                <span>Verfügbarkeiten</span>
+                <span>›</span>
+            </div>
+            <div class="mehr-item" onclick="switchTab('tausch')">
+                <span>Schichten</span>
+                <span>›</span>
+            </div>
+            <div class="mehr-item" onclick="switchTab('requests')">
+                <span>Einspring-Requests <span id="requests-badge" style="background:var(--color-primary); color:white; border-radius:10px; padding:0.1rem 0.5rem; font-size:0.75rem; display:none;"></span></span>
+                <span>›</span>
+            </div>
+            <div class="mehr-item" onclick="switchTab('krankmeldungen')">
+                <span>Krankmeldungen</span>
+                <span>›</span>
+            </div>
+            <div class="mehr-item" onclick="switchTab('terminations')">
+                <span>Kündigungen <span id="termination-badge" style="background:var(--color-primary); color:white; border-radius:10px; padding:0.1rem 0.5rem; font-size:0.75rem; display:none;"></span></span>
+                <span>›</span>
+            </div>
+            <div class="mehr-item" onclick="switchTab('hygiene')">
+                <span>Hygieneschutzbelehrung <span id="hygiene-badge" style="background:var(--color-primary); color:white; border-radius:10px; padding:0.1rem 0.5rem; font-size:0.75rem; display:none;"></span></span>
+                <span>›</span>
+            </div>
+        </div>
+        <div style="font-size:0.75rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.08em; text-align:center; margin:1.5rem 0 0.5rem;">FINANZEN</div>
+        <div class="mehr-list">
+            <div class="mehr-item" onclick="switchTab('trinkgeld')">
+                <span>Trinkgeld</span>
+                <span>›</span>
+            </div>
+        </div>
+        <div style="font-size:0.75rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.08em; text-align:center; margin:1.5rem 0 0.5rem;">EINSTELLUNGEN</div>
+        <div class="mehr-list">
+            <div class="mehr-item" onclick="switchTab('restaurant-info')">
+                <span>Restaurant-Info</span>
+                <span>›</span>
+            </div>
+        </div>
+        <div style="font-size:0.75rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.08em; text-align:center; margin:1.5rem 0 0.5rem;">ORGANISER</div>
+            <div class="mehr-list">
+                <div class="mehr-item" onclick="switchTab('tasks')">
+                    <span>Aufgaben</span>
+                    <span>›</span>
+                </div>
+                <div class="mehr-item" onclick="switchTab('notes')">
+                    <span>Notizen</span>
+                    <span>›</span>
+                </div>
+                <div class="mehr-item" onclick="switchTab('inventur')">
+                    <span>Inventur <span id="inventur-badge" style="background:var(--color-primary); color:white; border-radius:10px; padding:0.1rem 0.5rem; font-size:0.75rem; display:none;"></span></span>
+                    <span>›</span>
+                </div>
+            </div>
+        </div>
+
+
+    <!-- TAB: KÜNDIGUNGEN -->
+    <div id="tab-terminations" class="tab-content">
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom:1.5rem;">
+            <button onclick="switchTab('mehr')" style="background:none; border:none; color:var(--color-primary); font-size:0.95rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:0.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Mehr
+            </button>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--color-text);">Kündigungen</div>
+            <div></div>
+        </div>
+        <div id="terminations-list"></div>
+    </div>
+
+    <!-- TAB: RESTAURANT-INFO -->
+    <div id="tab-restaurant-info" class="tab-content">
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom:1.5rem;">
+            <button onclick="switchTab('mehr')" style="background:none; border:none; color:var(--color-primary); font-size:0.95rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:0.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Mehr
+            </button>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--color-text);">Restaurant-Info</div>
+            <div></div>
+        </div>
+        <div class="card">
+            <div class="form-group">
+                <label>Restaurant-Name</label>
+                <input type="text" id="restaurant-name" placeholder="z.B. Café Sonnenschein">
+            </div>
+            <div class="form-group">
+                <label>Straße</label>
+                <input type="text" id="restaurant-street" placeholder="z.B. Hauptstraße 1">
+            </div>
+            <div class="form-group">
+                <label>PLZ</label>
+                <input type="text" id="restaurant-zip" placeholder="z.B. 70173">
+            </div>
+            <div class="form-group">
+                <label>Ort</label>
+                <input type="text" id="restaurant-city" placeholder="z.B. Stuttgart">
+            </div>
+            <div id="restaurant-info-error" style="display:none; color:var(--color-danger); font-size:0.85rem; margin-bottom:0.5rem;"></div>
+            <button class="btn-primary" onclick="saveRestaurantInfo()">Speichern</button>
+        </div>
+    </div>
+
+    <!-- TAB: STUNDEN GENEHMIGEN -->
+    <div id="tab-stunden" class="tab-content">
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom:1.5rem;">
+            <button onclick="switchTab('mehr')" style="background:none; border:none; color:var(--color-primary); font-size:0.95rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:0.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Mehr
+            </button>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--color-text);">Stundenkonto</div>
+            <div></div>
+        </div>
+
+        <!-- Monatsnavigation -->
+        <div class="month-selector" style="display:flex; align-items:center; gap:0.5rem; justify-content:center;">
+            <button onclick="changeAdminStundenMonth(-1)">◀</button>
+            <span id="admin-stunden-month-label"></span>
+            <button onclick="changeAdminStundenMonth(1)">▶</button>
+            <button class="btn-small btn-pdf-view btn-icon" onclick="downloadStundenPdf()" title="Monatsreport PDF">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </button>
+        </div>
+
+        <!-- Mitarbeiter Liste -->
+        <div id="admin-stunden-list">
+            <div class="empty-state"><p>Lade Mitarbeiter...</p></div>
+        </div>
+    </div>
+
+    <!-- TAB: EINSPRING-REQUESTS -->
+    <div id="tab-requests" class="tab-content">
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom:1.5rem;">
+            <button onclick="switchTab('mehr')" style="background:none; border:none; color:var(--color-primary); font-size:0.95rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:0.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Mehr
+            </button>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--color-text);">Einspring-Requests</div>
+            <div></div>
+        </div>
+
+        <!-- Offene Schichten -->
+        <div style="font-size:0.85rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.05em; margin-bottom:0.75rem;">OFFENE SCHICHTEN</div>
+            <div id="requests-list">
+                <div class="empty-state"><p>Keine Requests vorhanden.</p></div>
+            </div>
+
+        <!-- Statistik -->
+        <div style="font-size:0.85rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.05em; margin-top:2rem; margin-bottom:0.75rem;">EINSPRING-STATISTIK</div>
+        <div class="card">
+            <div style="display:flex; gap:0.75rem; margin-bottom:1rem;">
+                <select id="stats-month" onchange="loadRequestsStats()" style="flex:1; padding:0.5rem; border:1px solid var(--color-border); border-radius:8px; font-size:0.9rem; background:white;">
+                    <option value="0">Alle Monate</option>
+                    <option value="1">Januar</option>
+                    <option value="2">Februar</option>
+                    <option value="3">März</option>
+                    <option value="4">April</option>
+                    <option value="5">Mai</option>
+                    <option value="6">Juni</option>
+                    <option value="7">Juli</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">Oktober</option>
+                    <option value="11">November</option>
+                    <option value="12">Dezember</option>
+                </select>
+                <select id="stats-year" onchange="loadRequestsStats()" style="flex:1; padding:0.5rem; border:1px solid var(--color-border); border-radius:8px; font-size:0.9rem; background:white;">
+                    <option value="2025">2025</option>
+                    <option value="2026" selected>2026</option>
+                    <option value="2027">2027</option>
+                </select>
+            </div>
+            <div id="requests-stats">
+                <div class="empty-state"><p>Keine Daten vorhanden.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: INVENTUR -->
+    <div id="tab-inventur" class="tab-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <button onclick="switchTab('mehr')" style="background:none; border:none; color:var(--color-primary); font-size:0.95rem; cursor:pointer; display:flex; align-items:center; gap:0.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Mehr
+            </button>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--color-text);">Inventur</div>
+            <div></div>
+        </div>
+
+        <!-- Datum -->
+        <div class="month-selector" style="margin-bottom:1rem; justify-content:center;">
+            <button onclick="changeInventurDate(-1)">◀</button>
+            <input type="date" id="inventur-date" onchange="onInventurDateChange()" style="border:none; background:none; font-size:0.95rem; font-weight:700; text-align:center; cursor:pointer; color:var(--color-text); width:auto;">
+            <button onclick="changeInventurDate(1)">▶</button>
+        </div>
+
+        <!-- Einreichungen -->
+        <div id="submissions-list"></div>
+
+        <!-- Sub-Tabs -->
+        <div class="login-tabs" style="margin-bottom:1rem;">
+            <button id="inventur-sub-tab-inventur" class="login-tab active" onclick="switchInventurSubTab('inventur')">Inventur</button>
+            <button id="inventur-sub-tab-bestellung" class="login-tab" onclick="switchInventurSubTab('bestellung')">Bestellung</button>
+        </div>
+
+        <!-- Sub-Tab: Inventur -->
+        <div id="inventur-subtab-inventur">
+            <div id="inventur-list"></div>
+        </div>
+
+        <!-- Sub-Tab: Bestellung -->
+        <div id="inventur-subtab-bestellung" style="display:none;">
+            <div id="bestellung-list"></div>
+        </div>
+
+        <!-- Buttons (immer sichtbar) -->
+        <div style="display:flex; gap:1rem; margin-top:1rem; justify-content:center;">
+            <button class="btn-small btn-pdf-view btn-icon" onclick="switchTab('inventur-config')" title="Einstellungen">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <button class="btn-small btn-pdf-view btn-icon" onclick="downloadInventurPdf()" title="Tages-PDF">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+            <button class="btn-small btn-pdf-view btn-icon" onclick="saveInventur()" title="Speichern">
+                <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            </button>
+            <button class="btn-small btn-pdf-view btn-icon" onclick="openJahresberichtModal()" title="Jahresbericht PDF">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- TAB: INVENTUR EINSTELLUNGEN -->
+    <div id="tab-inventur-config" class="tab-content">
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom:1rem;">
+            <button onclick="switchTab('inventur')" style="background:none; border:none; color:var(--color-primary); font-size:0.95rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:0.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Inventur
+            </button>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--color-text); text-align:center;">Einstellungen</div>
+            <div style="display:flex; justify-content:flex-end;">
+                <button onclick="openInventurInfoModal()" style="background:none; border:2px solid var(--color-text-light); color:var(--color-text-light); border-radius:50%; width:1.6rem; height:1.6rem; font-size:0.75rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center;">i</button>
+            </div>
+        </div>
+
+        <div class="login-tabs" style="margin-bottom:1rem;">
+            <button id="inventur-sort-tab-inventory" class="login-tab active" onclick="setInventurSortMode('inventory')">Inventur-Reihenfolge</button>
+            <button id="inventur-sort-tab-order" class="login-tab" onclick="setInventurSortMode('order')">Bestell-Reihenfolge</button>
+        </div>
+
+        <div style="font-size:0.85rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.05em; margin-bottom:0.75rem;">LIEFERANTEN</div>
+        <div id="suppliers-list"></div>
+        <button class="btn-secondary" style="width:100%; margin-bottom:1.5rem;" onclick="addSupplier()">+ Lieferant</button>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; padding:0.75rem 1rem; background:var(--color-gray); border-radius:12px; margin-bottom:0.25rem;" onclick="toggleDelegationSection()">
+            <div style="font-size:0.85rem; font-weight:700; color:var(--color-primary); letter-spacing:0.05em;">INVENTUR DELEGIEREN</div>
+            <span id="delegation-toggle" style="color:var(--color-text-light);">▶</span>
+        </div>
+        <div id="delegation-body" style="display:none;">
+            <div id="inventur-delegation-list" class="card" style="padding:0.5rem 0.75rem; margin-bottom:0.5rem;"></div>
+            <button class="btn-primary" style="width:100%; margin-bottom:1.5rem;" onclick="saveInventurDelegation()">Speichern</button>
+        </div>
+    </div>
+
+    <!-- TAB: TRINKGELD -->
+    <div id="tab-trinkgeld" class="tab-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <button onclick="switchTab('mehr')" style="background:none; border:none; color:var(--color-primary); font-size:0.95rem; cursor:pointer; display:flex; align-items:center; gap:0.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Mehr
+            </button>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--color-text);">Trinkgeld</div>
+            <div style="display:flex; gap:0.5rem;">
+                <button class="btn-small btn-pdf-view btn-icon" onclick="downloadTrinkgeldPdf()" title="PDF herunterladen">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </button>
+                <button class="btn-small btn-pdf-view btn-icon" onclick="switchTab('trinkgeld-config')" title="Einstellungen">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Monatsnavigation -->
+        <div class="month-selector">
+            <button onclick="changeTrinkgeldMonth(-1)">◀</button>
+            <span id="trinkgeld-month-label"></span>
+            <button onclick="changeTrinkgeldMonth(1)">▶</button>
+        </div>
+
+        <!-- Zusammenfassung -->
+        <div id="trinkgeld-summary-block" style="margin-bottom:1rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; padding:0.75rem 1rem; background:var(--color-gray); border-radius:12px;" onclick="toggleTrinkgeldSummary()">
+                <span style="font-size:0.85rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.05em;">ZUSAMMENFASSUNG</span>
+                <span id="trinkgeld-summary-toggle">▶</span>
+            </div>
+            <div id="trinkgeld-summary" style="display:none; margin-top:0.5rem;">
+                <div style="display:flex; justify-content:flex-end; margin-bottom:0.5rem;">
+                    <button class="btn-small btn-pdf-view btn-icon" onclick="downloadTrinkgeldPdf()" title="PDF herunterladen">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </button>
+                </div>
+                <div id="trinkgeld-results"></div>
+            </div>
+        </div>
+
+        <!-- Tage -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+            <div style="font-size:0.85rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.05em;">TAGE</div>
+            <button class="btn-small btn-pdf-view btn-icon" onclick="openTrinkgeldDayModal()" title="Tag hinzufügen">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+        </div>
+        <div id="trinkgeld-days-list"></div>
+    </div>
+
+    <!-- TAB: TRINKGELD EINSTELLUNGEN -->
+    <div id="tab-trinkgeld-config" class="tab-content">
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom:1rem;">
+            <button onclick="switchTab('trinkgeld')" style="background:none; border:none; color:var(--color-primary); font-size:0.95rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:0.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Trinkgeld
+            </button>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--color-text); text-align:center;">Einstellungen</div>
+            <div></div>
+        </div>
+
+        <div class="form-group">
+            <label>Modus</label>
+            <select id="tip-mode">
+                <option value="monthly">Monatlich</option>
+                <option value="daily">Täglich</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label style="display:flex; align-items:center; gap:0.5rem; font-weight:400;">
+                <input type="checkbox" id="tip-show-employees" style="width:auto;">
+                Mitarbeiter sehen ihren Anteil
+            </label>
+        </div>
+
+        <div style="font-size:0.85rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.05em; margin:1rem 0 0.75rem;">ABTEILUNGEN</div>
+        <div id="tip-departments-list"></div>
+        <button class="btn-secondary" style="width:100%; margin-bottom:1.5rem;" onclick="addTipDepartment()">+ Abteilung</button>
+
+        <button class="btn-primary" onclick="saveTipConfig()">Speichern</button>
+    </div>
+
+    <!-- TAB: AUFGABEN -->
+    <div id="tab-tasks" class="tab-content">
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom:1rem;">
+            <button onclick="switchTab('mehr')" style="background:none; border:none; color:var(--color-primary); font-size:0.95rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:0.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Mehr
+            </button>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--color-text); text-align:center;">Aufgaben</div>
+        </div>
+        <div style="font-size:0.85rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.05em; margin-bottom:0.75rem;">VORLAGEN</div>
+        <div id="templates-list">
+            <div class="empty-state"><p>Keine Vorlagen vorhanden.</p></div>
+        </div>
+        <button class="btn-secondary" style="width:100%; margin-bottom:1.5rem;" onclick="openNewTemplateModal()">+ Vorlage</button>
+        <div style="margin-top:1.5rem;">
+            <div style="font-size:0.85rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.05em; margin-bottom:0.75rem;">AKTIVE AUFGABEN</div>
+            <div id="tasks-list">
+                <div class="empty-state"><p>Keine Aufgaben vorhanden.</p></div>
+            </div>
+            <button class="btn-primary" style="width:100%; margin-top:0.75rem;" onclick="openNewTaskModal()">+ Aufgabe</button>
+            <div id="tasks-archive" style="margin-top:1.5rem;"></div>
+        </div>
+    </div>
+
+    <!-- TAB: NOTIZEN -->
+    <div id="tab-notes" class="tab-content">
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom:1rem;">
+            <button onclick="switchTab('mehr')" style="background:none; border:none; color:var(--color-primary); font-size:0.95rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:0.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Mehr
+            </button>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--color-text); text-align:center;">Notizen</div>
+            <div></div>
+        </div>
+        <div id="notes-list">
+            <div class="empty-state"><p>Keine Notizen vorhanden.</p></div>
+        </div>
+        <button class="btn-primary" style="width:100%; margin-top:0.75rem;" onclick="openNewNoteModal()">+ Notiz</button>
+    </div>
+
+    <!-- TAB: HYGIENE -->
+    <div id="tab-hygiene" class="tab-content">
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom:1.5rem;">
+            <button onclick="switchTab('mehr')" style="background:none; border:none; color:var(--color-primary); font-size:0.95rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:0.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Mehr
+            </button>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--color-text); text-align:center;">Hygieneschutzbelehrung</div>
+            <div></div>
+        </div>
+        <div style="margin-bottom:1rem;">
+            <div onclick="const b=document.getElementById('hygiene-links-body'); const open=b.style.display!=='none'; b.style.display=open?'none':'block'; this.querySelector('.hyg-links-arrow').textContent=open?'▶':'▼';"
+                 style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem; background:#F5F5F5; border-radius:8px; cursor:pointer;">
+                <span style="font-weight:700; font-size:1.1rem; color:var(--color-primary);">Links</span>
+                <span class="hyg-links-arrow" style="font-size:0.85rem; color:var(--color-text-light);">▶</span>
+            </div>
+            <div id="hygiene-links-body" style="display:none; padding:0.75rem 0 0.25rem;">
+                <div class="form-group">
+                    <label>Link Erstbelehrung</label>
+                    <input type="url" id="hygiene-link-erst" placeholder="https://…" style="width:100%;">
+                </div>
+                <div class="form-group">
+                    <label>Link Erneuerung</label>
+                    <input type="url" id="hygiene-link-erneuerung" placeholder="https://…" style="width:100%;">
+                </div>
+                <button class="btn-primary" onclick="saveHygieneLinks()" style="padding:0.4rem 1rem; font-size:0.85rem;">Speichern</button>
+            </div>
+        </div>
+        <div id="hygiene-list">
+            <div class="empty-state"><p>Lädt…</p></div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: SCHICHT ERSTELLEN -->
+<div id="shift-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="shift-modal-title">Schicht erstellen</div>
+            <button class="modal-close" onclick="closeShiftModal()">✕</button>
+        </div>
+        <!-- Vorlage laden -->
+        <div class="form-group" id="template-group">
+            <label>Vorlage laden (optional)</label>
+            <div style="display:flex; gap:0.5rem;">
+                <select id="shift-template" style="flex:1;" onchange="applyShiftTemplate()">
+                    <option value="">— Keine Vorlage —</option>
+                </select>
+                <button type="button" class="btn-small btn-pdf-view btn-icon" onclick="openSaveTemplateModal()" title="Vorlage speichern">
+                    <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                </button>
+                <button type="button" class="btn-small btn-pdf-view btn-icon" onclick="openManageTemplatesModal()" title="Vorlagen verwalten">
+                    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Mitarbeiter</label>
+            <select id="shift-employee"></select>
+        </div>
+        <div class="form-group">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+                <input type="checkbox" id="shift-is-open" style="width:auto;" onchange="toggleOpenShift()">
+                <label style="margin:0;">Schicht ist offen</label>
+            </div>
+        </div>
+        <div id="shift-dept-group" class="form-group">
+            <label>Abteilung</label>
+            <select id="shift-department"></select>
+        </div>
+        <div id="shift-open-note-group" class="form-group" style="display:none;">
+            <label>Notiz für Mitarbeiter (optional)</label>
+            <input type="text" id="shift-open-note" placeholder="z.B. Verstärkung gesucht">
+        </div>
+        <div class="form-group">
+            <label>Datum</label>
+            <input type="date" id="shift-date">
+        </div>
+        <div class="form-group">
+            <label>Von</label>
+            <input type="time" id="shift-start">
+        </div>
+        <div class="form-group">
+            <label>Bis</label>
+            <input type="time" id="shift-end">
+        </div>
+        <div class="form-group">
+            <label>Pause (Minuten)</label>
+            <input type="number" id="shift-break" placeholder="z.B. 30" min="0">
+        </div>
+        <div class="form-group">
+            <label>Notizen (optional)</label>
+            <textarea id="shift-notes" rows="2"></textarea>
+        </div>
+        <!-- Wiederholung -->
+        <div class="form-group">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+                <input type="checkbox" id="shift-repeat" style="width:auto;" onchange="toggleRepeat()">
+                <label style="margin:0;">Wöchentlich wiederholen</label>
+            </div>
+        </div>
+        <div id="shift-repeat-group" class="form-group" style="display:none;">
+            <label>Anzahl Wochen</label>
+            <input type="number" id="shift-repeat-weeks" min="1" max="12" value="4" placeholder="z.B. 4">
+        </div>
+        <!-- Tatsächliche Zeiten (nur bei bestehender Schicht) -->
+        <div id="shift-actual-group" style="display:none; margin-bottom:1rem;">
+            <button type="button" onclick="toggleShiftActual()" style="display:flex; justify-content:space-between; align-items:center; width:100%; background:var(--color-gray); border:none; border-radius:8px; padding:0.6rem 0.75rem; cursor:pointer; font-size:0.9rem; font-weight:600; color:var(--color-text);">
+                <span>Tatsächliche Zeiten</span>
+                <span id="shift-actual-toggle">▶</span>
+            </button>
+            <div id="shift-actual-body" style="display:none; padding-top:0.75rem;">
+                <div class="form-group">
+                    <label>Tatsächliche Startzeit</label>
+                    <input type="time" id="shift-actual-start" style="height:48px; font-size:16px;">
+                </div>
+                <div class="form-group">
+                    <label>Tatsächliche Endzeit</label>
+                    <input type="time" id="shift-actual-end" style="height:48px; font-size:16px;">
+                </div>
+                <div class="form-group">
+                    <label>Tatsächliche Pause (Min)</label>
+                    <input type="number" id="shift-actual-break" placeholder="z.B. 30" min="0">
+                </div>
+            </div>
+        </div>
+        <div id="shift-error" style="color:var(--color-red); font-size:0.85rem; margin-bottom:1rem; display:none;"></div>
+        <button id="shift-delete-btn" class="btn-secondary" style="margin-bottom:0.75rem; color:var(--color-red); border-color:var(--color-red);" onclick="deleteShift()">Schicht löschen</button>
+        <button class="btn-primary" onclick="submitShift()">Schicht speichern</button>
+    </div>
+</div>
+
+<!-- MODAL: NEUER MITARBEITER -->
+<div id="employee-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Neuer Mitarbeiter</div>
+            <button class="modal-close" onclick="closeNewEmployeeModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="new-emp-name" placeholder="Max Mustermann" oninput="previewLoginCode()">
+        </div>
+        <div class="form-group">
+            <label>Login-Kürzel (auto-generiert)</label>
+            <input type="text" id="new-emp-code" placeholder="z.B. MaMu" readonly style="background:#F5F5F5; color:#999;">
+        </div>
+        <div class="form-group">
+            <label>Passwort</label>
+            <input type="text" id="new-emp-password" placeholder="Initial-Passwort">
+        </div>
+        <div class="form-group">
+            <label>Abteilung</label>
+            <select id="new-emp-department"></select>
+        </div>
+        <div class="form-group">
+            <label>Geburtsdatum (optional)</label>
+            <input type="date" id="new-emp-birthdate" style="width:100%; height:48px; font-size:16px;">
+        </div>
+        <div class="form-group">
+            <label>Eintrittsdatum (optional)</label>
+            <input type="date" id="new-emp-start-date" style="width:100%; height:48px; font-size:16px;">
+        </div>
+        <div class="form-group">
+            <label>Urlaubstage pro Jahr</label>
+            <input type="number" id="new-emp-vacation-days" min="0" max="365" value="20">
+        </div>
+        <div class="form-group">
+            <label>Stunden pro Urlaubstag</label>
+            <input type="number" id="new-emp-hours-per-vacation-day" min="1" max="24" step="0.5" value="8">
+        </div>
+        <div class="form-group">
+            <label style="display:flex; align-items:center; gap:0.5rem;">
+            <input type="checkbox" id="new-emp-apprentice" style="width:auto;">
+                        Azubi
+        </label>
+        </div>
+        <details style="margin-bottom:1rem;">
+            <summary style="cursor:pointer; font-weight:600; font-size:0.9rem; color:var(--color-text); padding:0.5rem 0; list-style:none; display:flex; justify-content:space-between; align-items:center;">
+                Hygieneschutzbelehrung
+                <span style="font-size:0.75rem; color:var(--color-text-light);">optional ▾</span>
+            </summary>
+            <div style="padding-top:0.5rem;">
+                <div class="form-group">
+                    <label>Erstbelehrung</label>
+                    <input type="date" id="new-emp-hygiene-erste" style="width:100%; height:48px; font-size:16px;">
+                </div>
+                <div class="form-group">
+                    <label>Letzte Erneuerung</label>
+                    <input type="date" id="new-emp-hygiene-letzte" style="width:100%; height:48px; font-size:16px;">
+                </div>
+                <div class="form-group">
+                    <label>Gültigkeitsdauer (Monate)</label>
+                    <input type="number" id="new-emp-hygiene-monate" min="1" value="12">
+                </div>
+            </div>
+        </details>
+        <div id="emp-modal-error" style="color:var(--color-red); font-size:0.85rem; margin-bottom:1rem; display:none;"></div>
+        <button class="btn-primary" onclick="submitNewEmployee()">Mitarbeiter anlegen</button>
+    </div>
+</div>
+
+<!-- MODAL: URLAUB ABLEHNEN -->
+<div id="reject-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Antrag ablehnen</div>
+            <button class="modal-close" onclick="closeRejectModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Grund der Ablehnung</label>
+            <textarea id="reject-reason" rows="3" placeholder="z.B. Anderer Mitarbeiter hat in dieser Zeit Urlaub"></textarea>
+        </div>
+        <button class="btn-primary" onclick="submitReject()">Ablehnen</button>
+    </div>
+</div>
+
+<!-- MODAL: MITARBEITER BEARBEITEN -->
+<div id="edit-employee-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Mitarbeiter bearbeiten</div>
+            <button class="modal-close" onclick="closeEditEmployeeModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="edit-emp-name">
+        </div>
+        <div class="form-group">
+            <label>Kürzel</label>
+            <input type="text" id="edit-emp-code">
+        </div>
+        <div class="form-group">
+            <label>PIN (leer lassen = nicht ändern)</label>
+            <input type="text" id="edit-emp-password" placeholder="Neuer PIN">
+        </div>
+        <div class="form-group">
+            <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'flex':'none'; this.querySelector('.toggle-arrow').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; padding:0.5rem 0.6rem; background:#F5F5F5; border-radius:8px;">
+                <span style="font-size:0.9rem; font-weight:600;">Abteilungen</span>
+                <span class="toggle-arrow" style="font-size:0.8rem; color:var(--color-text-light);">▶</span>
+            </div>
+            <div id="edit-emp-departments-checks" style="display:none; flex-wrap:wrap; gap:0.5rem; margin-top:0.5rem;"></div>
+        </div>
+        <div class="form-group">
+            <label>Geburtsdatum (optional)</label>
+            <input type="date" id="edit-emp-birthdate" style="width:100%; height:48px; font-size:16px;">
+        </div>
+        <div class="form-group">
+            <label>Urlaubstage pro Jahr</label>
+            <input type="number" id="edit-emp-vacation-days" min="0" max="365" value="20">
+        </div>
+        <div class="form-group">
+            <label>Eintrittsdatum (optional)</label>
+            <input type="date" id="edit-emp-start-date" style="width:100%; height:48px; font-size:16px;">
+        </div>
+        <div class="form-group">
+            <label>Stunden pro Urlaubstag</label>
+            <input type="number" id="edit-emp-hours-per-vacation-day" min="1" max="24" step="0.5" value="8">
+        </div>
+        <div class="form-group">
+            <label style="display:flex; align-items:center; gap:0.5rem;">
+                <input type="checkbox" id="edit-emp-apprentice" style="width:auto;">
+                Azubi
+            </label>
+        </div>
+        <div style="margin-bottom:1rem;">
+            <div style="font-weight:700; font-size:0.9rem; margin-bottom:0.5rem;">Beschäftigungsphasen</div>
+            <div id="edit-emp-phases" style="margin-bottom:0.5rem;"></div>
+            <button type="button" onclick="addEmploymentPhase()" style="width:100%; padding:0.6rem; border:2px dashed var(--color-border); border-radius:8px; background:transparent; color:var(--color-text-light); font-size:0.85rem; cursor:pointer;">+ Phase hinzufügen</button>
+        </div>
+        <details style="margin-bottom:1rem;">
+            <summary style="cursor:pointer; font-weight:600; font-size:0.9rem; color:var(--color-text); padding:0.5rem 0; list-style:none; display:flex; justify-content:space-between; align-items:center;">
+                Hygieneschutzbelehrung
+                <span style="font-size:0.75rem; color:var(--color-text-light);">optional ▾</span>
+            </summary>
+            <div style="padding-top:0.5rem;">
+                <div class="form-group">
+                    <label>Erstbelehrung</label>
+                    <input type="date" id="edit-emp-hygiene-erste" style="width:100%; height:48px; font-size:16px;">
+                </div>
+                <div class="form-group">
+                    <label>Letzte Erneuerung</label>
+                    <input type="date" id="edit-emp-hygiene-letzte" style="width:100%; height:48px; font-size:16px;">
+                </div>
+                <div class="form-group">
+                    <label>Gültigkeitsdauer (Monate)</label>
+                    <input type="number" id="edit-emp-hygiene-monate" min="1" value="12">
+                </div>
+            </div>
+        </details>
+        <div id="edit-emp-error" style="color:var(--color-red); font-size:0.85rem; margin-bottom:1rem; display:none;"></div>
+        <button class="btn-primary" onclick="submitEditEmployee()">Speichern</button>
+    </div>
+</div>
+
+<!-- MODAL: STUNDEN GENEHMIGEN -->
+<div id="approve-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="approve-modal-title"></div>
+            <button class="modal-close" onclick="closeApproveModal()">✕</button>
+        </div>
+        <input type="hidden" id="approve-employee-id">
+        <input type="hidden" id="approve-month">
+        <div style="display:flex; gap:1rem;">
+            <div class="form-group" style="flex:1;">
+                <label>Stunden</label>
+                <input type="number" id="approve-hours" min="0" placeholder="z.B. 98">
+            </div>
+            <div class="form-group" style="flex:1;">
+                <label>Minuten</label>
+                <input type="number" id="approve-minutes" min="0" max="59" placeholder="0">
+            </div>
+        </div>
+        <button class="btn-primary" onclick="saveApprovedHours()">Speichern</button>
+    </div>
+</div>
+
+<!-- MODAL: OFFENE SCHICHT -->
+<div id="open-shift-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="open-shift-modal-title">Offene Schicht</div>
+            <button class="modal-close" onclick="closeOpenShiftModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Von</label>
+            <input type="time" id="open-shift-start">
+        </div>
+        <div class="form-group">
+            <label>Bis</label>
+            <input type="time" id="open-shift-end">
+        </div>
+        <div class="form-group">
+            <label>Pause (Minuten)</label>
+            <input type="number" id="open-shift-break" placeholder="z.B. 30" min="0">
+        </div>
+        <div class="form-group">
+            <label>Notiz (optional)</label>
+            <input type="text" id="open-shift-note" placeholder="z.B. Verstärkung gesucht">
+        </div>
+        <div id="open-shift-error" style="color:var(--color-red); font-size:0.85rem; margin-bottom:1rem; display:none;"></div>
+        <button id="open-shift-delete-btn" class="btn-secondary" style="margin-bottom:0.75rem; color:var(--color-red); border-color:var(--color-red); display:none;" onclick="deleteOpenShift()">Schicht löschen</button>
+        <button class="btn-primary" onclick="submitOpenShift()">Speichern</button>
+    </div>
+</div>
+
+<!-- MODAL: VORLAGE SPEICHERN -->
+<div id="save-template-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Vorlage speichern</div>
+            <button class="modal-close" onclick="closeSaveTemplateModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Name der Vorlage</label>
+            <input type="text" id="template-name" placeholder="z.B. Frühschicht, Spätschicht...">
+        </div>
+        <div id="template-error" style="color:var(--color-red); font-size:0.85rem; margin-bottom:1rem; display:none;"></div>
+        <button class="btn-primary" onclick="saveTemplate()">Speichern</button>
+    </div>
+</div>
+
+<!-- MODAL: VERFÜGBARKEITS-WARNUNG -->
+<div id="avail-warning-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">⚠️ Verfügbarkeit</div>
+        </div>
+        <div id="avail-warning-text" style="margin-bottom:1.5rem; font-size:0.95rem; line-height:1.5;"></div>
+        <button class="btn-primary" onclick="confirmShiftDespiteWarning()">Trotzdem einplanen</button>
+        <button class="btn-secondary" style="margin-top:0.75rem;" onclick="closeAvailWarningModal()">Abbrechen</button>
+    </div>
+</div>
+
+<!-- MODAL: VORLAGEN VERWALTEN -->
+<div id="manage-templates-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Vorlagen verwalten</div>
+            <button class="modal-close" onclick="closeManageTemplatesModal()">✕</button>
+        </div>
+        <div id="manage-templates-list"></div>
+    </div>
+</div>
+
+<!-- MODAL: VORLAGE BEARBEITEN -->
+<div id="edit-template-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Vorlage bearbeiten</div>
+            <button class="modal-close" onclick="closeEditTemplateModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="edit-template-name">
+        </div>
+        <div class="form-group">
+            <label>Von</label>
+            <input type="time" id="edit-template-start">
+        </div>
+        <div class="form-group">
+            <label>Bis</label>
+            <input type="time" id="edit-template-end">
+        </div>
+        <div class="form-group">
+            <label>Pause (Minuten)</label>
+            <input type="number" id="edit-template-break" min="0" value="0">
+        </div>
+        <button class="btn-primary" onclick="submitEditTemplate()">Speichern</button>
+    </div>
+</div>
+
+<!-- MODAL: URLAUBSANTRAG BEARBEITEN -->
+<div id="edit-vacation-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Urlaubsantrag bearbeiten</div>
+                <button class="modal-close" onclick="closeEditVacationModal()">✕</button>
+            </div>
+        <div id="edit-vacation-date-fields">
+<div class="form-group">
+<label>Von</label>
+<input type="date" id="edit-vacation-start">
+</div>
+<div class="form-group">
+<label>Bis</label>
+<input type="date" id="edit-vacation-end">
+</div>
+</div>
+<div id="edit-vacation-days-field" class="form-group">
+<label>Abzuziehende Urlaubstage</label>
+<input type="number" id="edit-vacation-days" min="0" step="0.01">
+</div>
+<div class="form-group">
+<label>Abzuziehende Urlaubsstunden (optional)</label>
+<input type="number" id="edit-vacation-hours" min="0" step="0.5" placeholder="z.B. 4">
+</div>
+<div id="edit-vacation-payout-month-field" style="display:none;">
+<div class="form-group">
+    <label>Ausgezahlt im</label>
+    <input type="text" id="edit-vacation-payout-month" placeholder="z.B. März 2026">
+</div>
+</div>
+<button class="btn-primary" onclick="submitEditVacation()">Speichern</button>
+</div>
+</div>
+
+<!-- MODAL: URLAUBSKALENDER TAG -->
+<div id="vac-day-modal" class="modal-overlay" onclick="if(event.target===this)closeVacDayModal()">
+    <div class="modal">
+        <div class="modal-header">
+            <span id="vac-day-modal-title" style="font-weight:700;"></span>
+            <button class="modal-close" onclick="closeVacDayModal()">✕</button>
+        </div>
+        <div id="vac-day-modal-body" style="padding:1rem;"></div>
+    </div>
+</div>
+
+<!-- MODAL: URLAUBSKONTO ERKLÄRUNG -->
+<div id="vacation-explain-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="vacation-explain-title"></div>
+            <button class="modal-close" onclick="closeVacationExplainModal()">✕</button>
+        </div>
+        <div id="vacation-explain-body" style="font-size:0.9rem; line-height:1.7;"></div>
+    </div>
+</div>
+
+<!-- MODAL: KRANKMELDUNG -->
+<div id="sick-leave-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Krankmeldung</div>
+            <button class="modal-close" onclick="closeSickLeaveModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Mitarbeiter</label>
+            <select id="sick-leave-employee"></select>
+        </div>
+        <div class="form-group">
+            <label>Von</label>
+            <input type="date" id="sick-leave-start" style="width:100%; height:48px; font-size:16px;">
+        </div>
+        <div class="form-group">
+            <label>Bis</label>
+            <input type="date" id="sick-leave-end" style="width:100%; height:48px; font-size:16px;">
+        </div>
+        <button class="btn-primary" onclick="submitSickLeave()">Speichern</button>
+    </div>
+</div>
+
+<!-- MODAL: KRANKMELDUNG VERLÄNGERN -->
+<div id="extend-sick-leave-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Krankmeldung verlängern</div>
+            <button class="modal-close" onclick="closeExtendSickLeaveModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Neues Enddatum</label>
+            <input type="date" id="extend-sick-leave-end" style="width:100%; height:48px; font-size:16px;">
+        </div>
+        <button class="btn-primary" onclick="submitExtendSickLeave()">Speichern</button>
+    </div>
+</div>
+
+<!-- TAB: URLAUBSVERWALTUNG -->
+<div id="tab-urlaubsverwaltung" class="tab-content">
+    <div style="max-width:700px; margin:0 auto; padding-bottom:5rem;">
+        <!-- Header -->
+        <div style="display:flex; align-items:center; margin-bottom:1.5rem;">
+            <button onclick="switchTab('mehr')" style="background:none; border:none; color:var(--color-primary); font-size:0.95rem; cursor:pointer; padding:0;">‹ Mehr</button>
+            <div style="flex:1; text-align:center; font-weight:700; font-size:1.1rem;">Urlaubskonto</div>
+        </div>
+        <!-- Jahresauswahl -->
+        <div class="month-selector" style="margin-bottom:1.5rem;">
+            <button onclick="changeUrlaubYear(-1)">◀</button>
+            <span id="urlaubsverwaltung-year-label" style="font-weight:700; font-size:1rem;"></span>
+            <button onclick="changeUrlaubYear(1)">▶</button>
+        </div>
+        <div id="urlaubsverwaltung-list"></div>
+        <!-- Übertrag Vorjahr Section -->
+        <div style="margin-top:1.5rem; border-radius:14px; overflow:hidden; background:var(--color-gray);">
+            <button onclick="toggleCarryOverSection()" style="width:100%; display:flex; justify-content:space-between; align-items:center; padding:0.85rem 1.25rem; background:#C9A24D; border:none; cursor:pointer; font-weight:700; font-size:0.95rem; touch-action:manipulation; color:white;">
+                <span>Übertrag Vorjahr</span>
+                <span id="carry-over-toggle-icon">▶</span>
+            </button>
+            <div id="carry-over-body" style="display:none;">
+                <div id="carry-over-list" style="padding:0 1.25rem;"></div>
+                <div style="padding:0.75rem 1.25rem 1rem; display:flex; flex-direction:column; gap:0.5rem;">
+                    <button onclick="saveAllCarryOvers()" style="width:100%; padding:0.7rem; background:var(--color-primary); color:white; border:none; border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer; touch-action:manipulation;">
+                        Speichern
+                    </button>
+                    <button onclick="applyYearEndCarryOver()" style="width:100%; padding:0.7rem; background:#F5F0E8; color:var(--color-primary); border:1px solid var(--color-primary); border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer; touch-action:manipulation;">
+                        Saldo <span id="carry-over-from-year"></span> als Übertrag <span id="carry-over-to-year"></span> für alle übernehmen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: NEUE AUFGABE -->
+<div id="new-task-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Neue Aufgabe</div>
+            <button class="modal-close" onclick="closeNewTaskModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Titel</label>
+            <input type="text" id="new-task-title" placeholder="z.B. Einstellung Max Mustermann">
+        </div>
+        <div class="form-group">
+            <label>Vorlage (optional)</label>
+            <select id="new-task-template-id">
+                <option value="">— Keine Vorlage —</option>
+            </select>
+        </div>
+        <div id="new-task-error" style="color:var(--color-red); font-size:0.85rem; margin-bottom:1rem; display:none;"></div>
+        <button class="btn-primary" onclick="submitNewTask()">Erstellen</button>
+    </div>
+</div>
+
+<!-- MODAL: NEUE/BEARBEITEN NOTIZ -->
+<div id="note-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="note-modal-title">Neue Notiz</div>
+            <button class="modal-close" onclick="closeNoteModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Titel</label>
+            <input type="text" id="note-title" placeholder="z.B. Lieferanten Kontakte">
+        </div>
+        <div class="form-group">
+            <label>Inhalt</label>
+            <textarea id="note-content" rows="6" placeholder="Notiz hier eingeben..." style="resize:vertical;"></textarea>
+        </div>
+        <div id="note-error" style="color:var(--color-red); font-size:0.85rem; margin-bottom:1rem; display:none;"></div>
+        <button class="btn-primary" onclick="submitNote()">Speichern</button>
+    </div>
+</div>
+
+<!-- MODAL: NEUE VORLAGE -->
+<div id="new-template-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Neue Vorlage</div>
+            <button class="modal-close" onclick="closeNewTemplateModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Name der Vorlage</label>
+            <input type="text" id="new-template-title" placeholder="z.B. Einstellungsprozess">
+        </div>
+        <div id="new-template-steps" style="margin-bottom:1rem;">
+            <div style="font-size:0.85rem; font-weight:600; margin-bottom:0.5rem;">Schritte:</div>
+            <div id="template-steps-list"></div>
+            <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+                <input type="text" id="new-template-step-input" placeholder="Schritt hinzufügen..." style="flex:1; padding:0.5rem; border-radius:8px; border:1px solid var(--color-border); font-size:0.85rem;">
+                <button class="btn-small btn-pdf-view btn-icon" onclick="addTemplateStep()">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+            </div>
+        </div>
+        <div id="new-template-error" style="color:var(--color-red); font-size:0.85rem; margin-bottom:1rem; display:none;"></div>
+        <button class="btn-primary" onclick="submitNewTemplate()">Vorlage speichern</button>
+    </div>
+</div>
+
+<!-- MODAL: VORLAGE BEARBEITEN -->
+<div id="edit-task-template-modal" class="modal-overlay">
+    <div class="modal" ontouchstart="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">Vorlage bearbeiten</div>
+            <button class="modal-close" onclick="closeEditTaskTemplateModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Name der Vorlage</label>
+            <input type="text" id="edit-template-title">
+        </div>
+        <div style="font-size:0.85rem; font-weight:600; margin-bottom:0.5rem;">Schritte:</div>
+        <div id="edit-template-steps-list" style="margin-bottom:0.5rem;"></div>
+        <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+            <input type="text" id="edit-template-step-input" placeholder="Neuer Schritt..." style="flex:1; padding:0.5rem; border-radius:8px; border:1px solid var(--color-border); font-size:0.85rem;">
+            <button class="btn-small btn-pdf-view btn-icon" onclick="addEditTemplateStep()">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+        </div>
+        <button class="btn-primary" onclick="submitEditTaskTemplate()">Speichern</button>
+    </div>
+</div>
+
+<!-- MODAL: TRINKGELD TAG -->
+<div id="trinkgeld-hours-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Tag eintragen</div>
+            <button class="modal-close" onclick="closeTrinkgeldHoursModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Datum</label>
+            <input type="date" id="trinkgeld-hours-date" onchange="loadTrinkgeldHoursEmployees(this.value)">
+        </div>
+        <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+            <div class="form-group" style="flex:1; margin-bottom:0;">
+                <label>Karte (€)</label>
+                <input type="number" id="trinkgeld-entry-card" min="0" step="0.01" placeholder="0.00">
+            </div>
+            <div class="form-group" style="flex:1; margin-bottom:0;">
+                <label>Bar (€)</label>
+                <input type="number" id="trinkgeld-entry-cash" min="0" step="0.01" placeholder="0.00">
+            </div>
+        </div>
+        <input type="hidden" id="trinkgeld-entry-id">
+        <div style="font-size:0.85rem; font-weight:700; color:var(--color-text-light); margin-bottom:0.5rem; margin-top:0.5rem;">STUNDEN</div>
+        <div id="trinkgeld-hours-employees"></div>
+        <button class="btn-primary" onclick="saveTrinkgeldHours()">Speichern</button>
+    </div>
+</div>
+
+<!-- MODAL: TIME PICKER -->
+<div id="time-picker-modal" class="modal-overlay">
+    <div class="modal" style="max-width:280px;">
+        <div class="modal-header">
+            <div class="modal-title" id="time-picker-emp-name"></div>
+            <button class="modal-close" onclick="closeTimePicker()">✕</button>
+        </div>
+        <div style="display:flex; gap:1.5rem; justify-content:center; margin:0.25rem 0 0.5rem;">
+            <div style="font-size:0.7rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.05em; text-align:center; width:64px;">STUNDEN</div>
+            <div style="width:16px;"></div>
+            <div style="font-size:0.7rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.05em; text-align:center; width:64px;">MINUTEN</div>
+        </div>
+        <div style="position:relative; display:flex; gap:0.5rem; justify-content:center; align-items:center; padding:0.5rem 0;">
+            <div style="position:absolute; top:50%; left:50%; width:160px; height:48px; transform:translate(-50%,-50%); background:var(--color-gray); border-radius:10px; pointer-events:none; z-index:1;"></div>
+            <div id="time-picker-hours" class="time-picker-col" onclick="event.stopPropagation()"></div>
+            <div style="font-size:1.6rem; font-weight:700; z-index:2;">:</div>
+            <div id="time-picker-minutes" class="time-picker-col" onclick="event.stopPropagation()"></div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:0.75rem;">
+            <button onclick="confirmTimePicker()" class="btn-primary">Übernehmen</button>
+            <button onclick="resetTimePicker()" class="btn-secondary">Zurücksetzen</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: INVENTUR WARE -->
+<div id="inventur-item-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="inventur-item-modal-title">Ware hinzufügen</div>
+            <button class="modal-close" onclick="closeInventurItemModal()">✕</button>
+        </div>
+        <input type="hidden" id="inventur-item-id">
+        <input type="hidden" id="inventur-item-supplier-id">
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="inventur-item-name" placeholder="z.B. Milch">
+        </div>
+        <div class="form-group">
+            <label>Einheit</label>
+            <input type="text" id="inventur-item-unit" placeholder="z.B. Stück, kg, Liter, Packung">
+        </div>
+        <div class="form-group">
+            <label>Soll-Menge</label>
+            <input type="number" id="inventur-item-target" min="0" step="0.1" placeholder="0">
+        </div>
+        <div class="form-group">
+            <label>Preis pro Einheit (€)</label>
+            <input type="number" id="inventur-item-price" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group">
+            <label>Bereich (optional)</label>
+            <select id="inventur-item-group">
+                <option value="">— Kein Bereich —</option>
+            </select>
+        </div>
+        <button class="btn-primary" onclick="saveInventurItem()">Speichern</button>
+    </div>
+</div>
+
+<!-- MODAL: INVENTUR INFO -->
+<div id="inventur-info-modal" class="modal-overlay" onclick="closeInventurInfoModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">So baust du die Inventurliste auf</div>
+            <button class="modal-close" onclick="closeInventurInfoModal()">✕</button>
+        </div>
+        <ol style="padding-left:1.25rem; line-height:2; margin:0.5rem 0 1rem;">
+            <li><strong>Lieferanten anlegen</strong><br><span style="font-size:0.85rem; color:var(--color-text-light);">z.B. Metro, Transgourmet</span></li>
+            <li><strong>Pro Lieferant Bereiche anlegen</strong><br><span style="font-size:0.85rem; color:var(--color-text-light);">z.B. Kühlschrank, Keller, Regal</span></li>
+            <li><strong>Waren anlegen</strong><br><span style="font-size:0.85rem; color:var(--color-text-light);">Lieferant und Bereich auswählen</span></li>
+            <li><strong>Reihenfolge anpassen</strong><br><span style="font-size:0.85rem; color:var(--color-text-light);">Inventur- und Bestell-Reihenfolge per ↑↓ Buttons</span></li>
+        </ol>
+        <button class="btn-primary" style="width:100%;" onclick="closeInventurInfoModal()">Verstanden</button>
+    </div>
+</div>
+
+<!-- MODAL: INVENTUR LIEFERANT -->
+<div id="inventur-supplier-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Lieferant hinzufügen</div>
+            <button class="modal-close" onclick="closeInventurSupplierModal()">✕</button>
+        </div>
+        <input type="hidden" id="inventur-supplier-id">
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="inventur-supplier-name" placeholder="z.B. Metro">
+        </div>
+        <button class="btn-primary" onclick="saveInventurSupplier()">Speichern</button>
+    </div>
+</div>
+
+<!-- MODAL: JAHRESBERICHT -->
+<div id="jahresbericht-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Jahresbericht</div>
+            <button class="modal-close" onclick="closeJahresberichtModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Datum der Inventur</label>
+            <input type="date" id="jahresbericht-date">
+        </div>
+        <button class="btn-primary" onclick="downloadJahresberichtPdf()">PDF erstellen</button>
+    </div>
+</div>
+
+<!-- DEPT SELECTION BAR -->
+<div id="dept-selection-bar" style="display:none; position:fixed; bottom:80px; right:1rem; z-index:999; background:#2C3E50; color:white; border-radius:12px; padding:0.65rem 1rem; gap:0.75rem; align-items:center; box-shadow:0 4px 16px rgba(0,0,0,0.25); font-size:0.9rem; white-space:nowrap;">
+    <span id="dept-selection-label">0 Schichten ausgewählt</span>
+    <span style="opacity:0.5; font-size:0.75rem;">(<span id="dept-selection-dept"></span>)</span>
+    <button onclick="deptDeleteSelected()" class="btn-small" style="background:#C0392B; color:white; margin-left:0.25rem;">Löschen</button>
+    <button onclick="deptCancelSelection()" style="background:none; border:none; color:white; cursor:pointer; font-size:1rem; padding:0 0.25rem;">✕</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/auth.js"></script>
+<script src="js/admin.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+</body>
+</html>
