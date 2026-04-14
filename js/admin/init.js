@@ -49,3 +49,34 @@ function switchTab(tab) {
 
     localStorage.setItem('planit_admin_tab', tab);
 }
+
+// ── INIT ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+    adminSession = await requireAdminSession();
+    if (!adminSession) return;
+
+    const savedTab = localStorage.getItem('planit_admin_tab');
+    if (savedTab) switchTab(savedTab);
+
+    await loadEmployees();
+    populateAvailEmployeeSelect();
+
+    await Promise.all([
+        loadDepartmentNames(),
+        loadWeekGrid(),
+        loadAdminVacations(),
+        loadAdminSwaps(),
+        loadTeam(),
+        loadDepartments(),
+        loadAdminAvailability(),
+        loadAdminVacationCalendar(),
+        loadArchiveBadge(),
+        loadSickLeaves(),
+        loadRequestsBadge(),
+        loadTerminationBadge(),
+        loadInventurBadge(),
+        loadUrlaubBadge(),
+        loadHygieneBadge(),
+        loadMehrBadge(),
+    ]);
+});
