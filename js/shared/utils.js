@@ -68,3 +68,9 @@ function formatDate(dateStr) {
         day: 'numeric', month: 'long', year: 'numeric'
     });
 }
+
+function formatMonthYear(dateStr) {
+    return new Date(dateStr).toLocaleDateString('de-DE', {
+        month: 'long', year: 'numeric'
+    });
+}
