@@ -1,0 +1,152 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         GASTROHUB — ZUSAMMENFASSUNG                        ║
+║                              Stand: 14.04.2026                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WAS IST GASTROHUB?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GastroHub ist eine Neuentwicklung auf Basis von PlanIt. PlanIt war eine
+monolithische Single-Page-App (eine große admin.js + employee.js). GastroHub
+zerlegt diese Logik in eine modulare Ordnerstruktur mit getrennten JS-Dateien
+pro Feature-Bereich und drei klar getrennten Nutzergruppen.
+
+Quell-Repository:  /Users/artchiebald/Documents/PlanIt/
+Ziel-Repository:   /Users/artchiebald/Documents/gastrohub-new/
+                   https://github.com/ArtsemKozel/gastrohub
+
+Datenbank:         Supabase (identischer Account und URL wie PlanIt)
+                   URL: https://ulazvcrpasnhufzlywxf.supabase.co
+                   Tabellen: employees_planit, planit_restaurants (unverändert)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ DREI NUTZERGRUPPEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. ADMIN       → admin.html     Login via Supabase Auth (Email + Passwort)
+                                  Zugriff auf alle Verwaltungsfunktionen
+                                  Session: Supabase JWT
+
+  2. MITARBEITER → employee.html  Login via Kürzel + PIN (localStorage)
+                                  Zugriff auf persönliche Schichten, Urlaub etc.
+                                  Session: localStorage-Key "planit_employee"
+
+  3. POS         → pos.html       Kassensystem / Stempeluhr
+                                  (noch nicht implementiert)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ DESIGN-ENTSCHEIDUNGEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Basis:         GastroHub-Old (GastroHub/Auth/) als visuelles Vorbild
+  Font:          Inter (Google Fonts)
+  Hintergrund:   #F9F5F1  (warmes Off-White)
+  Primärfarbe:   #B28A6E  (Terrakotta/Braun) — Buttons, Fokus-Ringe, Links
+  Hover:         #9A7558
+  Container:     Weiß, border-radius 24px, box-shadow dezent
+  Inputs:        border-radius 12px, border #E5E5E5, Fokus mit Primärfarbe
+  Fehlertexte:   #E57373 (gedämpftes Rot, kein hartes #FF0000)
+
+  Tab-Switcher (Login):
+    - Pill-Design auf #F5F0EB-Hintergrund
+    - Aktiver Tab: weiß mit leichtem Schatten
+    - Reihenfolge: [Mitarbeiter] [Admin] — Admin rechts, da häufiger genutzt
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ AKTUELLER STAND (14.04.2026)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  FERTIG ✓
+  ─────────────────────────────────────────────────────────────
+  index.html              Login-Seite mit GastroHub-Design, zwei Tabs
+  register.html           Registrierung (Admin-Konto + Restaurant-Name)
+  admin.html              HTML-Struktur vollständig (aus PlanIt übertragen)
+  employee.html           HTML-Struktur vollständig (aus PlanIt übertragen)
+
+  js/shared/db.js         Supabase-Client-Initialisierung
+  js/shared/auth.js       Login, Session-Check, Logout für alle Gruppen
+  js/shared/utils.js      Gemeinsame Hilfsfunktionen (Feiertage, Datum, etc.)
+
+  OFFEN ✗ (alle leer, Logik aus PlanIt noch nicht migriert)
+  ─────────────────────────────────────────────────────────────
+  js/admin/init.js        requireAdminSession(), DOMContentLoaded, switchTab()
+  js/admin/shifts.js      Schichtplanung
+  js/admin/team.js        Team-Verwaltung
+  js/admin/vacation.js    Urlaubsverwaltung
+  js/admin/hours.js       Stundenübersicht
+  js/admin/payroll.js     Lohnabrechnung
+  js/admin/tips.js        Trinkgeldverteilung
+  js/admin/inventory.js   Inventur
+  js/admin/hygiene.js     Hygieneprotokoll
+  js/admin/tasks.js       Aufgaben & Notizen
+  js/admin/terminations.js  Abgänge
+  js/admin/margincalc.js  Deckungsbeitragsrechnung
+
+  js/employee/init.js     requireEmployeeSession(), DOMContentLoaded, switchTab()
+  js/employee/overview.js Übersicht (Schichtplan der Woche)
+  js/employee/vacation.js Urlaubsantrag & Kalender
+  js/employee/availability.js  Verfügbarkeitsangaben
+  js/employee/swaps.js    Schichttausch
+  js/employee/inventory.js     Inventurformular (Mitarbeiter)
+  js/employee/profil.js   Profilseite
+
+  js/pos/clock.js         Stempeluhr (Ein-/Ausstempeln)
+  js/pos/breaks.js        Pausenverwaltung
+  js/pos/pos.js           POS-Hauptlogik
+
+  pos.html                Noch leer
+
+  CSS (alle leer):
+  css/base.css            Globale Variablen, Reset, Typografie
+  css/components.css      Wiederverwendbare UI-Komponenten
+  css/admin.css           Admin-spezifische Styles
+  css/employee.css        Mitarbeiter-spezifische Styles
+  css/pos.css             POS-spezifische Styles
+
+  Hinweis: admin.html und employee.html laden noch js/auth.js und js/admin.js
+  (PlanIt-Pfade) — müssen auf die neuen Modul-Pfade umgestellt werden.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GESAMTPLAN / NÄCHSTE SCHRITTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  PHASE 1 — Shared Foundation       ✓ ABGESCHLOSSEN
+    db.js, auth.js, utils.js, index.html
+
+  PHASE 2 — CSS-System               → als nächstes
+    base.css mit CSS-Variablen (GastroHub-Farben, Typografie, Reset)
+    components.css (Cards, Buttons, Inputs, Tabs, Modals, Toasts)
+    admin.css, employee.css, pos.css
+
+  PHASE 3 — Admin-Module
+    init.js → dann feature-weise: shifts, team, vacation, hours, tips, ...
+
+  PHASE 4 — Mitarbeiter-Module
+    init.js → overview, vacation, availability, swaps, inventory, profil
+
+  PHASE 5 — POS
+    pos.html aufbauen, clock.js, breaks.js, pos.js
+
+  PHASE 6 — HTML-Dateien anpassen
+    admin.html und employee.html: Script-Tags auf neue Modul-Pfade umstellen,
+    Titel auf "GastroHub" aktualisieren
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ MIGRATIONS-PRINZIP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  - Logik aus PlanIt/js/admin.js (~7100 Zeilen) wird aufgeteilt in
+    die 12 Admin-Module
+  - Logik aus PlanIt/js/employee.js (~2400 Zeilen) wird aufgeteilt in
+    die 7 Mitarbeiter-Module
+  - Funktionen die in beiden PlanIt-Dateien identisch waren →
+    js/shared/utils.js (getBWHolidays, getEasterDates, goldGradient,
+    getEmpDepartments, formatDate)
+  - Keine inhaltlichen Änderungen an der Logik während der Migration —
+    erst migrieren, dann verbessern

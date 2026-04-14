@@ -1,0 +1,242 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      GASTROHUB — CODE-DOKUMENTATION                        ║
+║                              Stand: 14.04.2026                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Dokumentiert alle bereits befüllten Dateien mit Funktionslisten und Hinweisen
+zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ js/shared/db.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Initialisiert den globalen Supabase-Client "db".
+            Wird als erstes Script nach dem Supabase-CDN eingebunden und
+            macht "db" für alle nachfolgenden Scripte verfügbar.
+
+  Abhängig von:  Supabase CDN (@supabase/supabase-js@2)
+  Exportiert:    window.db (implizit global)
+
+  Inhalt:
+    const db = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+  Hinweis:
+    Alle anderen JS-Dateien setzen "db" als global voraus und dürfen
+    den Supabase-Client NICHT neu initialisieren.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ js/shared/auth.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Login, Session-Checks und Logout für alle drei Nutzergruppen.
+            Basiert auf PlanIt/js/auth.js — Logik 1:1 übernommen.
+
+  Abhängig von:  js/shared/db.js (db-Client)
+  Eingebunden in: index.html (Login-Seite), admin.html, employee.html
+
+  Funktionen:
+  ┌─────────────────────────────┬────────────────────────────────────────────┐
+  │ switchLoginTab(tab)         │ Wechselt zwischen "admin" und "employee"   │
+  │                             │ Tab auf der Login-Seite (index.html).      │
+  │                             │ Steuert Sichtbarkeit der Formular-Divs.    │
+  ├─────────────────────────────┼────────────────────────────────────────────┤
+  │ loginAdmin()          async │ Liest #admin-email und #admin-password.    │
+  │                             │ Ruft db.auth.signInWithPassword() auf.     │
+  │                             │ Bei Erfolg: Redirect → admin.html          │
+  ├─────────────────────────────┼────────────────────────────────────────────┤
+  │ loginEmployee()       async │ Liest #emp-number (Kürzel) und             │
+  │                             │ #emp-password (PIN).                       │
+  │                             │ Sucht in Tabelle "employees_planit" nach   │
+  │                             │ login_code + is_active=true.               │
+  │                             │ Vergleicht password_hash mit PIN.          │
+  │                             │ Bei Erfolg: speichert Employee-Objekt in   │
+  │                             │ localStorage ("planit_employee") und       │
+  │                             │ Redirect → employee.html                   │
+  ├─────────────────────────────┼────────────────────────────────────────────┤
+  │ requireAdminSession() async │ Prüft Supabase-Session via               │
+  │                             │ db.auth.getSession(). Kein Session →       │
+  │                             │ Redirect zu index.html. Gibt Session zurück│
+  ├─────────────────────────────┼────────────────────────────────────────────┤
+  │ requireEmployeeSession()    │ Prüft localStorage-Key "planit_employee".  │
+  │                             │ Nicht vorhanden → Redirect zu index.html.  │
+  │                             │ Gibt geparsten Employee zurück.            │
+  ├─────────────────────────────┼────────────────────────────────────────────┤
+  │ logout()              async │ db.auth.signOut() + localStorage löschen   │
+  │                             │ + Redirect → index.html                    │
+  └─────────────────────────────┴────────────────────────────────────────────┘
+
+  localStorage-Schema (Key: "planit_employee"):
+    {
+      id:            string   (UUID des Mitarbeiters)
+      name:          string
+      login_code:    string   (Kürzel, z.B. "AnMu")
+      user_id:       string   (Supabase user_id des Admins, dem der MA gehört)
+      is_apprentice: boolean
+      department:    string
+    }
+
+  HTML-IDs die auth.js voraussetzt (index.html):
+    #employee-login, #admin-login  — Tab-Container
+    .login-tab                     — Tab-Buttons (NodeList, Index 0=Mitarb., 1=Admin)
+    #emp-number, #emp-password, #emp-error
+    #admin-email, #admin-password, #admin-error
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ js/shared/utils.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Gemeinsame Hilfsfunktionen ohne DOM- oder Supabase-Abhängigkeiten.
+            Kopiert aus PlanIt: Funktionen die in admin.js UND employee.js
+            identisch vorhanden waren, wurden hier zusammengeführt.
+
+  Abhängig von:  — (keine)
+  Eingebunden in: admin.html, employee.html (sobald deren JS-Module aktiv sind)
+
+  Funktionen:
+  ┌──────────────────────────────┬───────────────────────────────────────────┐
+  │ getBWHolidays(year)          │ Gibt Array aller BW-Feiertage für das     │
+  │                              │ übergebene Jahr zurück (Format: YYYY-MM-DD)│
+  │                              │ Enthält Neujahr, Heilige Drei Könige,     │
+  │                              │ alle beweglichen Osterfeiertage,          │
+  │                              │ Tag der Arbeit, Tag der Dt. Einheit,      │
+  │                              │ Allerheiligen, Weihnachten (1.+2. Tag).   │
+  ├──────────────────────────────┼───────────────────────────────────────────┤
+  │ getEasterDates(year)         │ Berechnet alle osterabhängigen Feiertage  │
+  │                              │ via Gaußsche Osterformel.                 │
+  │                              │ Gibt zurück: Karfreitag, Ostersonntag,    │
+  │                              │ Ostermontag, Christi Himmelfahrt (+39),   │
+  │                              │ Pfingstsonntag (+49), Pfingstmontag (+50),│
+  │                              │ Fronleichnam (+60).                       │
+  ├──────────────────────────────┼───────────────────────────────────────────┤
+  │ getEmpDepartments(emp)       │ Parst das Feld emp.departments            │
+  │                              │ (kommaseparierter String).                │
+  │                              │ Fallback auf emp.department (Einzelwert). │
+  │                              │ Gibt immer Array zurück,                  │
+  │                              │ mindestens ["Allgemein"].                 │
+  ├──────────────────────────────┼───────────────────────────────────────────┤
+  │ goldGradient(n)              │ Erzeugt CSS-Gradient-String aus n         │
+  │                              │ Gold-Farbtönen für Abteilungs-Badges.     │
+  │                              │ n=1: gibt Hex-Farbe zurück.               │
+  │                              │ n>1: gibt linear-gradient()-String zurück.│
+  ├──────────────────────────────┼───────────────────────────────────────────┤
+  │ formatDate(dateStr)          │ Formatiert YYYY-MM-DD → "14. April 2026"  │
+  │                              │ Locale: de-DE, long month name.           │
+  └──────────────────────────────┴───────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ index.html
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Login-Seite. Zwei Tabs: Admin (Supabase Auth) und
+            Mitarbeiter (Kürzel + PIN).
+
+  Design:   GastroHub-Design (inline <style>), keine externe CSS-Datei.
+            Grund: CSS-Dateien noch leer, login.html braucht eigenes Styling.
+
+  Script-Reihenfolge (zwingend):
+    1. https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2
+    2. js/shared/db.js      ← initialisiert "db"
+    3. js/shared/auth.js    ← nutzt "db"
+
+  Wichtige IDs / Klassen:
+    .auth-container         — Haupt-Card
+    .login-tabs             — Tab-Leiste (Pill-Design)
+    .login-tab + .active    — Tab-Button-State
+    #employee-login         — Mitarbeiter-Formular (display:none initial)
+    #admin-login            — Admin-Formular (sichtbar initial)
+    #emp-number             — Kürzel-Input
+    #emp-password           — PIN-Input
+    #emp-error              — Fehleranzeige Mitarbeiter
+    #admin-email            — Email-Input
+    #admin-password         — Passwort-Input
+    #admin-error            — Fehleranzeige Admin
+    .auth-button            — Login-Button (onclick)
+    .auth-error             — Fehlertexte (color #E57373)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ register.html
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Registrierung für neue Admin-Konten.
+            Erstellt Supabase Auth User + Eintrag in "planit_restaurants".
+
+  Status:   Vollständig (aus PlanIt übernommen, noch PlanIt-Design).
+            Noch nicht auf GastroHub-Design umgestellt.
+
+  Logik:    Inline-Script (kein externes JS).
+            Validierung: E-Mail-Format, Passwort-Regeln (8 Zeichen,
+            Großbuchstabe, Zahl, Sonderzeichen), Passwort-Wiederholung.
+            db.auth.signUp() → db.from('planit_restaurants').insert()
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ admin.html / employee.html
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Status:   HTML-Struktur vollständig (aus PlanIt übertragen).
+            Titel noch "PlanIt - Admin" / "PlanIt - Mitarbeiter" — TODO.
+
+  ACHTUNG: Beide Dateien laden noch die alten PlanIt-Script-Pfade:
+    js/auth.js     → muss werden: js/shared/db.js + js/shared/auth.js
+    js/admin.js    → muss werden: js/admin/init.js + feature-Module
+    js/employee.js → muss werden: js/employee/init.js + feature-Module
+
+  admin.html — Tabs & Bereiche:
+    schichtplanung, urlaub, verfuegbarkeit, team, tausch, krankmeldungen,
+    mehr, terminations, restaurant-info, stunden, requests, inventur,
+    inventur-config, trinkgeld, trinkgeld-config, tasks, notes, hygiene,
+    urlaubsverwaltung
+
+  employee.html — Tabs & Bereiche:
+    uebersicht, schichtplan, urlaub, verfuegbarkeit, lohn, tausch,
+    mehr, trinkgeld, inventur-emp, profil, stunden
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SCRIPT-LADEREIHENFOLGE (Zielzustand)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Jede Seite bindet Scripts in dieser Reihenfolge ein:
+
+  index.html:
+    1. Supabase CDN
+    2. js/shared/db.js
+    3. js/shared/auth.js
+
+  admin.html (Zielzustand):
+    1. Supabase CDN
+    2. js/shared/db.js
+    3. js/shared/utils.js
+    4. js/shared/auth.js
+    5. js/admin/init.js
+    6. js/admin/shifts.js
+    7. js/admin/team.js
+    8. js/admin/vacation.js
+    9. js/admin/hours.js
+   10. js/admin/payroll.js
+   11. js/admin/tips.js
+   12. js/admin/inventory.js
+   13. js/admin/hygiene.js
+   14. js/admin/tasks.js
+   15. js/admin/terminations.js
+   16. js/admin/margincalc.js
+   17. jsPDF CDN (nur für Lohnabrechnung)
+
+  employee.html (Zielzustand):
+    1. Supabase CDN
+    2. js/shared/db.js
+    3. js/shared/utils.js
+    4. js/shared/auth.js
+    5. js/employee/init.js
+    6. js/employee/overview.js
+    7. js/employee/vacation.js
+    8. js/employee/availability.js
+    9. js/employee/swaps.js
+   10. js/employee/inventory.js
+   11. js/employee/profil.js
+   17. jsPDF CDN (für Lohnzettel)
