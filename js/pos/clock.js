@@ -226,10 +226,12 @@ async function posClockIn() {
     let shift = posState.shift;
 
     if (shift) {
-        const { error } = await db.from('shifts')
+        const { data, error } = await db.from('shifts')
             .update({ actual_start_time: nowTime })
-            .eq('id', shift.id);
-        if (error) { posShowToast('Fehler beim Einstempeln'); return; }
+            .eq('id', shift.id)
+            .select('id, actual_start_time')
+            .maybeSingle();
+        if (error || !data) { posShowToast('Fehler beim Einstempeln'); return; }
         posState.shift = { ...shift, actual_start_time: nowTime, actual_end_time: null };
     } else {
         // Keine geplante Schicht — spontan anlegen
@@ -244,14 +246,13 @@ async function posClockIn() {
             is_open:           false,
             department:        emp.department || null
         }).select().maybeSingle();
-        if (error) { posShowToast('Fehler beim Einstempeln'); return; }
+        if (error || !data) { posShowToast('Fehler beim Einstempeln'); return; }
         posState.shift = data;
         posState.shifts.push(data);
     }
 
     posShowToast('✓ Eingestempelt um ' + nowTime.slice(0, 5) + ' Uhr');
     renderPOS();
-    setTimeout(posLogout, 2200);
 }
 
 async function posClockOut() {
@@ -260,10 +261,12 @@ async function posClockOut() {
 
     const nowTime = new Date().toTimeString().slice(0, 8);
 
-    const { error } = await db.from('shifts')
+    const { data, error } = await db.from('shifts')
         .update({ actual_end_time: nowTime })
-        .eq('id', shift.id);
-    if (error) { posShowToast('Fehler beim Ausstempeln'); return; }
+        .eq('id', shift.id)
+        .select('id, actual_end_time')
+        .maybeSingle();
+    if (error || !data) { posShowToast('Fehler beim Ausstempeln'); return; }
 
     posState.shift = { ...shift, actual_end_time: nowTime };
     const idx = posState.shifts.findIndex(s => s.id === shift.id);
@@ -271,7 +274,6 @@ async function posClockOut() {
 
     posShowToast('✓ Ausgestempelt um ' + nowTime.slice(0, 5) + ' Uhr');
     renderPOS();
-    setTimeout(posLogout, 2200);
 }
 
 // ── TOAST ─────────────────────────────────────────────────
