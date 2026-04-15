@@ -793,9 +793,7 @@ async function loadPayroll() {
             </button>
             <div style="font-size:1.1rem; font-weight:700; color:var(--color-text);">Lohnabrechnung</div>
             <div style="display:flex; justify-content:flex-end;">
-                <button class="btn-small btn-primary btn-icon" onclick="openPayrollWizard()" title="Neue Abrechnung">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 1v12M1 7h12" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/></svg>
-                </button>
+                <button class="btn-small btn-primary" onclick="openPayrollWizard()" title="Neue Abrechnung" style="font-size:1.4rem; line-height:1; color:white;">+</button>
             </div>
         </div>
         ${listHtml}`;
