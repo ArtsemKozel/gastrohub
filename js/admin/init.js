@@ -46,6 +46,7 @@ function switchTab(tab) {
     if (tab === 'restaurant-info')   loadRestaurantInfo();
     if (tab === 'terminations')      loadTerminations();
     if (tab === 'hygiene')           loadHygiene();
+    if (tab === 'margincalc')        MarginCalcApp.init();
 
     localStorage.setItem('planit_admin_tab', tab);
 }
