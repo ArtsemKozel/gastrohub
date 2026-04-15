@@ -794,7 +794,7 @@ async function loadPayroll() {
             <div style="font-size:1.1rem; font-weight:700; color:var(--color-text);">Lohnabrechnung</div>
             <div style="display:flex; justify-content:flex-end;">
                 <button class="btn-small btn-primary btn-icon" onclick="openPayrollWizard()" title="Neue Abrechnung">
-                    <svg width="16" height="16" viewBox="0 0 16 16"><line x1="8" y1="2" x2="8" y2="14" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="2" y1="8" x2="14" y2="8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 1v12M1 7h12" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/></svg>
                 </button>
             </div>
         </div>
