@@ -952,3 +952,148 @@ async function loadAllAvailabilities() {
         container.appendChild(grid);
     }
 }
+
+// ── TAUSCH / ABGABE ───────────────────────────────────────
+
+async function loadAdminSwaps() {
+    const { data: swaps } = await db
+        .from('shift_swaps')
+        .select('*, shifts!shift_id(shift_date, start_time, end_time), target:shifts!target_shift_id(shift_date, start_time, end_time), from_emp:employees_planit!from_employee_id(name), to_emp:employees_planit!to_employee_id(name)')
+        .eq('user_id', adminSession.user.id)
+        .eq('to_employee_status', 'accepted')
+        .order('created_at', { ascending: false });
+
+    const container = document.getElementById('admin-swap-list');
+    if (!swaps || swaps.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>Keine Requests vorhanden.</p></div>';
+        return;
+    }
+
+    container.innerHTML = swaps.map(s => {
+        const colleagueStatus = s.to_employee_status === 'pending' ? '⏳ Wartet auf Kollege'
+            : s.to_employee_status === 'accepted' ? '✓ Kollege akzeptiert'
+            : '✗ Kollege abgelehnt';
+        const canReview = s.status === 'pending' && s.to_employee_status === 'accepted';
+        return `
+            <div class="list-item" style="flex-direction:column; align-items:flex-start; gap:0.5rem;">
+                <div style="display:flex; justify-content:space-between; width:100%;">
+                    <h4>${s.from_emp?.name || '?'} ↔ ${s.to_emp?.name || '?'}</h4>
+                    <span class="badge badge-${s.status}">
+                        ${s.status === 'pending' ? 'Ausstehend' : s.status === 'approved' ? 'Genehmigt' : 'Abgelehnt'}
+                    </span>
+                </div>
+                <div style="font-size:0.85rem; color:var(--color-text-light);">
+                    ${s.from_emp?.name || '?'}: ${s.shifts ? formatShiftDate(s.shifts.shift_date) + ' ' + s.shifts.start_time.slice(0,5) + ' – ' + s.shifts.end_time.slice(0,5) : '—'}
+                </div>
+                <div style="font-size:0.85rem; color:var(--color-text-light);">
+                    ${s.to_emp?.name || '?'}: ${s.target ? formatShiftDate(s.target.shift_date) + ' ' + s.target.start_time.slice(0,5) + ' – ' + s.target.end_time.slice(0,5) : '—'}
+                </div>
+                <div style="font-size:0.75rem; color:var(--color-text-light);">${colleagueStatus}</div>
+                ${canReview ? `
+                    <div style="display:flex; gap:0.5rem; margin-top:0.25rem;">
+                        <button class="btn-small btn-approve btn-icon" onclick="reviewSwap('${s.id}', 'approved', '${s.shift_id}', '${s.target_shift_id}', '${s.from_employee_id}', '${s.to_employee_id}')">
+                            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        </button>
+                        <button class="btn-small btn-reject btn-icon" onclick="reviewSwap('${s.id}', 'rejected', null, null, null, null)">
+                            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                    </div>
+                ` : ''}
+            </div>`;
+    }).join('');
+
+    // Abzugebende Schichten laden
+    const { data: handoverShifts } = await db
+        .from('shifts')
+        .select('*, employees_planit!shifts_employee_id_fkey(name, department)')
+        .eq('user_id', adminSession.user.id)
+        .eq('handover_requested', true)
+        .gte('shift_date', new Date().toISOString().split('T')[0])
+        .order('shift_date');
+
+    const handoverContainer = document.getElementById('admin-handover-list');
+    if (!handoverShifts || handoverShifts.length === 0) {
+        handoverContainer.innerHTML = '<div class="empty-state"><p>Keine Requests vorhanden.</p></div>';
+        return;
+    }
+
+    const handoverHTML = await Promise.all(handoverShifts.map(async s => {
+        const { data: applicants } = await db
+            .from('shift_handovers')
+            .select('*, to_emp:employees_planit!to_employee_id(name)')
+            .eq('shift_id', s.id)
+            .eq('status', 'pending');
+
+        const applicantsList = applicants && applicants.length > 0
+            ? applicants.map(a => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.3rem 0; border-bottom:1px solid var(--color-border);">
+                    <span style="font-size:0.85rem;">${a.to_emp?.name || '—'}</span>
+                    <button class="btn-small btn-pdf-view btn-icon" onclick="approveHandover('${s.id}', '${a.to_employee_id}')">
+                        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                    </button>
+                </div>`).join('')
+            : '<div style="font-size:0.85rem; color:var(--color-text-light);">Noch niemand gemeldet.</div>';
+
+        return `
+            <div class="list-item" style="flex-direction:column; align-items:flex-start; gap:0.5rem;">
+                <div style="display:flex; justify-content:space-between; width:100%;">
+                    <h4>${s.employees_planit?.name || '?'} gibt ab</h4>
+                    <button class="btn-small btn-pdf-view btn-icon" onclick="cancelHandover('${s.id}')">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <div style="font-size:0.85rem; color:var(--color-text-light);">
+                    ${formatShiftDate(s.shift_date)} | ${s.start_time.slice(0,5)} – ${s.end_time.slice(0,5)} Uhr · ${s.employees_planit?.department || ''}
+                </div>
+                <div style="font-weight:600; font-size:0.8rem; margin-top:0.25rem;">Interessenten:</div>
+                ${applicantsList}
+            </div>`;
+    }));
+
+    handoverContainer.innerHTML = handoverHTML.join('');
+}
+
+async function approveHandover(shiftId, toEmpId) {
+    await db.from('shifts')
+        .update({ employee_id: toEmpId, handover_requested: false })
+        .eq('id', shiftId);
+    await db.from('shift_handovers')
+        .update({ status: 'rejected' })
+        .eq('shift_id', shiftId);
+    await db.from('shift_handovers')
+        .update({ status: 'approved' })
+        .eq('shift_id', shiftId)
+        .eq('to_employee_id', toEmpId);
+    await loadAdminSwaps();
+    await loadWeekGrid();
+}
+
+async function cancelHandover(shiftId) {
+    await db.from('shifts')
+        .update({ handover_requested: false })
+        .eq('id', shiftId);
+    await db.from('shift_handovers')
+        .update({ status: 'rejected' })
+        .eq('shift_id', shiftId);
+    await loadAdminSwaps();
+}
+
+async function reviewSwap(id, status, shiftId, targetShiftId, fromEmpId, toEmpId) {
+    await db.from('shift_swaps').update({
+        status,
+        reviewed_at: new Date().toISOString()
+    }).eq('id', id);
+
+    if (status === 'approved') {
+        await db.from('shifts').update({ employee_id: toEmpId }).eq('id', shiftId);
+        await db.from('shifts').update({ employee_id: fromEmpId }).eq('id', targetShiftId);
+    }
+
+    await loadAdminSwaps();
+    await loadWeekGrid();
+}
+
+function formatShiftDate(dateStr) {
+    if (!dateStr) return '—';
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'numeric' });
+}
