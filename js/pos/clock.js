@@ -190,7 +190,7 @@ async function posLogin() {
     const pin = posState.pin;
     if (!pin) return;
 
-    const emp = posState.employees.find(e => String(e.password_hash) === String(pin));
+    const emp = posState.employees.find(e => String(e.password_hash).trim() === String(pin).trim());
     if (!emp) {
         posState.error = 'Falscher PIN. Bitte nochmals versuchen.';
         posState.pin   = '';
