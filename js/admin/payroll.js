@@ -72,7 +72,7 @@ function renderPayrollWizardHTML() {
     return `
     <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:1000;overflow-y:auto;padding:1rem;box-sizing:border-box;">
         <div style="background:#F9F5F1;border-radius:24px;padding:1.5rem;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;">
-            <h2 style="color:var(--color-text);margin-bottom:0.25rem;">Lohnabrechnung</h2>
+            <h2 style="color:var(--color-text);margin-bottom:0.25rem;">Vorlohnabrechnung</h2>
             <p style="color:var(--color-text-light);font-size:0.85rem;margin-bottom:1.5rem;">Schritt ${payrollState.step} von 4</p>
 
             ${payrollState.step === 1 ? renderPayrollStep1() : ''}
@@ -266,13 +266,19 @@ function renderPayrollStep4() {
 
 // ── WIZARD-STEUERUNG ──────────────────────────────────────
 
-function openPayrollWizard() {
+async function openPayrollWizard() {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastDay  = new Date(now.getFullYear(), now.getMonth(), 0);
     const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     payrollState.period.startDate = fmt(firstDay);
     payrollState.period.endDate   = fmt(lastDay);
+    const { data: restaurant } = await db
+        .from('planit_restaurants')
+        .select('name')
+        .eq('user_id', adminSession.user.id)
+        .maybeSingle();
+    payrollState.period.restaurantName = restaurant?.name || '';
     payrollState.step = 1;
     renderPayrollUI();
 }
@@ -532,7 +538,7 @@ async function buildPayrollPDF() {
 
     // Header
     doc.setFontSize(16); doc.setFont(undefined, 'bold');
-    doc.text(payrollState.period.restaurantName || 'Lohnabrechnung', 148, yPos, { align: 'center' });
+    doc.text(payrollState.period.restaurantName || 'Vorlohnabrechnung', 148, yPos, { align: 'center' });
     yPos += 8;
     doc.setFontSize(12); doc.setFont(undefined, 'normal');
     doc.text(`Zeitraum: ${fmtDate(payrollState.period.startDate)} – ${fmtDate(payrollState.period.endDate)}`, 148, yPos, { align: 'center' });
@@ -749,7 +755,7 @@ async function downloadPayrollPDF() {
         employee_count: payrollState.employees.length,
         total_gross:    parseFloat(totalGross.toFixed(2))
     });
-    doc.save(`Lohnabrechnung_${payrollState.period.startDate}_${payrollState.period.endDate}.pdf`);
+    doc.save(`Vorlohnabrechnung_${payrollState.period.startDate}_${payrollState.period.endDate}.pdf`);
 }
 
 // ── ÜBERSICHT ─────────────────────────────────────────────
@@ -791,7 +797,7 @@ async function loadPayroll() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
                 Zurück
             </button>
-            <div style="font-size:1.1rem; font-weight:700; color:var(--color-text);">Lohnabrechnung</div>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--color-text);">Vorlohnabrechnung</div>
             <div style="display:flex; justify-content:flex-end;">
                 <button class="btn-small btn-primary" onclick="openPayrollWizard()" title="Neue Abrechnung" style="font-size:1.2rem;color:white;">&#xFF0B;</button>
             </div>
