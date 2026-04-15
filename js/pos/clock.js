@@ -176,6 +176,7 @@ async function posLogin() {
     const pin   = input ? input.value.trim() : posState.pin.trim();
     if (!pin) return;
 
+    console.log('Eingegebener PIN:', JSON.stringify(pin), 'DB-Wert:', JSON.stringify(posState.employees[0]?.password_hash));
     const emp = posState.employees.find(e => String(e.password_hash).trim() === String(pin).trim());
     if (!emp) {
         posState.error = 'Falscher PIN. Bitte nochmals versuchen.';
