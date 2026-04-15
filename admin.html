@@ -1242,6 +1242,20 @@
             <label>Anzahl Wochen</label>
             <input type="number" id="shift-repeat-weeks" min="1" max="12" value="4" placeholder="z.B. 4">
         </div>
+        <!-- Stempelzeiten (POS clock_in / clock_out, read-only) -->
+        <div id="shift-clock-group" style="display:none; margin-bottom:1rem;">
+            <div style="font-size:0.75rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.08em; margin-bottom:0.5rem;">STEMPELZEITEN</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
+                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Eingestempelt</div>
+                    <div id="shift-clock-in-display" style="font-size:0.95rem; font-weight:600; color:var(--color-text);">—</div>
+                </div>
+                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
+                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Ausgestempelt</div>
+                    <div id="shift-clock-out-display" style="font-size:0.95rem; font-weight:600; color:var(--color-text);">—</div>
+                </div>
+            </div>
+        </div>
         <!-- Tatsächliche Zeiten (nur bei bestehender Schicht) -->
         <div id="shift-actual-group" style="display:none; margin-bottom:1rem;">
             <button type="button" onclick="toggleShiftActual()" style="display:flex; justify-content:space-between; align-items:center; width:100%; background:var(--color-gray); border:none; border-radius:8px; padding:0.6rem 0.75rem; cursor:pointer; font-size:0.9rem; font-weight:600; color:var(--color-text);">
@@ -1260,20 +1274,6 @@
                 <div class="form-group">
                     <label>Tatsächliche Pause (Min)</label>
                     <input type="number" id="shift-actual-break" placeholder="z.B. 30" min="0">
-                </div>
-            </div>
-        </div>
-        <!-- Stempelzeiten (POS clock_in / clock_out, read-only) -->
-        <div id="shift-clock-group" style="display:none; margin-bottom:1rem;">
-            <div style="font-size:0.75rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.08em; margin-bottom:0.5rem;">STEMPELZEITEN</div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
-                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
-                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Eingestempelt</div>
-                    <div id="shift-clock-in-display" style="font-size:0.95rem; font-weight:600; color:var(--color-text);">—</div>
-                </div>
-                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
-                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Ausgestempelt</div>
-                    <div id="shift-clock-out-display" style="font-size:0.95rem; font-weight:600; color:var(--color-text);">—</div>
                 </div>
             </div>
         </div>
