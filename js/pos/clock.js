@@ -48,7 +48,7 @@ async function loadPosData() {
             .eq('is_active', true)
             .order('name'),
         db.from('shifts')
-            .select('id, employee_id, shift_date, start_time, end_time, actual_start_time, actual_end_time, break_minutes, actual_break_minutes')
+            .select('id, employee_id, shift_date, start_time, end_time, clock_in, clock_out, break_minutes')
             .eq('user_id', uid)
             .eq('shift_date', today)
             .eq('is_open', false)
@@ -115,8 +115,8 @@ function renderEmployeeScreen() {
     const shift = posState.shift;
     if (!emp) return '';
 
-    const isClockedIn  = !!(shift?.actual_start_time && !shift?.actual_end_time);
-    const isClockedOut = !!(shift?.actual_start_time && shift?.actual_end_time);
+    const isClockedIn  = !!(shift?.clock_in && !shift?.clock_out);
+    const isClockedOut = !!(shift?.clock_in && shift?.clock_out);
 
     let statusLabel, statusClass;
     if      (isClockedIn)  { statusLabel = 'Eingestempelt';           statusClass = 'clocked-in';  }
@@ -125,11 +125,11 @@ function renderEmployeeScreen() {
 
     let shiftInfo = '';
     if (shift) {
-        const startDisp = (shift.actual_start_time || shift.start_time).slice(0, 5);
-        const endDisp   = (shift.actual_end_time   || shift.end_time).slice(0, 5);
+        const startDisp = (shift.clock_in  || shift.start_time).slice(0, 5);
+        const endDisp   = (shift.clock_out || shift.end_time).slice(0, 5);
         shiftInfo = `Schicht: ${startDisp} – ${endDisp} Uhr`;
         if (isClockedIn) {
-            const startDt = new Date(new Date().toISOString().split('T')[0] + 'T' + shift.actual_start_time);
+            const startDt = new Date(new Date().toISOString().split('T')[0] + 'T' + shift.clock_in);
             const diffM   = Math.floor((Date.now() - startDt) / 60000);
             const h = Math.floor(diffM / 60), m = diffM % 60;
             shiftInfo += ` · ${h > 0 ? h + 'h ' : ''}${m}min`;
@@ -227,24 +227,24 @@ async function posClockIn() {
 
     if (shift) {
         const { data, error } = await db.from('shifts')
-            .update({ actual_start_time: nowTime })
+            .update({ clock_in: nowTime })
             .eq('id', shift.id)
-            .select('id, actual_start_time')
+            .select('id, clock_in')
             .maybeSingle();
         if (error || !data) { posShowToast('Fehler beim Einstempeln'); return; }
-        posState.shift = { ...shift, actual_start_time: nowTime, actual_end_time: null };
+        posState.shift = { ...shift, clock_in: nowTime, clock_out: null };
     } else {
         // Keine geplante Schicht — spontan anlegen
         const { data, error } = await db.from('shifts').insert({
-            user_id:           posState.userId,
-            employee_id:       emp.id,
-            shift_date:        today,
-            start_time:        nowTime,
-            end_time:          nowTime,
-            break_minutes:     0,
-            actual_start_time: nowTime,
-            is_open:           false,
-            department:        emp.department || null
+            user_id:      posState.userId,
+            employee_id:  emp.id,
+            shift_date:   today,
+            start_time:   nowTime,
+            end_time:     nowTime,
+            break_minutes: 0,
+            clock_in:     nowTime,
+            is_open:      false,
+            department:   emp.department || null
         }).select().maybeSingle();
         if (error || !data) { posShowToast('Fehler beim Einstempeln'); return; }
         posState.shift = data;
@@ -257,18 +257,18 @@ async function posClockIn() {
 
 async function posClockOut() {
     const shift = posState.shift;
-    if (!shift?.actual_start_time) return;
+    if (!shift?.clock_in) return;
 
     const nowTime = new Date().toTimeString().slice(0, 8);
 
     const { data, error } = await db.from('shifts')
-        .update({ actual_end_time: nowTime })
+        .update({ clock_out: nowTime })
         .eq('id', shift.id)
-        .select('id, actual_end_time')
+        .select('id, clock_out')
         .maybeSingle();
     if (error || !data) { posShowToast('Fehler beim Ausstempeln'); return; }
 
-    posState.shift = { ...shift, actual_end_time: nowTime };
+    posState.shift = { ...shift, clock_out: nowTime };
     const idx = posState.shifts.findIndex(s => s.id === shift.id);
     if (idx > -1) posState.shifts[idx] = posState.shift;
 
