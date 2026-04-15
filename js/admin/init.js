@@ -47,7 +47,7 @@ function switchTab(tab) {
     if (tab === 'terminations')      loadTerminations();
     if (tab === 'hygiene')           loadHygiene();
     if (tab === 'margincalc')        MarginCalcApp.init();
-    if (tab === 'payroll')           openPayrollWizard();
+    if (tab === 'payroll')           loadPayroll();
 
     localStorage.setItem('planit_admin_tab', tab);
 }

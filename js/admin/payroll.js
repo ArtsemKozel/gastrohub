@@ -733,5 +733,76 @@ async function previewPayrollPDF() {
 
 async function downloadPayrollPDF() {
     const doc = await buildPayrollPDF();
+    // Abrechnung in DB speichern
+    let totalGross = 0;
+    payrollState.employees.forEach(emp => {
+        const rate       = parseFloat(emp.hourlyRate || 0);
+        const totalHours = parseFloat(emp.workedHours) + parseFloat(emp.sickHours || 0) + parseFloat(emp.vacationHours || 0);
+        totalGross += ((emp.avType === 'VZ' || emp.avType === 'AZU') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
+            ? parseFloat(emp.monthlyHours) * rate : totalHours * rate;
+    });
+    await db.from('planit_payrolls').insert({
+        user_id:        adminSession.user.id,
+        start_date:     payrollState.period.startDate,
+        end_date:       payrollState.period.endDate,
+        restaurant_name: payrollState.period.restaurantName || null,
+        employee_count: payrollState.employees.length,
+        total_gross:    parseFloat(totalGross.toFixed(2))
+    });
     doc.save(`Lohnabrechnung_${payrollState.period.startDate}_${payrollState.period.endDate}.pdf`);
+}
+
+// ── ÜBERSICHT ─────────────────────────────────────────────
+
+async function loadPayroll() {
+    const container = document.getElementById('tab-payroll');
+    if (!container) return;
+
+    const { data } = await db
+        .from('planit_payrolls')
+        .select('*')
+        .eq('user_id', adminSession.user.id)
+        .order('start_date', { ascending: false });
+
+    const fmtDate  = d => new Date(d + 'T12:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
+    const fmtMoney = n => parseFloat(n || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const listHtml = (!data || data.length === 0)
+        ? '<div class="empty-state"><p>Noch keine Abrechnungen erstellt.</p></div>'
+        : data.map(p => `
+        <div class="card" style="margin-bottom:0.75rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+                <div style="font-weight:700; font-size:0.95rem;">
+                    ${fmtDate(p.start_date)} – ${fmtDate(p.end_date)}
+                </div>
+                <button class="btn-small btn-delete btn-icon" onclick="deletePayroll('${p.id}')">
+                    <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+            </div>
+            ${p.restaurant_name ? `<div style="font-size:0.8rem; color:var(--color-text-light); margin-bottom:0.2rem;">${p.restaurant_name}</div>` : ''}
+            <div style="font-size:0.85rem; color:var(--color-text-light);">
+                ${p.employee_count ?? '–'} Mitarbeiter · Brutto gesamt: <strong>${fmtMoney(p.total_gross)} €</strong>
+            </div>
+        </div>`).join('');
+
+    container.innerHTML = `
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom:1rem;">
+            <button onclick="switchTab('mehr')" style="background:none; border:none; color:var(--color-primary); font-size:0.95rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:0.25rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Zurück
+            </button>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--color-text);">Lohnabrechnung</div>
+            <div style="display:flex; justify-content:flex-end;">
+                <button class="btn-small btn-primary btn-icon" onclick="openPayrollWizard()" title="Neue Abrechnung">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+            </div>
+        </div>
+        ${listHtml}`;
+}
+
+async function deletePayroll(id) {
+    if (!confirm('Abrechnung unwiderruflich löschen?')) return;
+    await db.from('planit_payrolls').delete().eq('id', id);
+    await loadPayroll();
 }
