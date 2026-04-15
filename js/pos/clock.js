@@ -274,6 +274,7 @@ async function posClockOut() {
 
     posShowToast('✓ Ausgestempelt um ' + nowTime.slice(0, 5) + ' Uhr');
     renderPOS();
+    setTimeout(posLogout, 2200);
 }
 
 // ── TOAST ─────────────────────────────────────────────────
