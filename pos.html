@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>GastroHub · Zeiterfassung</title>
+    <style>
+        :root {
+            --color-primary:      #B28A6E;
+            --color-primary-dark: #9A7558;
+            --color-bg:           #F5F0EB;
+            --color-card:         #FFFFFF;
+            --color-text:         #2D2D2D;
+            --color-text-light:   #888888;
+            --color-green:        #4CAF7D;
+            --color-red:          #E05555;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--color-bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        #pos-root {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .pos-card {
+            background: var(--color-card);
+            border-radius: 20px;
+            padding: 1.75rem 1.5rem;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+
+        .pos-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .pos-logo {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--color-primary);
+            letter-spacing: -0.5px;
+            margin-bottom: 0.25rem;
+        }
+
+        .pos-clock-display {
+            background: var(--color-primary);
+            border-radius: 14px;
+            padding: 1.25rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+
+        .pos-clock-display .time {
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            line-height: 1;
+        }
+
+        .pos-clock-display .date {
+            font-size: 0.85rem;
+            opacity: 0.85;
+            margin-top: 0.35rem;
+        }
+
+        .pos-pin-dots {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .pos-pin-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid var(--color-primary);
+            background: transparent;
+            transition: background 0.15s;
+        }
+
+        .pos-pin-dot.filled {
+            background: var(--color-primary);
+        }
+
+        .pos-numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.6rem;
+        }
+
+        .pos-num-btn {
+            background: var(--color-bg);
+            border: none;
+            border-radius: 12px;
+            padding: 1rem;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--color-text);
+            cursor: pointer;
+            transition: background 0.12s, transform 0.08s;
+            user-select: none;
+        }
+
+        .pos-num-btn:active { background: #E8E0D8; transform: scale(0.95); }
+        .pos-num-btn.delete { font-size: 1.1rem; color: var(--color-text-light); }
+        .pos-num-btn.enter  { background: var(--color-primary); color: white; }
+        .pos-num-btn.enter:active { background: var(--color-primary-dark); }
+
+        .pos-error {
+            text-align: center;
+            color: var(--color-red);
+            font-size: 0.85rem;
+            margin-top: 0.75rem;
+            min-height: 1.2em;
+        }
+
+        /* Employee screen */
+        .pos-employee-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .pos-back-btn {
+            background: var(--color-bg);
+            border: none;
+            border-radius: 10px;
+            width: 2.2rem;
+            height: 2.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-primary);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .pos-emp-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        .pos-status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            text-align: center;
+            width: 100%;
+        }
+
+        .pos-status-badge.clocked-in  { background: #D4EDDA; color: #2D7A2D; }
+        .pos-status-badge.clocked-out { background: #F5E6E6; color: #C0392B; }
+        .pos-status-badge.not-started { background: #F0F0F0; color: var(--color-text-light); }
+
+        .pos-action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .pos-action-btn {
+            border: none;
+            border-radius: 14px;
+            padding: 1.1rem 0.5rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.15s, transform 0.08s;
+        }
+
+        .pos-action-btn:active { transform: scale(0.97); }
+        .pos-action-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+
+        .pos-action-btn.clock-in  { background: var(--color-green); color: white; }
+        .pos-action-btn.clock-out { background: var(--color-red);   color: white; }
+
+        .pos-shift-info {
+            font-size: 0.82rem;
+            color: var(--color-text-light);
+            text-align: center;
+            padding: 0.6rem;
+            background: var(--color-bg);
+            border-radius: 10px;
+        }
+
+        .pos-toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2D2D2D;
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border-radius: 24px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .pos-toast.show { opacity: 1; }
+
+        .pos-loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--color-text-light);
+        }
+    </style>
+</head>
+<body>
+    <div id="pos-root"><div class="pos-loading">Lädt…</div></div>
+    <div class="pos-toast" id="pos-toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/shared/db.js"></script>
+    <script src="js/pos/clock.js"></script>
+</body>
+</html>
