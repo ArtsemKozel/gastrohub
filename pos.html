@@ -76,49 +76,9 @@
             margin-top: 0.35rem;
         }
 
-        .pos-pin-dots {
-            display: flex;
-            justify-content: center;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .pos-pin-dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            border: 2px solid var(--color-primary);
-            background: transparent;
-            transition: background 0.15s;
-        }
-
-        .pos-pin-dot.filled {
-            background: var(--color-primary);
-        }
-
-        .pos-numpad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.6rem;
-        }
-
-        .pos-num-btn {
-            background: var(--color-bg);
-            border: none;
-            border-radius: 12px;
-            padding: 1rem;
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: var(--color-text);
-            cursor: pointer;
-            transition: background 0.12s, transform 0.08s;
-            user-select: none;
-        }
-
-        .pos-num-btn:active { background: #E8E0D8; transform: scale(0.95); }
-        .pos-num-btn.delete { font-size: 1.1rem; color: var(--color-text-light); }
-        .pos-num-btn.enter  { background: var(--color-primary); color: white; }
-        .pos-num-btn.enter:active { background: var(--color-primary-dark); }
+        /* hide number input arrows */
+        #pos-pin-input::-webkit-outer-spin-button,
+        #pos-pin-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
         .pos-error {
             text-align: center;

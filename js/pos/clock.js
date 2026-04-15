@@ -81,10 +81,6 @@ function renderPinScreen() {
     const time = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const date = now.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-    const dots = Array.from({ length: 4 }, (_, i) =>
-        `<div class="pos-pin-dot ${i < posState.pin.length ? 'filled' : ''}"></div>`
-    ).join('');
-
     return `
     <div class="pos-card">
         <div class="pos-header">
@@ -96,15 +92,13 @@ function renderPinScreen() {
             <div class="date">${date}</div>
         </div>
         <div style="text-align:center; font-size:0.85rem; color:var(--color-text-light); margin-bottom:0.75rem;">PIN eingeben</div>
-        <div class="pos-pin-dots">${dots}</div>
-        <div class="pos-numpad">
-            ${[1,2,3,4,5,6,7,8,9].map(n =>
-                `<button class="pos-num-btn" onclick="posNumInput('${n}')">${n}</button>`
-            ).join('')}
-            <button class="pos-num-btn delete" onclick="posNumDelete()">⌫</button>
-            <button class="pos-num-btn" onclick="posNumInput('0')">0</button>
-            <button class="pos-num-btn enter" onclick="posLogin()">→</button>
-        </div>
+        <input id="pos-pin-input" type="number" inputmode="numeric" pattern="[0-9]*"
+            placeholder="••••"
+            maxlength="4"
+            style="width:100%; text-align:center; font-size:2rem; letter-spacing:0.3em; padding:0.75rem; border:2px solid var(--color-primary); border-radius:12px; outline:none; margin-bottom:0.75rem; -moz-appearance:textfield;"
+            oninput="posPinInput(this.value)"
+            onkeydown="if(event.key==='Enter') posLogin()">
+        <button class="pos-action-btn clock-in" style="width:100%; margin-bottom:0.5rem;" onclick="posLogin()">Anmelden</button>
         <div class="pos-error" id="pos-error">${posState.error}</div>
     </div>`;
 }
@@ -168,33 +162,28 @@ function renderEmployeeScreen() {
     </div>`;
 }
 
-// ── NUMPAD ────────────────────────────────────────────────
+// ── PIN INPUT ─────────────────────────────────────────────
 
-function posNumInput(digit) {
-    if (posState.pin.length >= 4) return;
-    posState.pin  += digit;
+function posPinInput(value) {
+    posState.pin   = value.slice(0, 4);
     posState.error = '';
-    renderPOS();
-    if (posState.pin.length === 4) setTimeout(posLogin, 150);
-}
-
-function posNumDelete() {
-    posState.pin   = posState.pin.slice(0, -1);
-    posState.error = '';
-    renderPOS();
 }
 
 // ── LOGIN / LOGOUT ────────────────────────────────────────
 
 async function posLogin() {
-    const pin = posState.pin;
+    const input = document.getElementById('pos-pin-input');
+    const pin   = input ? input.value.trim() : posState.pin.trim();
     if (!pin) return;
 
     const emp = posState.employees.find(e => String(e.password_hash).trim() === String(pin).trim());
     if (!emp) {
         posState.error = 'Falscher PIN. Bitte nochmals versuchen.';
         posState.pin   = '';
-        renderPOS();
+        const errEl = document.getElementById('pos-error');
+        if (errEl) errEl.textContent = posState.error;
+        const inputEl = document.getElementById('pos-pin-input');
+        if (inputEl) { inputEl.value = ''; inputEl.focus(); }
         return;
     }
 
