@@ -465,6 +465,14 @@ async function openShiftModal(employeeId, dateStr, existingShift, defaultDept) {
     document.getElementById('shift-modal').classList.add('open');
 }
 
+function toggleShiftActual() {
+    const body   = document.getElementById('shift-actual-body');
+    const toggle = document.getElementById('shift-actual-toggle');
+    const open   = body.style.display === 'none';
+    body.style.display = open ? 'block' : 'none';
+    toggle.textContent = open ? '▼' : '▶';
+}
+
 function closeShiftModal() {
     document.getElementById('shift-modal').classList.remove('open');
     editShiftId = null;
