@@ -1,13 +1,13 @@
 // ── POS ZEITERFASSUNG ─────────────────────────────────────
 // PIN-Login via employees_planit.password_hash
-// Clock-in/out via shifts.actual_start_time / actual_end_time
-// Kiosk-Modus: benötigt aktive Admin-Session für user_id-Scoping
+// Clock-in/out via shifts.clock_in / clock_out
+// Kiosk-Modus: user_id wird aus URL-Parameter ?uid= gelesen
 
 // ── STATE ─────────────────────────────────────────────────
 
 const posState = {
     view:      'loading',   // loading | pin | employee
-    userId:    null,        // admin user_id (aus Session)
+    userId:    null,        // restaurant user_id (aus URL-Parameter)
     employees: [],          // employees_planit (is_active)
     shifts:    [],          // heutige shifts
     employee:  null,        // eingeloggter Mitarbeiter
@@ -19,18 +19,17 @@ const posState = {
 // ── INIT ──────────────────────────────────────────────────
 
 window.addEventListener('DOMContentLoaded', async () => {
-    const { data: { session } } = await db.auth.getSession();
-    if (!session) {
+    const uid = new URLSearchParams(window.location.search).get('uid');
+    if (!uid) {
         document.getElementById('pos-root').innerHTML = `
             <div class="pos-card" style="text-align:center; padding:2rem;">
                 <div style="font-size:1.1rem; font-weight:700; color:var(--color-primary); margin-bottom:0.75rem;">GastroHub · Zeiterfassung</div>
-                <p style="color:var(--color-text-light); font-size:0.9rem; margin-bottom:1.25rem;">Bitte zuerst als Admin anmelden.</p>
-                <a href="index.html" style="background:var(--color-primary);color:white;padding:0.75rem 1.5rem;border-radius:12px;text-decoration:none;font-weight:600;">Zum Login</a>
+                <p style="color:var(--color-text-light); font-size:0.9rem; margin-bottom:1.25rem;">Kein Restaurant konfiguriert.<br>Bitte URL-Parameter <code>?uid=…</code> angeben.</p>
             </div>`;
         return;
     }
 
-    posState.userId = session.user.id;
+    posState.userId = uid;
     await loadPosData();
     posState.view = 'pin';
     startPosClock();
