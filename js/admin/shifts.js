@@ -457,6 +457,15 @@ async function openShiftModal(employeeId, dateStr, existingShift, defaultDept) {
     document.getElementById('shift-actual-start').value          = existingShift?.actual_start_time ? existingShift.actual_start_time.slice(0,5) : (existingShift?.start_time ? existingShift.start_time.slice(0,5) : '');
     document.getElementById('shift-actual-end').value            = existingShift?.actual_end_time   ? existingShift.actual_end_time.slice(0,5)   : (existingShift?.end_time   ? existingShift.end_time.slice(0,5)   : '');
     document.getElementById('shift-actual-break').value          = existingShift?.actual_break_minutes ?? '';
+
+    const clockGroup = document.getElementById('shift-clock-group');
+    if (clockGroup) {
+        const hasClock = !!(existingShift?.clock_in || existingShift?.clock_out);
+        clockGroup.style.display = hasClock ? 'block' : 'none';
+        document.getElementById('shift-clock-in-display').textContent  = existingShift?.clock_in  ? existingShift.clock_in.slice(0,5)  : '—';
+        document.getElementById('shift-clock-out-display').textContent = existingShift?.clock_out ? existingShift.clock_out.slice(0,5) : '—';
+    }
+
     document.getElementById('shift-repeat').checked              = false;
     document.getElementById('shift-repeat-group').style.display  = 'none';
     document.getElementById('shift-repeat-weeks').value          = 4;
