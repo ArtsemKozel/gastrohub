@@ -104,26 +104,31 @@ function renderPinScreen() {
 }
 
 function renderEmployeeScreen() {
-    const emp   = posState.employee;
-    const entry = posState.entry;
+    const emp      = posState.employee;
+    const entry    = posState.entry;
+    const onBreak  = !!posState.activeBreak;
     if (!emp) return '';
 
     const isClockedIn  = !!(entry?.clock_in && !entry?.clock_out);
     const isClockedOut = !!(entry?.clock_in && entry?.clock_out);
 
-    let statusLabel, statusClass;
-    if      (isClockedIn)  { statusLabel = 'Eingestempelt';           statusClass = 'clocked-in';  }
-    else if (isClockedOut) { statusLabel = 'Ausgestempelt';           statusClass = 'clocked-out'; }
-    else                   { statusLabel = 'Noch nicht eingestempelt'; statusClass = 'not-started'; }
+    const time = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    let clockSub = '';
+    if (isClockedIn && !onBreak) {
+        const startDisp = new Date(entry.clock_in).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        const diffM     = Math.floor((Date.now() - new Date(entry.clock_in)) / 60000);
+        const h = Math.floor(diffM / 60), m = diffM % 60;
+        clockSub = `<div style="font-size:0.82rem; opacity:0.85; margin-top:0.35rem;">Seit ${startDisp} Uhr · ${h > 0 ? h + 'h ' : ''}${m}min</div>`;
+    } else if (onBreak) {
+        const since = new Date(posState.activeBreak.break_start).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        clockSub = `<div style="font-size:1rem; font-weight:600; margin-top:0.35rem;">⏸ Pause seit ${since} Uhr</div>`;
+    }
 
     let entryInfo = '';
     if (entry) {
         const startDisp = new Date(entry.clock_in).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-        if (isClockedIn) {
-            const diffM = Math.floor((Date.now() - new Date(entry.clock_in)) / 60000);
-            const h = Math.floor(diffM / 60), m = diffM % 60;
-            entryInfo = `Eingestempelt: ${startDisp} Uhr · ${h > 0 ? h + 'h ' : ''}${m}min`;
-        } else {
+        if (isClockedOut) {
             const endDisp = new Date(entry.clock_out).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
             entryInfo = `Schicht: ${startDisp} – ${endDisp} Uhr`;
         }
@@ -131,39 +136,47 @@ function renderEmployeeScreen() {
         entryInfo = 'Heute noch nicht eingestempelt';
     }
 
-    const time = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
     return `
     <div class="pos-card">
         <div class="pos-employee-header">
-            <button class="pos-back-btn" onclick="posLogout()">‹</button>
-            <div>
+            <button class="pos-back-btn" onclick="posLogout()">←</button>
+            <div class="pos-emp-info">
                 <div class="pos-emp-name">${emp.name}</div>
-                ${emp.department ? `<div style="font-size:0.78rem; color:var(--color-text-light);">${emp.department}</div>` : ''}
+                ${emp.department ? `<div class="pos-emp-dept">${emp.department}</div>` : ''}
             </div>
+            <div style="width:2.4rem; flex-shrink:0;"></div>
         </div>
-        <div class="pos-clock-display" style="margin-bottom:1rem;">
+
+        <div class="pos-clock-display${onBreak ? ' on-break' : ''}">
             <div class="time" id="pos-time">${time}</div>
+            ${clockSub}
         </div>
-        <div class="pos-status-badge ${statusClass}">${statusLabel}</div>
+
         <div class="pos-action-grid">
             <button class="pos-action-btn clock-in"
                 ${isClockedIn ? 'disabled' : ''}
-                onclick="posClockIn()">
-                Einstempeln
-            </button>
+                onclick="posClockIn()">Einstempeln</button>
             <button class="pos-action-btn clock-out"
                 ${!isClockedIn ? 'disabled' : ''}
-                onclick="posClockOut()">
-                Ausstempeln
-            </button>
+                onclick="posClockOut()">Ausstempeln</button>
         </div>
-        <div class="pos-shift-info">${entryInfo}</div>
-        ${renderBreakSection()}
+
+        ${isClockedIn ? `
+        <div class="pos-action-grid">
+            <button class="pos-action-btn break-start"
+                ${onBreak ? 'disabled' : ''}
+                onclick="posBreakStart()">⏸ Pause</button>
+            <button class="pos-action-btn break-end"
+                ${!onBreak ? 'disabled' : ''}
+                onclick="posBreakEnd()">▶ Weiter</button>
+        </div>` : ''}
+
+        ${entryInfo ? `<div class="pos-shift-info">${entryInfo}</div>` : ''}
+
         ${isClockedIn && !posState.noteSaved ? `
-        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+        <div style="display:flex; flex-direction:column; gap:0.75rem;">
             <textarea id="pos-note-input" placeholder="Kommentar..."
-                style="width:100%; padding:0.75rem; border:1px solid var(--color-border,#E5E5E5); border-radius:12px; font-family:inherit; font-size:0.9rem; resize:none; outline:none; background:white;"
+                style="width:100%; padding:0.75rem; border:1px solid #E5DDD5; border-radius:12px; font-family:inherit; font-size:0.9rem; resize:none; outline:none; background:white;"
                 rows="2"></textarea>
             <div style="display:flex; justify-content:center;">
                 <button onclick="posSubmitNote()" style="width:3.2rem; height:3.2rem; border-radius:50%; background:#B28A6E; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">

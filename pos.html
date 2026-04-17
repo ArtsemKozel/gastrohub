@@ -93,50 +93,50 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            margin-bottom: 1.25rem;
+        }
+
+        .pos-emp-info {
+            flex: 1;
+            text-align: center;
         }
 
         .pos-back-btn {
-            background: var(--color-bg);
+            background: white;
             border: none;
             border-radius: 10px;
-            width: 2.2rem;
-            height: 2.2rem;
+            width: 2.4rem;
+            height: 2.4rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--color-primary);
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             flex-shrink: 0;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
         }
 
         .pos-emp-name {
-            font-size: 1.15rem;
+            font-size: 1.5rem;
             font-weight: 700;
             color: var(--color-text);
+            line-height: 1.2;
         }
 
-        .pos-status-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-bottom: 1.25rem;
-            text-align: center;
-            width: 100%;
+        .pos-emp-dept {
+            font-size: 0.78rem;
+            color: var(--color-text-light);
+            margin-top: 0.15rem;
         }
 
-        .pos-status-badge.clocked-in  { background: #D4EDDA; color: #2D7A2D; }
-        .pos-status-badge.clocked-out { background: #F5E6E6; color: #C0392B; }
-        .pos-status-badge.not-started { background: #F0F0F0; color: var(--color-text-light); }
+        .pos-clock-display.on-break {
+            background: #C68A1A;
+        }
 
         .pos-action-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 0.75rem;
-            margin-bottom: 1rem;
         }
 
         .pos-action-btn {
@@ -149,18 +149,20 @@
             transition: opacity 0.15s, transform 0.08s;
         }
 
-        .pos-action-btn:active { transform: scale(0.97); }
+        .pos-action-btn:active  { transform: scale(0.97); }
         .pos-action-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
 
-        .pos-action-btn.clock-in  { background: var(--color-green); color: white; }
-        .pos-action-btn.clock-out { background: var(--color-red);   color: white; }
+        .pos-action-btn.clock-in    { background: var(--color-green); color: white; }
+        .pos-action-btn.clock-out   { background: var(--color-primary); color: white; }
+        .pos-action-btn.break-start { background: white; color: var(--color-text); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .pos-action-btn.break-end   { background: var(--color-green); color: white; }
 
         .pos-shift-info {
             font-size: 0.82rem;
             color: var(--color-text-light);
             text-align: center;
             padding: 0.6rem;
-            background: var(--color-bg);
+            background: white;
             border-radius: 10px;
         }
 

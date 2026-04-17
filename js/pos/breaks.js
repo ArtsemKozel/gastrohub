@@ -96,37 +96,7 @@ async function posBreakEnd() {
 }
 
 // ── RENDER PAUSE-BEREICH ──────────────────────────────────
+// Buttons werden direkt in renderEmployeeScreen (clock.js) gerendert.
+// Diese Funktion bleibt für externe Nutzung leer.
 
-function renderBreakSection() {
-    const entry       = posState.entry;
-    const activeBreak = posState.activeBreak;
-    const isClockedIn = !!(entry?.clock_in && !entry?.clock_out);
-
-    if (!isClockedIn) return '';
-
-    const onBreak = !!activeBreak;
-
-    let breakInfo = '';
-    if (onBreak) {
-        const since = new Date(activeBreak.break_start).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-        breakInfo = `Pause läuft seit ${since} Uhr`;
-    } else {
-        const doneBreaks = (posState.breaks || []).filter(b => b.break_end);
-        if (doneBreaks.length) {
-            const totalMin = doneBreaks.reduce((sum, b) =>
-                sum + Math.floor((new Date(b.break_end) - new Date(b.break_start)) / 60000), 0);
-            const h = Math.floor(totalMin / 60), m = totalMin % 60;
-            breakInfo = `Pausen heute: ${h > 0 ? h + 'h ' : ''}${m}min`;
-        }
-    }
-
-    return `
-    <div style="margin-top:0.75rem;">
-        <button class="pos-action-btn"
-            style="width:100%; background:${onBreak ? '#FFF3CD' : 'var(--color-bg)'}; color:${onBreak ? '#7D5E00' : 'var(--color-text)'};"
-            onclick="${onBreak ? 'posBreakEnd()' : 'posBreakStart()'}">
-            ${onBreak ? '▶ Pause beenden' : '⏸ Pause starten'}
-        </button>
-        ${breakInfo ? `<div class="pos-shift-info" style="margin-top:0.5rem;">${breakInfo}</div>` : ''}
-    </div>`;
-}
+function renderBreakSection() { return ''; }
