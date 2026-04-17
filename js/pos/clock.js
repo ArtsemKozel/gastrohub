@@ -87,7 +87,6 @@ function renderPinScreen() {
             <div class="time" id="pos-time">${time}</div>
             <div class="date">${date}</div>
         </div>
-        <div style="text-align:center; font-size:0.85rem; color:var(--color-text-light); margin-bottom:0.75rem;">PIN eingeben</div>
         <input id="pos-pin-input" type="password" inputmode="numeric" pattern="[0-9]*"
             placeholder="PIN eingeben"
             maxlength="4"
