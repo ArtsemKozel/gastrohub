@@ -137,7 +137,7 @@ function renderEmployeeScreen() {
 
             <button onclick="posLogout()" style="position: absolute; top: 1rem; left: 1rem; background: var(--color-bg); color: #8B6F47; border: none; padding: 0.5rem; cursor: pointer; width: 2.5rem; height: 2.5rem; font-size: 1.2rem; border-radius: 12px;">←</button>
 
-            <h2 style="color: #2C3E50; font-weight: 700; margin-bottom: 1.5rem; text-align: center;">Willkommen, ${emp.name}!</h2>
+            <h2 style="color: #2C3E50; font-weight: 700; margin-bottom: 1.5rem; text-align: center;">Hey, ${emp.name.split(' ')[0]}!</h2>
 
             <div style="background: ${onBreak ? '#F59E0B' : '#B28A6E'}; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; color: white;">
                 <div id="pos-time" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">${time}</div>
@@ -156,13 +156,14 @@ function renderEmployeeScreen() {
 
             ${isClockedIn && !posState.noteSaved ? `
             <div style="margin-top: 1.5rem;">
-                <label style="display: block; color: #2C3E50; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.875rem;">💬 Notiz für Admin:</label>
-                <textarea id="pos-note-input" placeholder="Kommentar..." rows="2"
+                <textarea id="pos-note-input" placeholder="Kommentar für Admin..." rows="2"
                     style="width: 100%; resize: vertical; padding: 0.75rem; border: 2px solid #B28A6E; border-radius: 12px; font-size: 1rem; box-sizing: border-box; color: #2C3E50; font-family: inherit;"></textarea>
-                <button onclick="posSubmitNote()"
-                    style="width:3.2rem; height:3.2rem; border-radius:50%; background:#8B6F47; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-top:0.5rem;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                </button>
+                <div style="display:flex; justify-content:center; margin-top:0.5rem;">
+                    <button onclick="posSubmitNote()"
+                        style="width:3.2rem; height:3.2rem; border-radius:50%; background:#B28A6E; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </button>
+                </div>
             </div>` : ''}
 
         </div>
