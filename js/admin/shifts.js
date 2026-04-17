@@ -459,11 +459,36 @@ async function openShiftModal(employeeId, dateStr, existingShift, defaultDept) {
     document.getElementById('shift-actual-break').value          = existingShift?.actual_break_minutes ?? '';
 
     const clockGroup = document.getElementById('shift-clock-group');
-    if (clockGroup) {
-        const hasClock = !!(existingShift?.clock_in || existingShift?.clock_out);
-        clockGroup.style.display = hasClock ? 'block' : 'none';
-        document.getElementById('shift-clock-in-display').textContent  = existingShift?.clock_in  ? existingShift.clock_in.slice(0,5)  : '—';
-        document.getElementById('shift-clock-out-display').textContent = existingShift?.clock_out ? existingShift.clock_out.slice(0,5) : '—';
+    if (clockGroup && existingShift) {
+        const { data: timeEntries } = await db.from('gh_time_entries')
+            .select('id, clock_in, clock_out')
+            .eq('user_id', adminSession.user.id)
+            .eq('employee_id', existingShift.employee_id)
+            .gte('clock_in', dateStr + 'T00:00:00')
+            .lte('clock_in', dateStr + 'T23:59:59')
+            .order('clock_in', { ascending: true });
+
+        const entries = timeEntries || [];
+        clockGroup.style.display = entries.length ? 'block' : 'none';
+        document.getElementById('shift-clock-list').innerHTML = entries.map((te, i) => {
+            const cin  = new Date(te.clock_in).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+            const cout = te.clock_out
+                ? new Date(te.clock_out).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+                : '—';
+            const label = entries.length > 1 ? `Eintrag ${i + 1}` : '';
+            return `<div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
+                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">${label ? label + ' · ' : ''}Eingestempelt</div>
+                    <div style="font-size:0.95rem; font-weight:600; color:var(--color-text);">${cin}</div>
+                </div>
+                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
+                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">${label ? label + ' · ' : ''}Ausgestempelt</div>
+                    <div style="font-size:0.95rem; font-weight:600; color:${te.clock_out ? 'var(--color-text)' : 'var(--color-text-light)'};">${cout}</div>
+                </div>
+            </div>`;
+        }).join('');
+    } else if (clockGroup) {
+        clockGroup.style.display = 'none';
     }
 
     const noteGroup = document.getElementById('shift-time-entry-note-group');

@@ -1245,16 +1245,7 @@
         <!-- Stempelzeiten (POS clock_in / clock_out, read-only) -->
         <div id="shift-clock-group" style="display:none; margin-bottom:1rem;">
             <div style="font-size:0.75rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.08em; margin-bottom:0.5rem;">STEMPELZEITEN</div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
-                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
-                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Eingestempelt</div>
-                    <div id="shift-clock-in-display" style="font-size:0.95rem; font-weight:600; color:var(--color-text);">—</div>
-                </div>
-                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
-                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Ausgestempelt</div>
-                    <div id="shift-clock-out-display" style="font-size:0.95rem; font-weight:600; color:var(--color-text);">—</div>
-                </div>
-            </div>
+            <div id="shift-clock-list" style="display:flex; flex-direction:column; gap:0.4rem;"></div>
         </div>
         <!-- Kommentar aus gh_time_entries -->
         <div id="shift-time-entry-note-group" style="display:none; margin-bottom:1rem;">
