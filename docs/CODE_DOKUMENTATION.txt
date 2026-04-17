@@ -1,6 +1,6 @@
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                      GASTROHUB — CODE-DOKUMENTATION                        ║
-║                              Stand: 14.04.2026                             ║
+║                              Stand: 17.04.2026                             ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 Dokumentiert alle bereits befüllten Dateien mit Funktionslisten und Hinweisen
@@ -34,54 +34,33 @@ zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
             Basiert auf PlanIt/js/auth.js — Logik 1:1 übernommen.
 
   Abhängig von:  js/shared/db.js (db-Client)
-  Eingebunden in: index.html (Login-Seite), admin.html, employee.html
+  Eingebunden in: index.html, admin.html, employee.html
 
   Funktionen:
   ┌─────────────────────────────┬────────────────────────────────────────────┐
   │ switchLoginTab(tab)         │ Wechselt zwischen "admin" und "employee"   │
   │                             │ Tab auf der Login-Seite (index.html).      │
-  │                             │ Steuert Sichtbarkeit der Formular-Divs.    │
   ├─────────────────────────────┼────────────────────────────────────────────┤
   │ loginAdmin()          async │ Liest #admin-email und #admin-password.    │
-  │                             │ Ruft db.auth.signInWithPassword() auf.     │
-  │                             │ Bei Erfolg: Redirect → admin.html          │
+  │                             │ db.auth.signInWithPassword() → admin.html  │
   ├─────────────────────────────┼────────────────────────────────────────────┤
-  │ loginEmployee()       async │ Liest #emp-number (Kürzel) und             │
-  │                             │ #emp-password (PIN).                       │
-  │                             │ Sucht in Tabelle "employees_planit" nach   │
-  │                             │ login_code + is_active=true.               │
-  │                             │ Vergleicht password_hash mit PIN.          │
-  │                             │ Bei Erfolg: speichert Employee-Objekt in   │
-  │                             │ localStorage ("planit_employee") und       │
-  │                             │ Redirect → employee.html                   │
+  │ loginEmployee()       async │ Liest #emp-number (Kürzel) + #emp-password │
+  │                             │ (PIN). Sucht in employees_planit nach      │
+  │                             │ login_code + is_active=true. Speichert     │
+  │                             │ Employee in localStorage → employee.html   │
   ├─────────────────────────────┼────────────────────────────────────────────┤
-  │ requireAdminSession() async │ Prüft Supabase-Session via               │
-  │                             │ db.auth.getSession(). Kein Session →       │
-  │                             │ Redirect zu index.html. Gibt Session zurück│
+  │ requireAdminSession() async │ Prüft Supabase-Session. Kein Session →     │
+  │                             │ Redirect index.html. Gibt Session zurück.  │
   ├─────────────────────────────┼────────────────────────────────────────────┤
-  │ requireEmployeeSession()    │ Prüft localStorage-Key "planit_employee".  │
-  │                             │ Nicht vorhanden → Redirect zu index.html.  │
-  │                             │ Gibt geparsten Employee zurück.            │
+  │ requireEmployeeSession()    │ Prüft localStorage "planit_employee".      │
+  │                             │ Nicht vorhanden → Redirect index.html.     │
   ├─────────────────────────────┼────────────────────────────────────────────┤
   │ logout()              async │ db.auth.signOut() + localStorage löschen   │
   │                             │ + Redirect → index.html                    │
   └─────────────────────────────┴────────────────────────────────────────────┘
 
   localStorage-Schema (Key: "planit_employee"):
-    {
-      id:            string   (UUID des Mitarbeiters)
-      name:          string
-      login_code:    string   (Kürzel, z.B. "AnMu")
-      user_id:       string   (Supabase user_id des Admins, dem der MA gehört)
-      is_apprentice: boolean
-      department:    string
-    }
-
-  HTML-IDs die auth.js voraussetzt (index.html):
-    #employee-login, #admin-login  — Tab-Container
-    .login-tab                     — Tab-Buttons (NodeList, Index 0=Mitarb., 1=Admin)
-    #emp-number, #emp-password, #emp-error
-    #admin-email, #admin-password, #admin-error
+    { id, name, login_code, user_id, is_apprentice, department }
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -89,73 +68,283 @@ zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Zweck:    Gemeinsame Hilfsfunktionen ohne DOM- oder Supabase-Abhängigkeiten.
-            Kopiert aus PlanIt: Funktionen die in admin.js UND employee.js
-            identisch vorhanden waren, wurden hier zusammengeführt.
-
-  Abhängig von:  — (keine)
-  Eingebunden in: admin.html, employee.html (sobald deren JS-Module aktiv sind)
+            Aus PlanIt zusammengeführt (admin.js + employee.js hatten Duplikate).
 
   Funktionen:
   ┌──────────────────────────────┬───────────────────────────────────────────┐
-  │ getBWHolidays(year)          │ Gibt Array aller BW-Feiertage für das     │
-  │                              │ übergebene Jahr zurück (Format: YYYY-MM-DD)│
-  │                              │ Enthält Neujahr, Heilige Drei Könige,     │
-  │                              │ alle beweglichen Osterfeiertage,          │
-  │                              │ Tag der Arbeit, Tag der Dt. Einheit,      │
-  │                              │ Allerheiligen, Weihnachten (1.+2. Tag).   │
+  │ getBWHolidays(year)          │ Gibt Array aller BW-Feiertage (YYYY-MM-DD)│
   ├──────────────────────────────┼───────────────────────────────────────────┤
-  │ getEasterDates(year)         │ Berechnet alle osterabhängigen Feiertage  │
-  │                              │ via Gaußsche Osterformel.                 │
-  │                              │ Gibt zurück: Karfreitag, Ostersonntag,    │
-  │                              │ Ostermontag, Christi Himmelfahrt (+39),   │
-  │                              │ Pfingstsonntag (+49), Pfingstmontag (+50),│
-  │                              │ Fronleichnam (+60).                       │
+  │ getEasterDates(year)         │ Gaußsche Osterformel → Karfreitag bis     │
+  │                              │ Fronleichnam (alle beweglichen Feiertage) │
   ├──────────────────────────────┼───────────────────────────────────────────┤
-  │ getEmpDepartments(emp)       │ Parst das Feld emp.departments            │
-  │                              │ (kommaseparierter String).                │
-  │                              │ Fallback auf emp.department (Einzelwert). │
-  │                              │ Gibt immer Array zurück,                  │
-  │                              │ mindestens ["Allgemein"].                 │
+  │ getEmpDepartments(emp)       │ Parst emp.departments (kommasepariert),   │
+  │                              │ Fallback emp.department, min. ["Allgemein"]│
   ├──────────────────────────────┼───────────────────────────────────────────┤
-  │ goldGradient(n)              │ Erzeugt CSS-Gradient-String aus n         │
-  │                              │ Gold-Farbtönen für Abteilungs-Badges.     │
-  │                              │ n=1: gibt Hex-Farbe zurück.               │
-  │                              │ n>1: gibt linear-gradient()-String zurück.│
+  │ goldGradient(n)              │ CSS-Gradient aus n Gold-Farbtönen für     │
+  │                              │ Abteilungs-Badges                         │
   ├──────────────────────────────┼───────────────────────────────────────────┤
-  │ formatDate(dateStr)          │ Formatiert YYYY-MM-DD → "14. April 2026"  │
-  │                              │ Locale: de-DE, long month name.           │
+  │ formatDate(dateStr)          │ YYYY-MM-DD → "14. April 2026" (de-DE)     │
   └──────────────────────────────┴───────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ js/admin/shifts.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Vollständige Schichtplanung im Admin-Bereich. Liest adminSession
+            aus requireAdminSession() und nutzt user_id als Mandanten-Filter
+            bei allen Supabase-Queries.
+
+  Abhängig von:  js/shared/db.js, js/shared/utils.js, js/shared/auth.js
+  Eingebunden in: admin.html
+
+  Globale Variablen:
+    adminSession      Supabase-Session (gesetzt in DOMContentLoaded)
+    employees         Array aller aktiven Mitarbeiter (employees_planit)
+    editShiftId       ID des aktuell bearbeiteten Shifts (null = neu)
+    shiftTemplates    Array der geladenen Schichtvorlagen
+
+  Funktionen:
+  ┌────────────────────────────────┬─────────────────────────────────────────┐
+  │ loadShifts()             async │ Lädt Schichten + Mitarbeiter für die    │
+  │                                │ aktuelle Woche und rendert die Tabelle  │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ openShiftModal(          async │ Öffnet das Modal zum Erstellen oder     │
+  │   empId, dateStr,              │ Bearbeiten einer Schicht. Befüllt alle  │
+  │   existingShift)               │ Formularfelder, lädt Stempelzeiten-Block│
+  │                                │ via loadAndRenderClockList() und ruft   │
+  │                                │ loadTemplates() auf                     │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ saveShift()              async │ Erstellt oder aktualisiert einen Shift  │
+  │                                │ in der shifts-Tabelle. Bei Wiederholung │
+  │                                │ werden N weitere Wochen geschrieben     │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ deleteShift(id)          async │ Löscht einen Shift nach Bestätigung     │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ loadAndRenderClockList(  async │ Lädt alle gh_time_entries des           │
+  │   employeeId, dateStr)         │ Mitarbeiters für den Tag sowie alle     │
+  │                                │ zugehörigen gh_breaks. Berechnet Netto- │
+  │                                │ Dauer pro Eintrag (clock_out − clock_in │
+  │                                │ minus Pausen) und eine Gesamt-Netto-    │
+  │                                │ Zeile. Rendert alles in #shift-clock-   │
+  │                                │ list. Befüllt #shift-clock-note mit dem │
+  │                                │ note-Feld. Zeigt #shift-clock-group nur │
+  │                                │ wenn Einträge vorhanden                 │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ deleteTimeEntry(         async │ Löscht zuerst alle gh_breaks mit        │
+  │   id, empId, dateStr)          │ time_entry_id = id, dann den            │
+  │                                │ gh_time_entries-Eintrag selbst. Ruft    │
+  │                                │ danach loadAndRenderClockList() auf     │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ toggleShiftClock()             │ Klappt den Stempelzeiten-Block auf/zu   │
+  │                                │ (#shift-clock-body, #shift-clock-toggle)│
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ toggleShiftActual()            │ Klappt den Tatsächliche-Zeiten-Block    │
+  │                                │ auf/zu (#shift-actual-body)             │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ closeShiftModal()              │ Entfernt .open vom Modal, setzt         │
+  │                                │ editShiftId zurück, scrollt zur alten   │
+  │                                │ Position                                │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ toggleRepeat()                 │ Zeigt/versteckt #shift-repeat-group     │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ loadTemplates()          async │ Lädt shift_templates und befüllt        │
+  │                                │ #shift-template Select                  │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ applyShiftTemplate()           │ Trägt Vorlage in start/end/break-Felder │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ checkAvailabilityWarning async │ Prüft Verfügbarkeit und gibt Warntext   │
+  │   (empId, date, start, end)    │ zurück oder null                        │
+  └────────────────────────────────┴─────────────────────────────────────────┘
+
+  HTML-IDs im Schicht-Modal (admin.html):
+    #shift-clock-group      — Wrapper des Stempelzeiten-Blocks (display:none
+                              wenn keine Einträge)
+    #shift-clock-body       — Klappbarer Inhalt
+    #shift-clock-toggle     — Pfeil-Symbol (▶/▼)
+    #shift-clock-list       — Container für die Eintrags-Zeilen
+    #shift-clock-note       — Wrapper des Kommentar-Felds (display:none wenn leer)
+    #shift-clock-note-text  — Text des Kommentars
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ js/admin/margincalc.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Deckungsbeitragsrechnung (MarginCalc) im Admin-Bereich.
+            Berechnet DB I (Umsatz − Wareneinsatz) und DB II (DB I −
+            Personalkosten) aus manuell eingegebenen Werten.
+
+  Abhängig von:  js/shared/db.js, js/shared/auth.js
+  Eingebunden in: admin.html
+
+  Logik:    Alle Eingabewerte werden aus dem DOM gelesen, Berechnung erfolgt
+            clientseitig ohne Server-Roundtrip. Ergebnisse werden farblich
+            hervorgehoben (positiv / negativ).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ js/admin/payroll.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Vorlohnabrechnung. Erstellt Lohnzettel-Entwürfe pro Mitarbeiter
+            und Monat, speichert sie in planit_payrolls und ermöglicht
+            PDF-Export via jsPDF.
+
+  Abhängig von:  js/shared/db.js, js/shared/auth.js, jsPDF CDN
+  Eingebunden in: admin.html
+
+  Tabelle:  planit_payrolls (id, user_id, employee_id, month YYYY-MM,
+            data jsonb, created_at)
+
+  Logik:    Stunden, Zuschläge und Abzüge werden im data-JSON-Feld gespeichert.
+            Für den PDF-Export wird jsPDF direkt im Browser genutzt —
+            kein Server-seitiges Rendering.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ pos.html
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Kiosk-Stempeluhr für Mitarbeiter. Kein Admin-Login erforderlich.
+            user_id wird aus URL-Parameter ?uid= gelesen.
+
+  Script-Reihenfolge:
+    1. Supabase CDN
+    2. js/shared/db.js
+    3. js/pos/breaks.js   ← muss vor clock.js geladen sein (posState fehlt sonst)
+    4. js/pos/clock.js
+
+  CSS-Variablen (inline <style>):
+    --color-primary: #B28A6E
+    --color-bg:      #F5F0EB
+
+  Wichtige IDs:
+    #pos-root      — Wurzel für renderPOS() (Pin-Screen oder Employee-Screen)
+    #pos-toast     — Toast-Benachrichtigungen
+
+  body.employee-view:
+    Wird von renderPOS() gesetzt wenn view === 'employee'.
+    Ändert Layout: align-items:flex-start, padding:0, max-width:100%
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ js/pos/clock.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Haupt-Controller des POS-Kiosks. Verwaltet den globalen posState,
+            rendert Pin-Screen und Employee-Screen, steuert Ein-/Ausstempeln
+            und Kommentar-Speicherung.
+
+  Abhängig von:  js/shared/db.js, js/pos/breaks.js (muss vorher geladen sein)
+  Eingebunden in: pos.html
+
+  Globales Objekt:
+    posState = {
+      view:       'loading' | 'pin' | 'employee'
+      userId:     string   (aus URL ?uid=, Fallback hardcoded)
+      employees:  array    (employees_planit, is_active=true)
+      entries:    array    (heutige gh_time_entries)
+      employee:   object   (eingeloggter Mitarbeiter)
+      entry:      object   (letzter time_entry des Mitarbeiters)
+      breaks:     array    (gh_breaks des aktiven Eintrags)
+      activeBreak: object  (offene Pause, break_end=null, sonst null)
+      pin:        string
+      error:      string
+      noteSaved:  boolean  (Kommentar-Block nach erstem Speichern ausblenden)
+    }
+
+  Funktionen:
+  ┌──────────────────────────┬───────────────────────────────────────────────┐
+  │ loadPosData()      async │ Lädt employees_planit + gh_time_entries für   │
+  │                          │ heute in posState. Wird beim DOMContentLoaded │
+  │                          │ und nach Aktionen nicht erneut aufgerufen —   │
+  │                          │ State wird direkt mutiert                     │
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │ startPosClock()          │ setInterval 1s → schreibt Uhrzeit in #pos-time│
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │ renderPOS()              │ Liest posState.view und setzt #pos-root.      │
+  │                          │ Schaltet body.employee-view um                │
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │ renderPinScreen()        │ Gibt HTML-String für den PIN-Eingabe-Screen   │
+  │                          │ zurück. Zeigt Uhrzeit, Datum, type=password   │
+  │                          │ Input, Pfeil-Button, Fehlertext               │
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │ renderEmployeeScreen()   │ Gibt HTML-String für den Mitarbeiter-Screen   │
+  │                          │ zurück. Zeigt Uhrzeit-Box (amber bei Pause),  │
+  │                          │ 4 Aktions-Buttons, optionales Kommentarfeld   │
+  │                          │ (solange noteSaved=false)                     │
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │ posPinInput(value)       │ oninput-Handler: schreibt PIN in posState,    │
+  │                          │ löscht Fehlermeldung                          │
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │ posLogin()         async │ Vergleicht PIN mit password_hash in           │
+  │                          │ posState.employees. Bei Treffer: setzt        │
+  │                          │ employee + entry, ruft loadBreakData() auf,  │
+  │                          │ wechselt zu view='employee'                   │
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │ posLogout()              │ Resettet posState (employee, entry, breaks,   │
+  │                          │ activeBreak, noteSaved), view='pin'           │
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │ posClockIn()       async │ INSERT gh_time_entries, dann separates SELECT │
+  │                          │ (RLS-Workaround), setzt posState.entry        │
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │ posClockOut()      async │ UPDATE gh_time_entries SET clock_out.         │
+  │                          │ Kein automatischer Logout                     │
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │ posSubmitNote()    async │ UPDATE gh_time_entries SET note. Setzt        │
+  │                          │ noteSaved=true → Kommentarfeld verschwindet   │
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │ posShowToast(msg)        │ Zeigt #pos-toast für 2,5 Sekunden             │
+  └──────────────────────────┴───────────────────────────────────────────────┘
+
+  RLS-Workaround:
+    Supabase anon key blockiert chained .insert().select() — der INSERT
+    läuft durch, aber die zurückgegebenen Rows sind leer. Lösung: INSERT
+    nur auf Fehler prüfen, dann separates SELECT mit .maybeSingle() ausführen.
+    Gleiches Muster in posBreakStart() (breaks.js).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ js/pos/breaks.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Pausen-Verwaltung für den POS-Kiosk. Erweitert posState um
+            breaks[] und activeBreak. Muss vor clock.js geladen sein.
+
+  Abhängig von:  js/shared/db.js, posState (aus clock.js — daher Ladereihenfolge
+                 beachten: breaks.js zuerst, clock.js danach)
+  Eingebunden in: pos.html
+
+  Tabelle:  gh_breaks (id, user_id, employee_id, time_entry_id,
+            break_start, break_end)
+
+  Funktionen:
+  ┌─────────────────────────┬────────────────────────────────────────────────┐
+  │ loadBreakData()   async │ Lädt alle gh_breaks für den aktuellen Eintrag  │
+  │                         │ (time_entry_id = posState.entry.id). Setzt     │
+  │                         │ posState.breaks und posState.activeBreak       │
+  ├─────────────────────────┼────────────────────────────────────────────────┤
+  │ posBreakStart()   async │ INSERT gh_breaks, dann separates SELECT        │
+  │                         │ (RLS-Workaround). Setzt posState.activeBreak   │
+  ├─────────────────────────┼────────────────────────────────────────────────┤
+  │ posBreakEnd()     async │ UPDATE gh_breaks SET break_end. Mutiert        │
+  │                         │ posState.breaks direkt, setzt activeBreak=null │
+  ├─────────────────────────┼────────────────────────────────────────────────┤
+  │ renderBreakSection()    │ Gibt leeren String zurück — Break-Buttons sind │
+  │                         │ direkt in renderEmployeeScreen() (clock.js)    │
+  └─────────────────────────┴────────────────────────────────────────────────┘
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  index.html
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Zweck:    Login-Seite. Zwei Tabs: Admin (Supabase Auth) und
-            Mitarbeiter (Kürzel + PIN).
+  Zweck:    Login-Seite. Zwei Tabs: Mitarbeiter (Kürzel + PIN) und
+            Admin (Supabase Auth / Email + Passwort).
 
   Design:   GastroHub-Design (inline <style>), keine externe CSS-Datei.
-            Grund: CSS-Dateien noch leer, login.html braucht eigenes Styling.
-
-  Script-Reihenfolge (zwingend):
-    1. https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2
-    2. js/shared/db.js      ← initialisiert "db"
-    3. js/shared/auth.js    ← nutzt "db"
-
-  Wichtige IDs / Klassen:
-    .auth-container         — Haupt-Card
-    .login-tabs             — Tab-Leiste (Pill-Design)
-    .login-tab + .active    — Tab-Button-State
-    #employee-login         — Mitarbeiter-Formular (display:none initial)
-    #admin-login            — Admin-Formular (sichtbar initial)
-    #emp-number             — Kürzel-Input
-    #emp-password           — PIN-Input
-    #emp-error              — Fehleranzeige Mitarbeiter
-    #admin-email            — Email-Input
-    #admin-password         — Passwort-Input
-    #admin-error            — Fehleranzeige Admin
-    .auth-button            — Login-Button (onclick)
-    .auth-error             — Fehlertexte (color #E57373)
+  Scripts:  Supabase CDN → js/shared/db.js → js/shared/auth.js
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -163,59 +352,60 @@ zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Zweck:    Registrierung für neue Admin-Konten.
-            Erstellt Supabase Auth User + Eintrag in "planit_restaurants".
+            db.auth.signUp() + INSERT planit_restaurants.
 
-  Status:   Vollständig (aus PlanIt übernommen, noch PlanIt-Design).
-            Noch nicht auf GastroHub-Design umgestellt.
-
-  Logik:    Inline-Script (kein externes JS).
-            Validierung: E-Mail-Format, Passwort-Regeln (8 Zeichen,
-            Großbuchstabe, Zahl, Sonderzeichen), Passwort-Wiederholung.
-            db.auth.signUp() → db.from('planit_restaurants').insert()
+  Design:   GastroHub-Design (inline <style>).
+  Logik:    Inline-Script. Validierung: E-Mail-Format, Passwort-Regeln
+            (8 Zeichen, Großbuchstabe, Zahl, Sonderzeichen), Wiederholung.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- admin.html / employee.html
+ admin.html
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Status:   HTML-Struktur vollständig (aus PlanIt übertragen).
-            Titel noch "PlanIt - Admin" / "PlanIt - Mitarbeiter" — TODO.
+  Status:   HTML-Struktur vollständig. Alle Modals und Tabs vorhanden.
+            Inline <style>-Block mit CSS-Variablen:
+              --color-primary: #B28A6E
+              --color-gray:    #F5F5F5  (Hintergrund Eingabefelder / Blöcke)
+              --color-text:    #2D2D2D
+              --color-text-light: #888
 
-  ACHTUNG: Beide Dateien laden noch die alten PlanIt-Script-Pfade:
-    js/auth.js     → muss werden: js/shared/db.js + js/shared/auth.js
-    js/admin.js    → muss werden: js/admin/init.js + feature-Module
-    js/employee.js → muss werden: js/employee/init.js + feature-Module
+  Schicht-Modal — relevante Block-IDs:
+    #shift-clock-group      Stempelzeiten (collapsible, display:none wenn leer)
+    #shift-clock-body       Klappbarer Inhalt
+    #shift-clock-toggle     Pfeil-Symbol
+    #shift-clock-list       Eintrags-Zeilen (gerendert von loadAndRenderClockList)
+    #shift-clock-note       Kommentar-Wrapper
+    #shift-clock-note-text  Kommentar-Text
 
-  admin.html — Tabs & Bereiche:
-    schichtplanung, urlaub, verfuegbarkeit, team, tausch, krankmeldungen,
-    mehr, terminations, restaurant-info, stunden, requests, inventur,
-    inventur-config, trinkgeld, trinkgeld-config, tasks, notes, hygiene,
-    urlaubsverwaltung
+    #shift-actual-group     Tatsächliche Zeiten (collapsible)
+    #shift-actual-body      Klappbarer Inhalt
+    #shift-actual-toggle    Pfeil-Symbol
 
-  employee.html — Tabs & Bereiche:
-    uebersicht, schichtplan, urlaub, verfuegbarkeit, lohn, tausch,
-    mehr, trinkgeld, inventur-emp, profil, stunden
+  Scripts (aktuelle Ladereihenfolge):
+    Supabase CDN → js/shared/db.js → js/shared/utils.js → js/shared/auth.js
+    → js/admin/shifts.js → js/admin/margincalc.js → js/admin/payroll.js
+    → (weitere Module sobald befüllt)
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  SCRIPT-LADEREIHENFOLGE (Zielzustand)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Jede Seite bindet Scripts in dieser Reihenfolge ein:
-
-  index.html:
+  pos.html:
     1. Supabase CDN
     2. js/shared/db.js
-    3. js/shared/auth.js
+    3. js/pos/breaks.js    ← vor clock.js, da posState aus clock.js stammt
+    4. js/pos/clock.js
 
   admin.html (Zielzustand):
     1. Supabase CDN
     2. js/shared/db.js
     3. js/shared/utils.js
     4. js/shared/auth.js
-    5. js/admin/init.js
+    5. js/admin/init.js    (noch leer)
     6. js/admin/shifts.js
-    7. js/admin/team.js
+    7. js/admin/team.js    (noch leer)
     8. js/admin/vacation.js
     9. js/admin/hours.js
    10. js/admin/payroll.js
@@ -225,18 +415,4 @@ zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
    14. js/admin/tasks.js
    15. js/admin/terminations.js
    16. js/admin/margincalc.js
-   17. jsPDF CDN (nur für Lohnabrechnung)
-
-  employee.html (Zielzustand):
-    1. Supabase CDN
-    2. js/shared/db.js
-    3. js/shared/utils.js
-    4. js/shared/auth.js
-    5. js/employee/init.js
-    6. js/employee/overview.js
-    7. js/employee/vacation.js
-    8. js/employee/availability.js
-    9. js/employee/swaps.js
-   10. js/employee/inventory.js
-   11. js/employee/profil.js
-   17. jsPDF CDN (für Lohnzettel)
+   17. jsPDF CDN (für Lohnzettel-PDF)

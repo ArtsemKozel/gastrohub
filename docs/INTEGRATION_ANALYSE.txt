@@ -1,0 +1,169 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     GASTROHUB — INTEGRATIONS-ANALYSE                       ║
+║                              Stand: 17.04.2026                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Dokumentiert die Abhängigkeiten zwischen Modulen, bekannte technische
+Fallstricke, Supabase-RLS-Verhalten und Entscheidungen die nicht aus dem
+Code selbst ableitbar sind.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SUPABASE RLS — BEKANNTES PROBLEM MIT ANON KEY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Der POS-Kiosk (pos.html) verwendet den Supabase anon key ohne eingeloggten
+User. Die Row-Level-Security-Policies auf gh_time_entries und gh_breaks
+erlauben zwar INSERT und SELECT, aber eine direkt verkettete Abfrage der Form
+.insert({...}).select() gibt keine Zeilen zurück — der INSERT läuft durch,
+aber die Response enthält leere data.
+
+Workaround (etabliertes Muster im Projekt): INSERT nur auf error prüfen.
+Falls kein Fehler, direkt danach ein separates SELECT mit .maybeSingle()
+ausführen. Dieses Muster gilt für posClockIn() in clock.js und für
+posBreakStart() in breaks.js.
+
+Dieses Verhalten tritt ausschließlich beim anon key auf. Im Admin-Bereich
+(Supabase Auth JWT) funktioniert das verkettete .insert().select() normal,
+da RLS die Session-User-ID auswertet.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ MODUL-ABHÄNGIGKEITEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+js/pos/breaks.js hängt von posState ab, welches in js/pos/clock.js deklariert
+wird. Gleichzeitig ruft clock.js Funktionen aus breaks.js auf (loadBreakData,
+posBreakStart, posBreakEnd). Die Lösung: breaks.js wird in pos.html vor
+clock.js geladen. Das ist eine bewusste Abweichung von der üblichen Konvention
+"Abhängigkeit zuerst" — breaks.js nutzt posState erst zur Laufzeit, nicht
+beim Laden, daher funktioniert die Reihenfolge.
+
+js/admin/shifts.js hängt von adminSession ab (globale Variable aus dem
+DOMContentLoaded-Handler). Alle Supabase-Queries in shifts.js verwenden
+adminSession.user.id als user_id-Filter. Wenn adminSession noch nicht gesetzt
+ist, schlagen die Queries stillschweigend fehl. Daher muss shifts.js immer
+nach requireAdminSession() ausgeführt werden.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ MANDANTEN-TRENNUNG
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Alle Tabellen haben eine user_id-Spalte, die der Supabase Auth User ID des
+Admin-Kontos entspricht. Dadurch können mehrere Restaurants dieselbe Datenbank
+nutzen. Jede Query filtert zwingend auf .eq('user_id', ...).
+
+Im Admin-Bereich: user_id = adminSession.user.id (aus Supabase Auth Session).
+Im POS-Kiosk: user_id = posState.userId (aus URL-Parameter ?uid=, Fallback
+hardcoded auf 7bb9b579-edd9-449a-840c-21fb33bde772).
+
+Der POS-Kiosk hat kein eigenes Login — der Admin gibt dem Kiosk die URL mit
+dem eigenen ?uid=-Parameter. Das ist bewusst so designt, damit Mitarbeiter
+keinen Admin-Zugang brauchen.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GH_TIME_ENTRIES — DATENFLUSS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Schreiben: Nur der POS-Kiosk (clock.js) schreibt in gh_time_entries.
+Lesen: Der Admin (shifts.js) liest gh_time_entries lesend im Schicht-Modal.
+Löschen: Nur der Admin (deleteTimeEntry in shifts.js) kann Einträge löschen.
+Beim Löschen werden zuerst alle gh_breaks mit time_entry_id = id entfernt,
+danach erst der gh_time_entries-Eintrag — sonst entstehen verwaiste Pausen.
+
+Das note-Feld in gh_time_entries wird vom Mitarbeiter am POS via
+posSubmitNote() in clock.js befüllt und vom Admin im Stempelzeiten-Block
+des Schicht-Modals angezeigt (#shift-clock-note-text).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GH_BREAKS — DATENFLUSS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Schreiben: Nur der POS-Kiosk (breaks.js) schreibt in gh_breaks.
+Lesen: shifts.js liest gh_breaks beim Berechnen der Netto-Arbeitszeiten in
+loadAndRenderClockList(). Dabei wird für jeden time_entry_id die Summe aller
+abgeschlossenen Pausen (break_end IS NOT NULL) berechnet und vom
+clock_out−clock_in-Wert abgezogen.
+Löschen: Nur indirekt via deleteTimeEntry() in shifts.js (kaskadiert).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ PLANIT_PAYROLLS — DATENFLUSS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Schreiben und Lesen ausschließlich durch js/admin/payroll.js. Kein POS-
+und kein Mitarbeiter-Zugriff. Die Tabelle speichert Lohnzettel-Entwürfe
+als JSONB — das erlaubt flexible Felder ohne Schema-Migration.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ POS-KIOSK — DESIGN-ENTSCHEIDUNGEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Der Kiosk rendert alle Screens vollständig in JavaScript (renderPOS,
+renderPinScreen, renderEmployeeScreen) statt statisches HTML zu verwenden.
+Das macht Hot-Updates des Zustandsbaums einfacher, bedeutet aber dass
+alle IDs (z.B. #pos-time, #pos-pin-input) nur im gerenderten DOM existieren.
+
+Nach dem Einstempeln bleibt der Mitarbeiter eingeloggt und sieht die
+laufende Arbeitszeit. Kein automatischer Logout nach clock_out — der
+Mitarbeiter muss aktiv auf das X-Icon drücken. Das ist bewusst so, damit
+der Mitarbeiter den Kommentar noch eingeben kann.
+
+Das Kommentarfeld (note) erscheint nur wenn isClockedIn=true und
+noteSaved=false. Nach einmaligem Speichern via posSubmitNote() wird
+noteSaved=true gesetzt und das Feld verschwindet. Es kann innerhalb
+einer Session nur einmal gespeichert werden.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ ADMIN SCHICHT-MODAL — COLLAPSIBLE BLÖCKE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Das Schicht-Modal in admin.html hat zwei klappbare Blöcke die nach demselben
+Muster funktionieren: ein Toggle-Button mit Pfeil-Symbol und ein Body-Div das
+per display:none/block ein- und ausgeblendet wird.
+
+"Tatsächliche Zeiten" (#shift-actual-group): Zeigt manuell eingetragene
+Ist-Zeiten der Schicht. Wird vom Admin manuell befüllt.
+
+"Stempelzeiten" (#shift-clock-group): Zeigt die vom Mitarbeiter am POS
+gestempelten Einträge aus gh_time_entries. Wird in openShiftModal() via
+loadAndRenderClockList() befüllt. Ist per default zugeklappt und wird
+nur angezeigt wenn überhaupt Einträge für den Tag vorhanden sind.
+
+Beide Blöcke starten zugeklappt (shift-clock-body und shift-actual-body
+haben display:none). Das Toggle-Symbol beginnt bei ▶ (geschlossen) und
+wechselt zu ▼ (offen).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ MARGINCALC — INTEGRATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Der MarginCalc (js/admin/margincalc.js) ist ein eigenständiges Modul ohne
+Abhängigkeiten zu anderen Admin-Modulen. Er liest keine Daten aus Supabase-
+Tabellen, sondern arbeitet rein mit manuellen Eingaben aus dem DOM. Dadurch
+kann er unabhängig von anderen Modulen entwickelt und getestet werden.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ MIGRATIONS-STATUS VON PLANIT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PlanIt hatte alle Admin-Logik in einer einzigen Datei admin.js (~7100 Zeilen).
+GastroHub teilt diese Logik auf 12 Admin-Module auf. Stand 17.04.2026 sind
+shifts.js, margincalc.js und payroll.js implementiert. Die restlichen neun
+Module (init, team, vacation, hours, tips, inventory, hygiene, tasks,
+terminations) enthalten noch keine Logik.
+
+PlanIt hatte keine POS-Funktionalität. Die gesamte POS-Logik (pos.html,
+clock.js, breaks.js, gh_time_entries, gh_breaks) ist eine Neuentwicklung
+ohne PlanIt-Vorbild, orientiert sich UI-seitig an ShiftIn (externes Projekt).
+
+Die CSS-Dateien (css/) sind noch leer. Alle bisherigen Styles sind inline
+in den HTML-Dateien oder in <style>-Blöcken. Die CSS-Auslagerung ist für
+eine spätere Phase vorgesehen und blockiert nicht die weitere Entwicklung.

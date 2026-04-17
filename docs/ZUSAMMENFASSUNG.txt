@@ -1,6 +1,6 @@
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                         GASTROHUB — ZUSAMMENFASSUNG                        ║
-║                              Stand: 14.04.2026                             ║
+║                              Stand: 17.04.2026                             ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -18,7 +18,45 @@ Ziel-Repository:   /Users/artchiebald/Documents/gastrohub-new/
 
 Datenbank:         Supabase (identischer Account und URL wie PlanIt)
                    URL: https://ulazvcrpasnhufzlywxf.supabase.co
-                   Tabellen: employees_planit, planit_restaurants (unverändert)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ DATENBANK-TABELLEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Von PlanIt übernommen (unverändert):
+    employees_planit      Mitarbeiterstammdaten (id, name, department,
+                          password_hash, login_code, user_id, is_active)
+    planit_restaurants    Restaurant-Konten (id, name, owner_id)
+    shifts                Schichtplanung
+    shift_templates       Schichtvorlagen
+    vacation_requests     Urlaubsanträge
+    availability          Verfügbarkeitsangaben
+    tips                  Trinkgeldverteilung
+    inventory             Inventureinträge
+    hygiene_logs          Hygieneprotokoll
+    tasks / notes         Aufgaben und Notizen
+
+  Neu in GastroHub:
+    gh_time_entries       Stempelzeiten der Mitarbeiter
+                          Spalten: id, user_id, employee_id,
+                          clock_in (timestamptz), clock_out (timestamptz),
+                          note (text)
+                          Hinweis: RLS auf anon key blockiert chained
+                          .insert().select() — nach INSERT immer separates
+                          SELECT durchführen
+
+    gh_breaks             Pausen zu einem Stempelzeit-Eintrag
+                          Spalten: id, user_id, employee_id,
+                          time_entry_id (FK → gh_time_entries.id),
+                          break_start (timestamptz), break_end (timestamptz)
+                          Hinweis: Beim Löschen eines gh_time_entries-Eintrags
+                          zuerst alle gh_breaks mit time_entry_id löschen
+
+    planit_payrolls       Vorlohnabrechnungen (Lohnzettel-Entwürfe)
+                          Spalten: id, user_id, employee_id, month (YYYY-MM),
+                          data (jsonb mit Stunden, Zuschlägen, Abzügen),
+                          created_at
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -33,58 +71,76 @@ Datenbank:         Supabase (identischer Account und URL wie PlanIt)
                                   Zugriff auf persönliche Schichten, Urlaub etc.
                                   Session: localStorage-Key "planit_employee"
 
-  3. POS         → pos.html       Kassensystem / Stempeluhr
-                                  (noch nicht implementiert)
+  3. POS         → pos.html       Kiosk-Stempeluhr für Mitarbeiter
+                                  Kein Login — user_id aus URL-Parameter ?uid=
+                                  Fallback: 7bb9b579-edd9-449a-840c-21fb33bde772
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  DESIGN-ENTSCHEIDUNGEN
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Basis:         GastroHub-Old (GastroHub/Auth/) als visuelles Vorbild
   Font:          Inter (Google Fonts)
-  Hintergrund:   #F9F5F1  (warmes Off-White)
-  Primärfarbe:   #B28A6E  (Terrakotta/Braun) — Buttons, Fokus-Ringe, Links
-  Hover:         #9A7558
-  Container:     Weiß, border-radius 24px, box-shadow dezent
-  Inputs:        border-radius 12px, border #E5E5E5, Fokus mit Primärfarbe
-  Fehlertexte:   #E57373 (gedämpftes Rot, kein hartes #FF0000)
+  Hintergrund:   #F5F0EB  (warmes Off-White, CSS-Variable --color-bg)
+  Primärfarbe:   #B28A6E  (Terrakotta/Braun) — Buttons, Fokus, Akzente
+  Dunkelbraun:   #8B6F47  — Icons, sekundäre Buttons
+  Grün:          #6B8E6F  — Einstempeln, positive Aktionen
+  Amber:         #F59E0B  — Pause-Zustand
+  Fehler:        #E05555
 
-  Tab-Switcher (Login):
-    - Pill-Design auf #F5F0EB-Hintergrund
-    - Aktiver Tab: weiß mit leichtem Schatten
-    - Reihenfolge: [Mitarbeiter] [Admin] — Admin rechts, da häufiger genutzt
+  POS-Kiosk orientiert sich an ShiftIn (externes Referenz-Projekt) —
+  inline CSS in renderPinScreen() und renderEmployeeScreen() in clock.js.
+  Admin-Bereich verwendet CSS-Variablen aus admin.html <style>-Block.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- AKTUELLER STAND (14.04.2026)
+ AKTUELLER STAND (17.04.2026)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   FERTIG ✓
   ─────────────────────────────────────────────────────────────
-  index.html              Login-Seite mit GastroHub-Design, zwei Tabs
-  register.html           Registrierung (Admin-Konto + Restaurant-Name)
-  admin.html              HTML-Struktur vollständig (aus PlanIt übertragen)
-  employee.html           HTML-Struktur vollständig (aus PlanIt übertragen)
+  index.html              Login-Seite (Admin + Mitarbeiter, Pill-Tabs)
+  register.html           Registrierung (GastroHub-Design, planit_restaurants)
+  admin.html              HTML-Struktur vollständig, alle Modals vorhanden
+  employee.html           HTML-Struktur vollständig
 
-  js/shared/db.js         Supabase-Client-Initialisierung
-  js/shared/auth.js       Login, Session-Check, Logout für alle Gruppen
-  js/shared/utils.js      Gemeinsame Hilfsfunktionen (Feiertage, Datum, etc.)
+  js/shared/db.js         Supabase-Client-Initialisierung (global "db")
+  js/shared/auth.js       Login, Session-Checks, Logout für alle Gruppen
+  js/shared/utils.js      Feiertage BW, Datum-Formatierung, Abteilungen
 
-  OFFEN ✗ (alle leer, Logik aus PlanIt noch nicht migriert)
+  js/admin/shifts.js      Schichtplanung vollständig:
+                          — Schicht erstellen / bearbeiten / löschen
+                          — Wiederholung (N Wochen)
+                          — Vorlagen laden und anwenden
+                          — Verfügbarkeits-Warnungen
+                          — Tatsächliche Zeiten (klappbarer Block)
+                          — Stempelzeiten aus gh_time_entries (klappbarer Block)
+                            mit Netto-Dauer, Pausen abgezogen, Gesamt-Netto
+                          — Kommentar (note) aus gh_time_entries im Block
+                          — Eintrag löschen (zuerst gh_breaks, dann Eintrag)
+
+  js/admin/margincalc.js  Deckungsbeitragsrechnung (MarginCalc):
+                          Umsatz, Wareneinsatz, Personalkosten, DB I / DB II
+
+  js/admin/payroll.js     Vorlohnabrechnung:
+                          Lohnzettel-Entwurf pro Mitarbeiter und Monat,
+                          Speichern in planit_payrolls, PDF-Export via jsPDF
+
+  pos.html                POS-Kiosk vollständig (Shell + Styles)
+  js/pos/clock.js         PIN-Login, Ein-/Ausstempeln, Kommentar, Logout
+  js/pos/breaks.js        Pause starten / beenden (gh_breaks)
+
+  OFFEN ✗ (leer oder teilweise, Logik aus PlanIt noch nicht migriert)
   ─────────────────────────────────────────────────────────────
   js/admin/init.js        requireAdminSession(), DOMContentLoaded, switchTab()
-  js/admin/shifts.js      Schichtplanung
   js/admin/team.js        Team-Verwaltung
   js/admin/vacation.js    Urlaubsverwaltung
   js/admin/hours.js       Stundenübersicht
-  js/admin/payroll.js     Lohnabrechnung
   js/admin/tips.js        Trinkgeldverteilung
   js/admin/inventory.js   Inventur
   js/admin/hygiene.js     Hygieneprotokoll
   js/admin/tasks.js       Aufgaben & Notizen
   js/admin/terminations.js  Abgänge
-  js/admin/margincalc.js  Deckungsbeitragsrechnung
 
   js/employee/init.js     requireEmployeeSession(), DOMContentLoaded, switchTab()
   js/employee/overview.js Übersicht (Schichtplan der Woche)
@@ -94,59 +150,45 @@ Datenbank:         Supabase (identischer Account und URL wie PlanIt)
   js/employee/inventory.js     Inventurformular (Mitarbeiter)
   js/employee/profil.js   Profilseite
 
-  js/pos/clock.js         Stempeluhr (Ein-/Ausstempeln)
-  js/pos/breaks.js        Pausenverwaltung
-  js/pos/pos.js           POS-Hauptlogik
-
-  pos.html                Noch leer
+  js/pos/pos.js           POS-Hauptlogik (Kassensystem, noch nicht begonnen)
 
   CSS (alle leer):
-  css/base.css            Globale Variablen, Reset, Typografie
-  css/components.css      Wiederverwendbare UI-Komponenten
-  css/admin.css           Admin-spezifische Styles
-  css/employee.css        Mitarbeiter-spezifische Styles
-  css/pos.css             POS-spezifische Styles
-
-  Hinweis: admin.html und employee.html laden noch js/auth.js und js/admin.js
-  (PlanIt-Pfade) — müssen auf die neuen Modul-Pfade umgestellt werden.
+  css/base.css, css/components.css, css/admin.css, css/employee.css, css/pos.css
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GESAMTPLAN / NÄCHSTE SCHRITTE
+ ARBEITSREGELN FÜR CLAUDE CODE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  PHASE 1 — Shared Foundation       ✓ ABGESCHLOSSEN
-    db.js, auth.js, utils.js, index.html
+Diese Regeln gelten für alle Aufträge an Claude Code in diesem Projekt und
+sollen eine konsistente, nachvollziehbare Zusammenarbeit sicherstellen.
 
-  PHASE 2 — CSS-System               → als nächstes
-    base.css mit CSS-Variablen (GastroHub-Farben, Typografie, Reset)
-    components.css (Cards, Buttons, Inputs, Tabs, Modals, Toasts)
-    admin.css, employee.css, pos.css
+Aufträge werden als zusammenhängender Fließtext auf Deutsch formuliert —
+keine Aufzählungslisten, keine Codeblöcke im Auftragstext. Der Auftragstext
+nennt immer den Dateinamen und den Funktionsnamen, der geändert werden soll,
+damit Claude Code ohne Rückfragen an die richtige Stelle navigieren kann.
 
-  PHASE 3 — Admin-Module
-    init.js → dann feature-weise: shifts, team, vacation, hours, tips, ...
+Pro Auftrag wird genau eine inhaltliche Änderung beschrieben. Mehrere
+unabhängige Änderungen werden als separate Aufträge gestellt, nicht
+zusammengefasst, um Verwechslungen beim Commit-Text zu vermeiden und die
+Git-Historie übersichtlich zu halten.
 
-  PHASE 4 — Mitarbeiter-Module
-    init.js → overview, vacation, availability, swaps, inventory, profil
+Mobile und Desktop werden immer gleichzeitig berücksichtigt. Wann immer eine
+UI-Änderung in einer Ansicht gemacht wird, muss geprüft werden ob dieselbe
+Änderung auch für die andere Bildschirmgröße passt oder angepasst werden muss.
 
-  PHASE 5 — POS
-    pos.html aufbauen, clock.js, breaks.js, pos.js
-
-  PHASE 6 — HTML-Dateien anpassen
-    admin.html und employee.html: Script-Tags auf neue Modul-Pfade umstellen,
-    Titel auf "GastroHub" aktualisieren
+Nach jedem abgeschlossenen Feature oder jeder Änderung wird der Stand sofort
+committed und zu GitHub gepusht. Es wird nicht auf mehrere fertige Aufgaben
+gewartet — jede Änderung erhält ihren eigenen Commit mit aussagekräftigem
+Commit-Text auf Deutsch.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  MIGRATIONS-PRINZIP
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  - Logik aus PlanIt/js/admin.js (~7100 Zeilen) wird aufgeteilt in
-    die 12 Admin-Module
-  - Logik aus PlanIt/js/employee.js (~2400 Zeilen) wird aufgeteilt in
-    die 7 Mitarbeiter-Module
-  - Funktionen die in beiden PlanIt-Dateien identisch waren →
-    js/shared/utils.js (getBWHolidays, getEasterDates, goldGradient,
-    getEmpDepartments, formatDate)
-  - Keine inhaltlichen Änderungen an der Logik während der Migration —
-    erst migrieren, dann verbessern
+Logik aus PlanIt/js/admin.js (~7100 Zeilen) wird aufgeteilt in die 12
+Admin-Module. Logik aus PlanIt/js/employee.js (~2400 Zeilen) wird aufgeteilt
+in die 7 Mitarbeiter-Module. Funktionen die in beiden PlanIt-Dateien identisch
+vorhanden waren landen in js/shared/utils.js. Keine inhaltlichen Änderungen
+an der Logik während der Migration — erst migrieren, dann verbessern.
