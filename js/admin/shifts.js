@@ -465,25 +465,6 @@ async function openShiftModal(employeeId, dateStr, existingShift, defaultDept) {
         clockGroup.style.display = 'none';
     }
 
-    const noteGroup = document.getElementById('shift-time-entry-note-group');
-    if (noteGroup && existingShift) {
-        const { data: te } = await db.from('gh_time_entries')
-            .select('note')
-            .eq('user_id', adminSession.user.id)
-            .eq('employee_id', existingShift.employee_id)
-            .gte('clock_in', dateStr + 'T00:00:00')
-            .lte('clock_in', dateStr + 'T23:59:59')
-            .not('note', 'is', null)
-            .order('clock_in', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-        const note = te?.note?.trim();
-        noteGroup.style.display = note ? 'block' : 'none';
-        document.getElementById('shift-time-entry-note').textContent = note || '';
-    } else if (noteGroup) {
-        noteGroup.style.display = 'none';
-    }
-
     document.getElementById('shift-repeat').checked              = false;
     document.getElementById('shift-repeat-group').style.display  = 'none';
     document.getElementById('shift-repeat-weeks').value          = 4;
@@ -499,7 +480,7 @@ async function loadAndRenderClockList(employeeId, dateStr) {
     if (!clockGroup) return;
 
     const { data: timeEntries } = await db.from('gh_time_entries')
-        .select('id, clock_in, clock_out')
+        .select('id, clock_in, clock_out, note')
         .eq('user_id', adminSession.user.id)
         .eq('employee_id', employeeId)
         .gte('clock_in', dateStr + 'T00:00:00')
@@ -508,6 +489,14 @@ async function loadAndRenderClockList(employeeId, dateStr) {
 
     const entries = timeEntries || [];
     clockGroup.style.display = entries.length ? 'block' : 'none';
+
+    const note = entries.map(e => e.note?.trim()).filter(Boolean).join(' / ');
+    const noteEl     = document.getElementById('shift-clock-note');
+    const noteTextEl = document.getElementById('shift-clock-note-text');
+    if (noteEl && noteTextEl) {
+        noteEl.style.display = note ? 'block' : 'none';
+        noteTextEl.textContent = note;
+    }
 
     document.getElementById('shift-clock-list').innerHTML = entries.map((te, i) => {
         const cin   = new Date(te.clock_in).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
@@ -552,6 +541,14 @@ async function deleteTimeEntry(id, employeeId, dateStr) {
     const { error } = await db.from('gh_time_entries').delete().eq('id', id);
     if (error) { alert('Fehler: ' + error.message); return; }
     await loadAndRenderClockList(employeeId, dateStr);
+}
+
+function toggleShiftClock() {
+    const body   = document.getElementById('shift-clock-body');
+    const toggle = document.getElementById('shift-clock-toggle');
+    const open   = body.style.display === 'none';
+    body.style.display = open ? 'block' : 'none';
+    toggle.textContent = open ? '▼' : '▶';
 }
 
 function toggleShiftActual() {
