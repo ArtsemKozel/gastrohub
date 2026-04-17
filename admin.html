@@ -581,15 +581,14 @@
 
         <!-- Zeiterfassung heute -->
         <div style="margin-bottom:1rem; border:1px solid #E8E3DE; border-radius:10px; overflow:hidden;">
-            <button type="button" onclick="toggleTodayClockSummary()"
-                style="display:flex; align-items:center; gap:0.6rem; width:100%; background:var(--color-gray); border:none; padding:0.6rem 0.75rem; cursor:pointer; font-size:0.9rem; font-weight:600; color:var(--color-text);">
-                <span id="today-clock-summary-title">Zeiterfassung am</span>
+            <div style="display:flex; align-items:center; gap:0.6rem; background:var(--color-gray); padding:0.6rem 0.75rem; cursor:pointer;" onclick="toggleTodayClockSummary()">
+                <span style="font-size:0.9rem; font-weight:600; color:var(--color-text);">Zeiterfassung am</span>
                 <input type="date" id="today-clock-date"
                     onclick="event.stopPropagation()"
                     onchange="onTodayClockDateChange()"
                     style="font-size:0.8rem; font-weight:400; border:1px solid #ddd; border-radius:6px; padding:0.15rem 0.4rem; color:var(--color-text); background:white; cursor:pointer;">
-                <span id="today-clock-summary-toggle" style="margin-left:auto;">▶</span>
-            </button>
+                <span id="today-clock-summary-toggle" style="margin-left:auto; font-size:0.9rem; font-weight:600; color:var(--color-text);">▶</span>
+            </div>
             <div id="today-clock-summary-body" style="display:none; padding:0.75rem;">
                 <div id="today-clock-summary-list"></div>
             </div>
