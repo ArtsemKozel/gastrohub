@@ -135,7 +135,9 @@ function renderEmployeeScreen() {
     <div style="background: var(--color-bg); min-height: 100vh; padding: 1rem;">
         <div style="max-width: 600px; margin: 0 auto; background: transparent; border-radius: 12px; padding: 2rem; box-shadow: none; position: relative;">
 
-            <button onclick="posLogout()" style="position: absolute; top: 1rem; left: 1rem; background: var(--color-bg); color: #8B6F47; border: none; padding: 0.5rem; cursor: pointer; width: 2.5rem; height: 2.5rem; font-size: 1.2rem; border-radius: 12px;">←</button>
+            <button onclick="posLogout()" style="position: absolute; top: 1rem; right: 1rem; background: var(--color-bg); border: none; padding: 0.5rem; cursor: pointer; width: 2.5rem; height: 2.5rem; border-radius: 12px; display:flex; align-items:center; justify-content:center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
 
             <h2 style="color: #2C3E50; font-weight: 700; margin-bottom: 1.5rem; text-align: center;">Hey, ${emp.name.split(' ')[0]}!</h2>
 
