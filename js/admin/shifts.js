@@ -498,7 +498,26 @@ async function loadAndRenderClockList(employeeId, dateStr) {
         noteTextEl.textContent = note;
     }
 
-    document.getElementById('shift-clock-list').innerHTML = entries.map((te, i) => {
+    // Pausen für alle Einträge laden
+    const entryIds = entries.map(e => e.id);
+    let breaks = [];
+    if (entryIds.length) {
+        const { data: bData } = await db.from('gh_breaks')
+            .select('time_entry_id, break_start, break_end')
+            .in('time_entry_id', entryIds);
+        breaks = bData || [];
+    }
+
+    const breakMinByEntry = {};
+    for (const b of breaks) {
+        if (!b.break_end) continue;
+        const m = Math.round((new Date(b.break_end) - new Date(b.break_start)) / 60000);
+        breakMinByEntry[b.time_entry_id] = (breakMinByEntry[b.time_entry_id] || 0) + m;
+    }
+
+    let totalNettoMin = 0;
+
+    const rows = entries.map((te, i) => {
         const cin   = new Date(te.clock_in).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
         const cout  = te.clock_out
             ? new Date(te.clock_out).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
@@ -508,7 +527,9 @@ async function loadAndRenderClockList(employeeId, dateStr) {
         let netto = '—';
         if (te.clock_out) {
             const diffM = Math.round((new Date(te.clock_out) - new Date(te.clock_in)) / 60000);
-            const h = Math.floor(diffM / 60), m = diffM % 60;
+            const netM  = diffM - (breakMinByEntry[te.id] || 0);
+            totalNettoMin += netM;
+            const h = Math.floor(netM / 60), m = netM % 60;
             netto = h > 0 ? `${h}h ${m}min` : `${m}min`;
         }
 
@@ -529,11 +550,31 @@ async function loadAndRenderClockList(employeeId, dateStr) {
                 </div>
             </div>
             <button onclick="deleteTimeEntry('${te.id}','${employeeId}','${dateStr}')"
-                style="flex-shrink:0; background:none; border:none; cursor:pointer; color:var(--color-red); font-size:1.1rem; padding:0.25rem;" title="Eintrag löschen">
+                style="flex-shrink:0; background:none; border:none; cursor:pointer; color:#B28A6E; font-size:1.1rem; padding:0.25rem;" title="Eintrag löschen">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
             </button>
         </div>`;
-    }).join('');
+    });
+
+    if (entries.length > 1 || totalNettoMin > 0) {
+        const th = Math.floor(totalNettoMin / 60), tm = totalNettoMin % 60;
+        const totalStr = th > 0 ? `${th}h ${tm}min` : `${tm}min`;
+        rows.push(`
+        <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.25rem;">
+            <div style="flex:1; display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem;">
+                <div style="grid-column:1/3; background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
+                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Gesamt (inkl. Pausen abgezogen)</div>
+                </div>
+                <div style="background:#B28A6E1A; border-radius:8px; padding:0.5rem 0.75rem; border:1px solid #B28A6E44;">
+                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Gesamt Netto</div>
+                    <div style="font-size:0.95rem; font-weight:700; color:#B28A6E;">${totalStr}</div>
+                </div>
+            </div>
+            <div style="width:1.85rem; flex-shrink:0;"></div>
+        </div>`);
+    }
+
+    document.getElementById('shift-clock-list').innerHTML = rows.join('');
 }
 
 async function deleteTimeEntry(id, employeeId, dateStr) {
