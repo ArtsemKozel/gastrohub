@@ -19,15 +19,8 @@ const posState = {
 // ── INIT ──────────────────────────────────────────────────
 
 window.addEventListener('DOMContentLoaded', async () => {
-    const uid = new URLSearchParams(window.location.search).get('uid');
-    if (!uid) {
-        document.getElementById('pos-root').innerHTML = `
-            <div class="pos-card" style="text-align:center; padding:2rem;">
-                <div style="font-size:1.1rem; font-weight:700; color:var(--color-primary); margin-bottom:0.75rem;">GastroHub · Zeiterfassung</div>
-                <p style="color:var(--color-text-light); font-size:0.9rem; margin-bottom:1.25rem;">Kein Restaurant konfiguriert.<br>Bitte URL-Parameter <code>?uid=…</code> angeben.</p>
-            </div>`;
-        return;
-    }
+    const uid = new URLSearchParams(window.location.search).get('uid')
+             || '7bb9b579-edd9-449a-840c-21fb33bde772';
 
     posState.userId = uid;
     await loadPosData();
