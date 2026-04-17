@@ -108,6 +108,7 @@ Datenbank:         Supabase (identischer Account und URL wie PlanIt)
   js/shared/auth.js       Login, Session-Checks, Logout für alle Gruppen
   js/shared/utils.js      Feiertage BW, Datum-Formatierung, Abteilungen
 
+  js/admin/init.js        requireAdminSession(), DOMContentLoaded, switchTab()
   js/admin/shifts.js      Schichtplanung vollständig:
                           — Schicht erstellen / bearbeiten / löschen
                           — Wiederholung (N Wochen)
@@ -118,21 +119,6 @@ Datenbank:         Supabase (identischer Account und URL wie PlanIt)
                             mit Netto-Dauer, Pausen abgezogen, Gesamt-Netto
                           — Kommentar (note) aus gh_time_entries im Block
                           — Eintrag löschen (zuerst gh_breaks, dann Eintrag)
-
-  js/admin/margincalc.js  Deckungsbeitragsrechnung (MarginCalc):
-                          Umsatz, Wareneinsatz, Personalkosten, DB I / DB II
-
-  js/admin/payroll.js     Vorlohnabrechnung:
-                          Lohnzettel-Entwurf pro Mitarbeiter und Monat,
-                          Speichern in planit_payrolls, PDF-Export via jsPDF
-
-  pos.html                POS-Kiosk vollständig (Shell + Styles)
-  js/pos/clock.js         PIN-Login, Ein-/Ausstempeln, Kommentar, Logout
-  js/pos/breaks.js        Pause starten / beenden (gh_breaks)
-
-  OFFEN ✗ (leer oder teilweise, Logik aus PlanIt noch nicht migriert)
-  ─────────────────────────────────────────────────────────────
-  js/admin/init.js        requireAdminSession(), DOMContentLoaded, switchTab()
   js/admin/team.js        Team-Verwaltung
   js/admin/vacation.js    Urlaubsverwaltung
   js/admin/hours.js       Stundenübersicht
@@ -141,6 +127,13 @@ Datenbank:         Supabase (identischer Account und URL wie PlanIt)
   js/admin/hygiene.js     Hygieneprotokoll
   js/admin/tasks.js       Aufgaben & Notizen
   js/admin/terminations.js  Abgänge
+  js/admin/margincalc.js  Deckungsbeitragsrechnung (MarginCalc):
+                          Umsatz, Wareneinsatz, Personalkosten, DB I / DB II
+  js/admin/payroll.js     Vorlohnabrechnung:
+                          Lohnzettel-Entwurf pro Mitarbeiter und Monat,
+                          Speichern in planit_payrolls, PDF-Export via jsPDF
+  js/admin/restaurant.js  Restaurant-Einstellungen
+  js/admin/time_entries.js  Stempelzeiten-Übersicht (alle Mitarbeiter)
 
   js/employee/init.js     requireEmployeeSession(), DOMContentLoaded, switchTab()
   js/employee/overview.js Übersicht (Schichtplan der Woche)
@@ -149,7 +142,17 @@ Datenbank:         Supabase (identischer Account und URL wie PlanIt)
   js/employee/swaps.js    Schichttausch
   js/employee/inventory.js     Inventurformular (Mitarbeiter)
   js/employee/profil.js   Profilseite
+  js/employee/schichtplan.js   Schichtplan-Ansicht (Mitarbeiter)
+  js/employee/stunden.js  Stundenübersicht (Mitarbeiter)
+  js/employee/trinkgeld.js     Trinkgeld-Ansicht (Mitarbeiter)
+  js/employee/payroll.js  Lohnzettel-Ansicht (Mitarbeiter)
 
+  pos.html                POS-Kiosk vollständig (Shell + Styles)
+  js/pos/clock.js         PIN-Login, Ein-/Ausstempeln, Kommentar, Logout
+  js/pos/breaks.js        Pause starten / beenden (gh_breaks)
+
+  OFFEN ✗
+  ─────────────────────────────────────────────────────────────
   js/pos/pos.js           POS-Hauptlogik (Kassensystem, noch nicht begonnen)
 
   CSS (alle leer):
