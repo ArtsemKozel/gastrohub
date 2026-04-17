@@ -87,13 +87,17 @@ function renderPinScreen() {
             <div class="time" id="pos-time">${time}</div>
             <div class="date">${date}</div>
         </div>
-        <input id="pos-pin-input" type="password" inputmode="numeric" pattern="[0-9]*"
-            placeholder="PIN eingeben"
-            maxlength="4"
-            style="width:100%; text-align:center; font-size:2rem; letter-spacing:0.3em; padding:0.75rem; border:2px solid var(--color-primary); border-radius:12px; outline:none; margin-bottom:0.75rem;"
-            oninput="posPinInput(this.value)"
-            onkeydown="if(event.key==='Enter') posLogin()">
-        <button class="pos-action-btn clock-in" style="width:100%; margin-bottom:0.5rem; background:#B28A6E;" onclick="posLogin()">Anmelden</button>
+        <div style="display:flex; gap:0.75rem; align-items:center;">
+            <input id="pos-pin-input" type="password" inputmode="numeric" pattern="[0-9]*"
+                placeholder="PIN eingeben"
+                maxlength="4"
+                style="flex:1; text-align:center; font-size:2rem; letter-spacing:0.3em; padding:0.75rem; border:2px solid var(--color-primary); border-radius:12px; outline:none;"
+                oninput="posPinInput(this.value)"
+                onkeydown="if(event.key==='Enter') posLogin()">
+            <button onclick="posLogin()" style="width:3.2rem; height:3.2rem; flex-shrink:0; border-radius:50%; background:#B28A6E; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+        </div>
         <div class="pos-error" id="pos-error">${posState.error}</div>
     </div>`;
 }
