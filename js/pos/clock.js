@@ -68,6 +68,7 @@ function startPosClock() {
 function renderPOS() {
     const root = document.getElementById('pos-root');
     if (!root) return;
+    document.body.classList.toggle('employee-view', posState.view === 'employee');
     if (posState.view === 'loading')  { root.innerHTML = '<div class="pos-loading">Lädt…</div>'; return; }
     if (posState.view === 'pin')      { root.innerHTML = renderPinScreen();      return; }
     if (posState.view === 'employee') { root.innerHTML = renderEmployeeScreen(); return; }
@@ -104,86 +105,67 @@ function renderPinScreen() {
 }
 
 function renderEmployeeScreen() {
-    const emp      = posState.employee;
-    const entry    = posState.entry;
-    const onBreak  = !!posState.activeBreak;
+    const emp     = posState.employee;
+    const entry   = posState.entry;
+    const onBreak = !!posState.activeBreak;
     if (!emp) return '';
 
-    const isClockedIn  = !!(entry?.clock_in && !entry?.clock_out);
-    const isClockedOut = !!(entry?.clock_in && entry?.clock_out);
-
-    const time = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const isClockedIn = !!(entry?.clock_in && !entry?.clock_out);
+    const time        = new Date().toLocaleTimeString('de-DE');
 
     let clockSub = '';
-    if (isClockedIn && !onBreak) {
-        const startDisp = new Date(entry.clock_in).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-        const diffM     = Math.floor((Date.now() - new Date(entry.clock_in)) / 60000);
+    if (isClockedIn && !onBreak && entry) {
+        const since  = new Date(entry.clock_in).toLocaleTimeString('de-DE');
+        const diffM  = Math.floor((Date.now() - new Date(entry.clock_in)) / 60000);
         const h = Math.floor(diffM / 60), m = diffM % 60;
-        clockSub = `<div style="font-size:0.82rem; opacity:0.85; margin-top:0.35rem;">Seit ${startDisp} Uhr · ${h > 0 ? h + 'h ' : ''}${m}min</div>`;
+        clockSub = `
+            <div style="font-size: 0.875rem; opacity: 0.9;">Eingestempelt seit: ${since}</div>
+            <div style="font-size: 1.5rem; margin-top: 0.5rem; font-weight: 600;">${h > 0 ? h + 'h ' : ''}${m}min</div>`;
     } else if (onBreak) {
-        const since = new Date(posState.activeBreak.break_start).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-        clockSub = `<div style="font-size:1rem; font-weight:600; margin-top:0.35rem;">⏸ Pause seit ${since} Uhr</div>`;
-    }
-
-    let entryInfo = '';
-    if (entry) {
-        const startDisp = new Date(entry.clock_in).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-        if (isClockedOut) {
-            const endDisp = new Date(entry.clock_out).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-            entryInfo = `Schicht: ${startDisp} – ${endDisp} Uhr`;
-        }
-    } else {
-        entryInfo = 'Heute noch nicht eingestempelt';
+        const since = new Date(posState.activeBreak.break_start).toLocaleTimeString('de-DE');
+        const diffM = Math.floor((Date.now() - new Date(posState.activeBreak.break_start)) / 60000);
+        const h = Math.floor(diffM / 60), m = diffM % 60;
+        clockSub = `
+            <div style="font-size: 1.5rem; font-weight: 600;">🍽️ PAUSE</div>
+            <div style="font-size: 0.875rem; opacity: 0.9; margin-top: 0.25rem;">Seit: ${since}</div>
+            <div style="font-size: 1.5rem; margin-top: 0.5rem; font-weight: 600;">${h > 0 ? h + 'h ' : ''}${m}min</div>`;
     }
 
     return `
-    <div class="pos-card">
-        <div class="pos-employee-header">
-            <button class="pos-back-btn" onclick="posLogout()">←</button>
-            <div class="pos-emp-info">
-                <div class="pos-emp-name">${emp.name}</div>
-                ${emp.department ? `<div class="pos-emp-dept">${emp.department}</div>` : ''}
+    <div style="background: var(--color-bg); min-height: 100vh; padding: 1rem;">
+        <div style="max-width: 600px; margin: 0 auto; background: transparent; border-radius: 12px; padding: 2rem; box-shadow: none; position: relative;">
+
+            <button onclick="posLogout()" style="position: absolute; top: 1rem; left: 1rem; background: var(--color-bg); color: #8B6F47; border: none; padding: 0.5rem; cursor: pointer; width: 2.5rem; height: 2.5rem; font-size: 1.2rem; border-radius: 12px;">←</button>
+
+            <h2 style="color: #2C3E50; font-weight: 700; margin-bottom: 1.5rem; text-align: center;">Willkommen, ${emp.name}!</h2>
+
+            <div style="background: ${onBreak ? '#F59E0B' : '#B28A6E'}; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; color: white;">
+                <div id="pos-time" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">${time}</div>
+                ${clockSub}
             </div>
-            <div style="width:2.4rem; flex-shrink:0;"></div>
-        </div>
 
-        <div class="pos-clock-display${onBreak ? ' on-break' : ''}">
-            <div class="time" id="pos-time">${time}</div>
-            ${clockSub}
-        </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <button onclick="posClockIn()" ${isClockedIn ? 'disabled' : ''} style="background: #6B8E6F; color: white; border: none; padding: 1rem; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 1rem; opacity: ${isClockedIn ? '0.5' : '1'};">Einstempeln</button>
+                <button onclick="posClockOut()" ${!isClockedIn || onBreak ? 'disabled' : ''} style="background: #B28A6E; color: white; border: none; padding: 1rem; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 1rem; opacity: ${!isClockedIn || onBreak ? '0.5' : '1'};">Ausstempeln</button>
+            </div>
 
-        <div class="pos-action-grid">
-            <button class="pos-action-btn clock-in"
-                ${isClockedIn ? 'disabled' : ''}
-                onclick="posClockIn()">Einstempeln</button>
-            <button class="pos-action-btn clock-out"
-                ${!isClockedIn ? 'disabled' : ''}
-                onclick="posClockOut()">Ausstempeln</button>
-        </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <button onclick="posBreakStart()" ${!isClockedIn || onBreak ? 'disabled' : ''} style="background: #B28A6E; color: white; border: none; padding: 1rem; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 1rem; opacity: ${!isClockedIn || onBreak ? '0.5' : '1'};">🍽️ Pause starten</button>
+                <button onclick="posBreakEnd()" ${!onBreak ? 'disabled' : ''} style="background: #6B8E6F; color: white; border: none; padding: 1rem; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 1rem; opacity: ${!onBreak ? '0.5' : '1'};">✓ Pause beenden</button>
+            </div>
 
-        ${isClockedIn ? `
-        <div class="pos-action-grid">
-            <button class="pos-action-btn break-start"
-                ${onBreak ? 'disabled' : ''}
-                onclick="posBreakStart()">⏸ Pause</button>
-            <button class="pos-action-btn break-end"
-                ${!onBreak ? 'disabled' : ''}
-                onclick="posBreakEnd()">▶ Weiter</button>
-        </div>` : ''}
-
-        ${entryInfo ? `<div class="pos-shift-info">${entryInfo}</div>` : ''}
-
-        ${isClockedIn && !posState.noteSaved ? `
-        <div style="display:flex; flex-direction:column; gap:0.75rem;">
-            <textarea id="pos-note-input" placeholder="Kommentar..."
-                style="width:100%; padding:0.75rem; border:1px solid #E5DDD5; border-radius:12px; font-family:inherit; font-size:0.9rem; resize:none; outline:none; background:white;"
-                rows="2"></textarea>
-            <div style="display:flex; justify-content:center;">
-                <button onclick="posSubmitNote()" style="width:3.2rem; height:3.2rem; border-radius:50%; background:#B28A6E; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            ${isClockedIn && !posState.noteSaved ? `
+            <div style="margin-top: 1.5rem;">
+                <label style="display: block; color: #2C3E50; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.875rem;">💬 Notiz für Admin:</label>
+                <textarea id="pos-note-input" placeholder="Kommentar..." rows="2"
+                    style="width: 100%; resize: vertical; padding: 0.75rem; border: 2px solid #B28A6E; border-radius: 12px; font-size: 1rem; box-sizing: border-box; color: #2C3E50; font-family: inherit;"></textarea>
+                <button onclick="posSubmitNote()"
+                    style="background: #8B6F47; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; margin-top: 0.5rem; font-size: 0.875rem;">
+                    💬 Notiz speichern
                 </button>
-            </div>
-        </div>` : ''}
+            </div>` : ''}
+
+        </div>
     </div>`;
 }
 
