@@ -142,7 +142,7 @@ function renderEmployeeScreen() {
         <div class="pos-status-badge ${statusClass}">${statusLabel}</div>
         <div class="pos-action-grid">
             <button class="pos-action-btn clock-in"
-                ${isClockedIn || isClockedOut ? 'disabled' : ''}
+                ${isClockedIn ? 'disabled' : ''}
                 onclick="posClockIn()">
                 Einstempeln
             </button>
