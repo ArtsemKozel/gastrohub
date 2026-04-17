@@ -1,6 +1,6 @@
 // ── POS ZEITERFASSUNG ─────────────────────────────────────
 // PIN-Login via employees_planit.password_hash
-// Clock-in/out via time_entries (clock_in / clock_out)
+// Clock-in/out via gh_time_entries (clock_in / clock_out)
 // Kiosk-Modus: user_id wird aus URL-Parameter ?uid= gelesen
 
 // ── STATE ─────────────────────────────────────────────────
@@ -9,7 +9,7 @@ const posState = {
     view:      'loading',   // loading | pin | employee
     userId:    null,        // restaurant user_id (aus URL-Parameter)
     employees: [],          // employees_planit (is_active)
-    entries:   [],          // heutige time_entries
+    entries:   [],          // heutige gh_time_entries
     employee:  null,        // eingeloggter Mitarbeiter
     entry:     null,        // letzter time_entry des Mitarbeiters
     pin:       '',
@@ -39,7 +39,7 @@ async function loadPosData() {
             .eq('user_id', uid)
             .eq('is_active', true)
             .order('name'),
-        db.from('time_entries')
+        db.from('gh_time_entries')
             .select('id, employee_id, clock_in, clock_out')
             .eq('user_id', uid)
             .gte('clock_in', today + 'T00:00:00')
@@ -208,7 +208,7 @@ async function posClockIn() {
     const emp  = posState.employee;
     const now  = new Date().toISOString();
 
-    const { error } = await db.from('time_entries')
+    const { error } = await db.from('gh_time_entries')
         .insert({
             user_id:     posState.userId,
             employee_id: emp.id,
@@ -217,7 +217,7 @@ async function posClockIn() {
 
     if (error) { posShowToast('Fehler beim Einstempeln'); return; }
 
-    const { data } = await db.from('time_entries')
+    const { data } = await db.from('gh_time_entries')
         .select('id, employee_id, clock_in, clock_out')
         .eq('user_id', posState.userId)
         .eq('employee_id', emp.id)
@@ -242,7 +242,7 @@ async function posClockOut() {
 
     const now = new Date().toISOString();
 
-    const { data, error } = await db.from('time_entries')
+    const { data, error } = await db.from('gh_time_entries')
         .update({ clock_out: now })
         .eq('id', entry.id)
         .select()
