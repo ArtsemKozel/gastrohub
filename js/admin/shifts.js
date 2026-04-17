@@ -410,6 +410,8 @@ let pendingShiftPayload  = null;
 let pendingShiftIsRepeat = false;
 let pendingShiftWeeks    = 1;
 let shiftTemplates       = [];
+let _clockListEmployeeId = null;
+let _clockListDateStr    = null;
 
 async function openShiftModal(employeeId, dateStr, existingShift, defaultDept) {
     _shiftModalScrollY      = window.scrollY;
@@ -476,6 +478,9 @@ async function openShiftModal(employeeId, dateStr, existingShift, defaultDept) {
 async function loadAndRenderClockList(employeeId, dateStr) {
     const clockGroup = document.getElementById('shift-clock-group');
     if (!clockGroup) return;
+
+    _clockListEmployeeId = employeeId;
+    _clockListDateStr    = dateStr;
 
     const { data: timeEntries } = await db.from('gh_time_entries')
         .select('id, clock_in, clock_out, note')
@@ -604,10 +609,11 @@ async function loadAndRenderClockList(employeeId, dateStr) {
                 </div>
             </div>
             <div style="text-align:center;">
-                <button type="button" onclick=""
+                <button type="button" onclick="saveManualClockEntry()"
                     style="background:#B28A6E; color:white; border:none; border-radius:8px; padding:0.45rem 1.25rem; font-size:0.875rem; font-weight:600; cursor:pointer;">
                     Speichern
                 </button>
+                <div id="clock-add-error" style="color:#E05555; font-size:0.8rem; margin-top:0.4rem;"></div>
             </div>
         </div>`;
 }
@@ -615,6 +621,82 @@ async function loadAndRenderClockList(employeeId, dateStr) {
 function toggleClockAddForm() {
     const form = document.getElementById('shift-clock-add-form');
     if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+async function saveManualClockEntry() {
+    const von     = document.getElementById('clock-add-von')?.value;
+    const bis     = document.getElementById('clock-add-bis')?.value;
+    const pauseRaw = parseInt(document.getElementById('clock-add-pause')?.value || '0', 10);
+    const pauseMin = isNaN(pauseRaw) || pauseRaw < 0 ? 0 : pauseRaw;
+    const errorEl = document.getElementById('clock-add-error');
+
+    if (errorEl) errorEl.textContent = '';
+
+    if (!von || !bis) {
+        if (errorEl) errorEl.textContent = 'Bitte Von und Bis ausfüllen.';
+        return;
+    }
+
+    const clockIn  = new Date(`${_clockListDateStr}T${von}:00`);
+    const clockOut = new Date(`${_clockListDateStr}T${bis}:00`);
+
+    if (clockOut <= clockIn) {
+        if (errorEl) errorEl.textContent = 'Bis muss nach Von liegen.';
+        return;
+    }
+
+    // Überschneidungs-Check gegen bestehende Einträge
+    const { data: existing } = await db.from('gh_time_entries')
+        .select('id, clock_in, clock_out')
+        .eq('user_id', adminSession.user.id)
+        .eq('employee_id', _clockListEmployeeId)
+        .gte('clock_in', _clockListDateStr + 'T00:00:00')
+        .lte('clock_in', _clockListDateStr + 'T23:59:59');
+
+    for (const e of existing || []) {
+        const exIn  = new Date(e.clock_in);
+        const exOut = e.clock_out ? new Date(e.clock_out) : null;
+        if (!exOut) continue;
+        if (clockIn < exOut && clockOut > exIn) {
+            if (errorEl) errorEl.textContent = 'Zeitspanne überschneidet sich mit einem bestehenden Eintrag.';
+            return;
+        }
+    }
+
+    const { error: insertErr } = await db.from('gh_time_entries').insert({
+        user_id:     adminSession.user.id,
+        employee_id: _clockListEmployeeId,
+        clock_in:    clockIn.toISOString(),
+        clock_out:   clockOut.toISOString()
+    });
+
+    if (insertErr) {
+        if (errorEl) errorEl.textContent = 'Fehler beim Speichern: ' + insertErr.message;
+        return;
+    }
+
+    if (pauseMin > 0) {
+        const { data: newEntry } = await db.from('gh_time_entries')
+            .select('id')
+            .eq('user_id', adminSession.user.id)
+            .eq('employee_id', _clockListEmployeeId)
+            .eq('clock_in', clockIn.toISOString())
+            .maybeSingle();
+
+        if (newEntry) {
+            const breakStart = new Date(clockIn.getTime() + 60 * 60 * 1000);
+            const breakEnd   = new Date(breakStart.getTime() + pauseMin * 60 * 1000);
+            await db.from('gh_breaks').insert({
+                user_id:       adminSession.user.id,
+                employee_id:   _clockListEmployeeId,
+                time_entry_id: newEntry.id,
+                break_start:   breakStart.toISOString(),
+                break_end:     breakEnd.toISOString()
+            });
+        }
+    }
+
+    await loadAndRenderClockList(_clockListEmployeeId, _clockListDateStr);
 }
 
 async function deleteTimeEntry(id, employeeId, dateStr) {
