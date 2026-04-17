@@ -160,8 +160,8 @@ function renderEmployeeScreen() {
                 <textarea id="pos-note-input" placeholder="Kommentar..." rows="2"
                     style="width: 100%; resize: vertical; padding: 0.75rem; border: 2px solid #B28A6E; border-radius: 12px; font-size: 1rem; box-sizing: border-box; color: #2C3E50; font-family: inherit;"></textarea>
                 <button onclick="posSubmitNote()"
-                    style="background: #8B6F47; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; margin-top: 0.5rem; font-size: 0.875rem;">
-                    💬 Notiz speichern
+                    style="width:3.2rem; height:3.2rem; border-radius:50%; background:#8B6F47; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-top:0.5rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </button>
             </div>` : ''}
 
