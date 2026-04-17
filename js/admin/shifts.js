@@ -562,10 +562,7 @@ async function loadAndRenderClockList(employeeId, dateStr) {
         rows.push(`
         <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.25rem;">
             <div style="flex:1; display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem;">
-                <div style="grid-column:1/3; background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
-                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Gesamt (inkl. Pausen abgezogen)</div>
-                </div>
-                <div style="background:#B28A6E1A; border-radius:8px; padding:0.5rem 0.75rem; border:1px solid #B28A6E44;">
+                <div style="grid-column:3/4; background:#B28A6E1A; border-radius:8px; padding:0.5rem 0.75rem; border:1px solid #B28A6E44;">
                     <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Gesamt Netto</div>
                     <div style="font-size:0.95rem; font-weight:700; color:#B28A6E;">${totalStr}</div>
                 </div>
