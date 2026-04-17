@@ -483,7 +483,7 @@ async function loadAndRenderClockList(employeeId, dateStr) {
     _clockListDateStr    = dateStr;
 
     const { data: timeEntries } = await db.from('gh_time_entries')
-        .select('id, clock_in, clock_out, note')
+        .select('id, clock_in, clock_out, note, is_manual')
         .eq('user_id', adminSession.user.id)
         .eq('employee_id', employeeId)
         .gte('clock_in', dateStr + 'T00:00:00')
@@ -544,7 +544,10 @@ async function loadAndRenderClockList(employeeId, dateStr) {
             <div style="flex:1; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0.5rem;">
                 <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
                     <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">${label ? label + ' · ' : ''}Ein</div>
-                    <div style="font-size:0.95rem; font-weight:600; color:var(--color-text);">${cin}</div>
+                    <div style="display:flex; align-items:center; gap:0.35rem;">
+                        <span style="font-size:0.95rem; font-weight:600; color:var(--color-text);">${cin}</span>
+                        ${te.is_manual ? '<span style="font-size:0.65rem; font-weight:600; background:#E8E3DE; color:#8B6F47; border-radius:5px; padding:0.1rem 0.35rem;">manuell</span>' : ''}
+                    </div>
                 </div>
                 <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
                     <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Aus</div>
@@ -667,7 +670,8 @@ async function saveManualClockEntry() {
         user_id:     adminSession.user.id,
         employee_id: _clockListEmployeeId,
         clock_in:    clockIn.toISOString(),
-        clock_out:   clockOut.toISOString()
+        clock_out:   clockOut.toISOString(),
+        is_manual:   true
     });
 
     if (insertErr) {
