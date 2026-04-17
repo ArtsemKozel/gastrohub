@@ -94,7 +94,7 @@ function renderPinScreen() {
             style="width:100%; text-align:center; font-size:2rem; letter-spacing:0.3em; padding:0.75rem; border:2px solid var(--color-primary); border-radius:12px; outline:none; margin-bottom:0.75rem; -moz-appearance:textfield;"
             oninput="posPinInput(this.value)"
             onkeydown="if(event.key==='Enter') posLogin()">
-        <button class="pos-action-btn clock-in" style="width:100%; margin-bottom:0.5rem;" onclick="posLogin()">Anmelden</button>
+        <button class="pos-action-btn clock-in" style="width:100%; margin-bottom:0.5rem; background:#B28A6E;" onclick="posLogin()">Anmelden</button>
         <div class="pos-error" id="pos-error">${posState.error}</div>
     </div>`;
 }
