@@ -720,6 +720,69 @@ function toggleShiftClock() {
     toggle.textContent = open ? '▼' : '▶';
 }
 
+let _todayClockSummaryLoaded = false;
+
+function toggleTodayClockSummary() {
+    const body   = document.getElementById('today-clock-summary-body');
+    const toggle = document.getElementById('today-clock-summary-toggle');
+    const open   = body.style.display === 'none';
+    body.style.display = open ? 'block' : 'none';
+    toggle.textContent = open ? '▼' : '▶';
+    if (open && !_todayClockSummaryLoaded) {
+        _todayClockSummaryLoaded = true;
+        loadTodayClockSummary();
+    }
+}
+
+async function loadTodayClockSummary() {
+    const list = document.getElementById('today-clock-summary-list');
+    if (!list) return;
+
+    const dateEl = document.getElementById('today-clock-summary-date');
+    if (dateEl) {
+        dateEl.textContent = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+    }
+
+    list.innerHTML = '<div style="color:var(--color-text-light); font-size:0.85rem;">Lädt…</div>';
+
+    const today = new Date().toISOString().split('T')[0];
+    const { data: entries } = await db.from('gh_time_entries')
+        .select('id, employee_id, clock_in, clock_out')
+        .eq('user_id', adminSession.user.id)
+        .gte('clock_in', today + 'T00:00:00')
+        .lte('clock_in', today + 'T23:59:59')
+        .order('clock_in', { ascending: true });
+
+    if (!entries || entries.length === 0) {
+        list.innerHTML = '<div style="color:var(--color-text-light); font-size:0.85rem;">Noch keine Stempelzeiten heute.</div>';
+        return;
+    }
+
+    const fmt = t => new Date(t).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+    list.innerHTML = entries.map(e => {
+        const emp      = employees.find(em => em.id === e.employee_id);
+        const name     = emp ? emp.name : '—';
+        const cin      = fmt(e.clock_in);
+        const cout     = e.clock_out ? fmt(e.clock_out) : null;
+        const endTime  = e.clock_out ? new Date(e.clock_out) : new Date();
+        const diffM    = Math.round((endTime - new Date(e.clock_in)) / 60000);
+        const h        = Math.floor(diffM / 60), m = diffM % 60;
+        const duration = h > 0 ? `${h}h ${m}min` : `${m}min`;
+        const status   = cout
+            ? `<span style="color:var(--color-text-light);">${cout}</span>`
+            : `<span style="background:#6B8E6F22; color:#6B8E6F; border-radius:5px; padding:0.1rem 0.4rem; font-size:0.75rem; font-weight:600;">noch da</span>`;
+
+        return `
+        <div style="display:grid; grid-template-columns:1.6fr 0.8fr 1fr 0.9fr; align-items:center; gap:0.5rem; padding:0.45rem 0.5rem; border-radius:8px; background:var(--color-gray); margin-bottom:0.35rem;">
+            <div style="font-size:0.875rem; font-weight:600; color:var(--color-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${name}</div>
+            <div style="font-size:0.875rem; color:var(--color-text);">${cin}</div>
+            <div style="font-size:0.875rem;">${status}</div>
+            <div style="font-size:0.8rem; color:var(--color-text-light); text-align:right;">${duration}</div>
+        </div>`;
+    }).join('');
+}
+
 function toggleShiftActual() {
     const body   = document.getElementById('shift-actual-body');
     const toggle = document.getElementById('shift-actual-toggle');

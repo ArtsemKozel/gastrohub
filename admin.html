@@ -578,6 +578,19 @@
 
     <!-- TAB 1: SCHICHTPLANUNG -->
     <div id="tab-schichtplanung" class="tab-content active">
+
+        <!-- Zeiterfassung heute -->
+        <div style="margin-bottom:1rem; border:1px solid #E8E3DE; border-radius:10px; overflow:hidden;">
+            <button type="button" onclick="toggleTodayClockSummary()"
+                style="display:flex; justify-content:space-between; align-items:center; width:100%; background:var(--color-gray); border:none; padding:0.6rem 0.75rem; cursor:pointer; font-size:0.9rem; font-weight:600; color:var(--color-text);">
+                <span>Zeiterfassung heute &nbsp;<span id="today-clock-summary-date" style="font-weight:400; color:var(--color-text-light); font-size:0.82rem;"></span></span>
+                <span id="today-clock-summary-toggle">▶</span>
+            </button>
+            <div id="today-clock-summary-body" style="display:none; padding:0.75rem;">
+                <div id="today-clock-summary-list"></div>
+            </div>
+        </div>
+
         <div class="month-selector">
             <button onclick="changeWeek(-1)">◀</button>
             <span id="week-label"></span>
