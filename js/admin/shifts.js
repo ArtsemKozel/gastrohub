@@ -538,6 +538,8 @@ async function loadAndRenderClockList(employeeId, dateStr) {
 
 async function deleteTimeEntry(id, employeeId, dateStr) {
     if (!confirm('Stempel-Eintrag wirklich löschen?')) return;
+    const { error: breakErr } = await db.from('gh_breaks').delete().eq('time_entry_id', id);
+    if (breakErr) { alert('Fehler beim Löschen der Pausen: ' + breakErr.message); return; }
     const { error } = await db.from('gh_time_entries').delete().eq('id', id);
     if (error) { alert('Fehler: ' + error.message); return; }
     await loadAndRenderClockList(employeeId, dateStr);
