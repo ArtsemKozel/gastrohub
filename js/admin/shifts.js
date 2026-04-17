@@ -461,8 +461,6 @@ async function openShiftModal(employeeId, dateStr, existingShift, defaultDept) {
     const clockGroup = document.getElementById('shift-clock-group');
     if (clockGroup && existingShift) {
         await loadAndRenderClockList(existingShift.employee_id, dateStr);
-    } else if (clockGroup) {
-        clockGroup.style.display = 'none';
     }
 
     document.getElementById('shift-repeat').checked              = false;
@@ -488,7 +486,7 @@ async function loadAndRenderClockList(employeeId, dateStr) {
         .order('clock_in', { ascending: true });
 
     const entries = timeEntries || [];
-    clockGroup.style.display = entries.length ? 'block' : 'none';
+    clockGroup.style.display = 'block';
 
     const note = entries.map(e => e.note?.trim()).filter(Boolean).join(' / ');
     const noteEl     = document.getElementById('shift-clock-note');
