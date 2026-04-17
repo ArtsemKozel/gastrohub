@@ -577,6 +577,44 @@ async function loadAndRenderClockList(employeeId, dateStr) {
     }
 
     document.getElementById('shift-clock-list').innerHTML = rows.join('');
+
+    document.getElementById('shift-clock-add-wrap').innerHTML = `
+        <div style="text-align:center; margin-top:0.75rem;">
+            <button type="button" onclick="toggleClockAddForm()"
+                style="background:none; border:1px solid #B28A6E; color:#B28A6E; border-radius:8px; padding:0.4rem 1rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                + Eintrag nachtragen
+            </button>
+        </div>
+        <div id="shift-clock-add-form" style="display:none; margin-top:0.75rem; background:var(--color-gray); border-radius:10px; padding:0.75rem;">
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; margin-bottom:0.6rem;">
+                <div>
+                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.2rem;">Von</div>
+                    <input id="clock-add-von" type="time"
+                        style="width:100%; padding:0.4rem 0.5rem; border:1px solid #ddd; border-radius:7px; font-size:0.95rem;">
+                </div>
+                <div>
+                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.2rem;">Bis</div>
+                    <input id="clock-add-bis" type="time"
+                        style="width:100%; padding:0.4rem 0.5rem; border:1px solid #ddd; border-radius:7px; font-size:0.95rem;">
+                </div>
+                <div>
+                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.2rem;">Pause (Min)</div>
+                    <input id="clock-add-pause" type="number" min="0" placeholder="0"
+                        style="width:100%; padding:0.4rem 0.5rem; border:1px solid #ddd; border-radius:7px; font-size:0.95rem;">
+                </div>
+            </div>
+            <div style="text-align:center;">
+                <button type="button" onclick=""
+                    style="background:#B28A6E; color:white; border:none; border-radius:8px; padding:0.45rem 1.25rem; font-size:0.875rem; font-weight:600; cursor:pointer;">
+                    Speichern
+                </button>
+            </div>
+        </div>`;
+}
+
+function toggleClockAddForm() {
+    const form = document.getElementById('shift-clock-add-form');
+    if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 
 async function deleteTimeEntry(id, employeeId, dateStr) {
