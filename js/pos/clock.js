@@ -1,6 +1,6 @@
 // ── POS ZEITERFASSUNG ─────────────────────────────────────
 // PIN-Login via employees_planit.password_hash
-// Clock-in/out via shifts.clock_in / clock_out
+// Clock-in/out via time_entries (clock_in / clock_out)
 // Kiosk-Modus: user_id wird aus URL-Parameter ?uid= gelesen
 
 // ── STATE ─────────────────────────────────────────────────
@@ -9,9 +9,9 @@ const posState = {
     view:      'loading',   // loading | pin | employee
     userId:    null,        // restaurant user_id (aus URL-Parameter)
     employees: [],          // employees_planit (is_active)
-    shifts:    [],          // heutige shifts
+    entries:   [],          // heutige time_entries
     employee:  null,        // eingeloggter Mitarbeiter
-    shift:     null,        // heutiger Shift des Mitarbeiters
+    entry:     null,        // letzter time_entry des Mitarbeiters
     pin:       '',
     error:     ''
 };
@@ -40,21 +40,22 @@ async function loadPosData() {
     const today = new Date().toISOString().split('T')[0];
     const uid   = posState.userId;
 
-    const [{ data: emps }, { data: shifts }] = await Promise.all([
+    const [{ data: emps }, { data: entries }] = await Promise.all([
         db.from('employees_planit')
             .select('id, name, department, password_hash, user_id')
             .eq('user_id', uid)
             .eq('is_active', true)
             .order('name'),
-        db.from('shifts')
-            .select('id, employee_id, shift_date, start_time, end_time, clock_in, clock_out, break_minutes')
+        db.from('time_entries')
+            .select('id, employee_id, clock_in, clock_out')
             .eq('user_id', uid)
-            .eq('shift_date', today)
-            .eq('is_open', false)
+            .gte('clock_in', today + 'T00:00:00')
+            .lte('clock_in', today + 'T23:59:59')
+            .order('clock_in', { ascending: true })
     ]);
 
-    posState.employees = emps  || [];
-    posState.shifts    = shifts || [];
+    posState.employees = emps    || [];
+    posState.entries   = entries || [];
 }
 
 // ── UHRZEIT-TICKER ────────────────────────────────────────
@@ -105,30 +106,30 @@ function renderPinScreen() {
 
 function renderEmployeeScreen() {
     const emp   = posState.employee;
-    const shift = posState.shift;
+    const entry = posState.entry;
     if (!emp) return '';
 
-    const isClockedIn  = !!(shift?.clock_in && !shift?.clock_out);
-    const isClockedOut = !!(shift?.clock_in && shift?.clock_out);
+    const isClockedIn  = !!(entry?.clock_in && !entry?.clock_out);
+    const isClockedOut = !!(entry?.clock_in && entry?.clock_out);
 
     let statusLabel, statusClass;
     if      (isClockedIn)  { statusLabel = 'Eingestempelt';           statusClass = 'clocked-in';  }
     else if (isClockedOut) { statusLabel = 'Ausgestempelt';           statusClass = 'clocked-out'; }
     else                   { statusLabel = 'Noch nicht eingestempelt'; statusClass = 'not-started'; }
 
-    let shiftInfo = '';
-    if (shift) {
-        const startDisp = (shift.clock_in  || shift.start_time).slice(0, 5);
-        const endDisp   = (shift.clock_out || shift.end_time).slice(0, 5);
-        shiftInfo = `Schicht: ${startDisp} – ${endDisp} Uhr`;
+    let entryInfo = '';
+    if (entry) {
+        const startDisp = new Date(entry.clock_in).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
         if (isClockedIn) {
-            const startDt = new Date(new Date().toISOString().split('T')[0] + 'T' + shift.clock_in);
-            const diffM   = Math.floor((Date.now() - startDt) / 60000);
+            const diffM = Math.floor((Date.now() - new Date(entry.clock_in)) / 60000);
             const h = Math.floor(diffM / 60), m = diffM % 60;
-            shiftInfo += ` · ${h > 0 ? h + 'h ' : ''}${m}min`;
+            entryInfo = `Eingestempelt: ${startDisp} Uhr · ${h > 0 ? h + 'h ' : ''}${m}min`;
+        } else {
+            const endDisp = new Date(entry.clock_out).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+            entryInfo = `Schicht: ${startDisp} – ${endDisp} Uhr`;
         }
     } else {
-        shiftInfo = 'Keine Schicht heute geplant — freies Einstempeln';
+        entryInfo = 'Heute noch nicht eingestempelt';
     }
 
     const time = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -158,7 +159,7 @@ function renderEmployeeScreen() {
                 Ausstempeln
             </button>
         </div>
-        <div class="pos-shift-info">${shiftInfo}</div>
+        <div class="pos-shift-info">${entryInfo}</div>
     </div>`;
 }
 
@@ -176,7 +177,6 @@ async function posLogin() {
     const pin   = input ? input.value.trim() : posState.pin.trim();
     if (!pin) return;
 
-    console.log('Eingegebener PIN:', JSON.stringify(pin), 'DB-Wert:', JSON.stringify(posState.employees[0]?.password_hash));
     const emp = posState.employees.find(e => String(e.password_hash).trim() === String(pin).trim());
     if (!emp) {
         posState.error = 'Falscher PIN. Bitte nochmals versuchen.';
@@ -188,8 +188,12 @@ async function posLogin() {
         return;
     }
 
+    // Letzten offenen Eintrag des Mitarbeiters ermitteln
+    const empEntries = posState.entries.filter(e => e.employee_id === emp.id);
+    const lastEntry  = empEntries.length ? empEntries[empEntries.length - 1] : null;
+
     posState.employee = emp;
-    posState.shift    = posState.shifts.find(s => s.employee_id === emp.id) || null;
+    posState.entry    = lastEntry;
     posState.pin      = '';
     posState.error    = '';
     posState.view     = 'employee';
@@ -198,7 +202,7 @@ async function posLogin() {
 
 function posLogout() {
     posState.employee = null;
-    posState.shift    = null;
+    posState.entry    = null;
     posState.pin      = '';
     posState.error    = '';
     posState.view     = 'pin';
@@ -208,60 +212,48 @@ function posLogout() {
 // ── CLOCK IN / OUT ────────────────────────────────────────
 
 async function posClockIn() {
-    const emp     = posState.employee;
-    const today   = new Date().toISOString().split('T')[0];
-    const nowTime = new Date().toTimeString().slice(0, 8); // HH:MM:SS
+    const emp  = posState.employee;
+    const now  = new Date().toISOString();
 
-    let shift = posState.shift;
+    const { data, error } = await db.from('time_entries')
+        .insert({
+            user_id:     posState.userId,
+            employee_id: emp.id,
+            clock_in:    now
+        })
+        .select()
+        .maybeSingle();
 
-    if (shift) {
-        const { data, error } = await db.from('shifts')
-            .update({ clock_in: nowTime })
-            .eq('id', shift.id)
-            .select('id, clock_in')
-            .maybeSingle();
-        if (error || !data) { posShowToast('Fehler beim Einstempeln'); return; }
-        posState.shift = { ...shift, clock_in: nowTime, clock_out: null };
-    } else {
-        // Keine geplante Schicht — spontan anlegen
-        const { data, error } = await db.from('shifts').insert({
-            user_id:      posState.userId,
-            employee_id:  emp.id,
-            shift_date:   today,
-            start_time:   nowTime,
-            end_time:     nowTime,
-            break_minutes: 0,
-            clock_in:     nowTime,
-            is_open:      false,
-            department:   emp.department || null
-        }).select().maybeSingle();
-        if (error || !data) { posShowToast('Fehler beim Einstempeln'); return; }
-        posState.shift = data;
-        posState.shifts.push(data);
-    }
+    if (error || !data) { posShowToast('Fehler beim Einstempeln'); return; }
 
-    posShowToast('✓ Eingestempelt um ' + nowTime.slice(0, 5) + ' Uhr');
+    posState.entry = data;
+    posState.entries.push(data);
+
+    const timeStr = new Date(now).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    posShowToast('✓ Eingestempelt um ' + timeStr + ' Uhr');
     renderPOS();
 }
 
 async function posClockOut() {
-    const shift = posState.shift;
-    if (!shift?.clock_in) return;
+    const entry = posState.entry;
+    if (!entry?.clock_in || entry.clock_out) return;
 
-    const nowTime = new Date().toTimeString().slice(0, 8);
+    const now = new Date().toISOString();
 
-    const { data, error } = await db.from('shifts')
-        .update({ clock_out: nowTime })
-        .eq('id', shift.id)
-        .select('id, clock_out')
+    const { data, error } = await db.from('time_entries')
+        .update({ clock_out: now })
+        .eq('id', entry.id)
+        .select()
         .maybeSingle();
+
     if (error || !data) { posShowToast('Fehler beim Ausstempeln'); return; }
 
-    posState.shift = { ...shift, clock_out: nowTime };
-    const idx = posState.shifts.findIndex(s => s.id === shift.id);
-    if (idx > -1) posState.shifts[idx] = posState.shift;
+    posState.entry = data;
+    const idx = posState.entries.findIndex(e => e.id === entry.id);
+    if (idx > -1) posState.entries[idx] = data;
 
-    posShowToast('✓ Ausgestempelt um ' + nowTime.slice(0, 5) + ' Uhr');
+    const timeStr = new Date(now).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    posShowToast('✓ Ausgestempelt um ' + timeStr + ' Uhr');
     renderPOS();
     setTimeout(posLogout, 2200);
 }
