@@ -749,11 +749,7 @@ async function loadTodayClockSummary() {
     const dateStr  = (input && input.value) ? input.value : todayStr;
 
     const titleEl = document.getElementById('today-clock-summary-title');
-    if (titleEl) {
-        titleEl.textContent = dateStr === todayStr
-            ? 'Zeiterfassung heute'
-            : 'Zeiterfassung ' + formatDate(dateStr);
-    }
+    if (titleEl) titleEl.textContent = 'Zeiterfassung am';
 
     list.innerHTML = '<div style="color:var(--color-text-light); font-size:0.85rem;">Lädt…</div>';
 
