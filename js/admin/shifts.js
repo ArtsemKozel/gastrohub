@@ -537,11 +537,11 @@ async function loadAndRenderClockList(employeeId, dateStr) {
         <div style="display:flex; align-items:center; gap:0.5rem;">
             <div style="flex:1; display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem;">
                 <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
-                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">${label ? label + ' · ' : ''}Eingestempelt</div>
+                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">${label ? label + ' · ' : ''}Ein</div>
                     <div style="font-size:0.95rem; font-weight:600; color:var(--color-text);">${cin}</div>
                 </div>
                 <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
-                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Ausgestempelt</div>
+                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Aus</div>
                     <div style="font-size:0.95rem; font-weight:600; color:${te.clock_out ? 'var(--color-text)' : 'var(--color-text-light)'};">${cout}</div>
                 </div>
                 <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
