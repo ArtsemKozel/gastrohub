@@ -730,31 +730,42 @@ function toggleTodayClockSummary() {
     toggle.textContent = open ? '▼' : '▶';
     if (open && !_todayClockSummaryLoaded) {
         _todayClockSummaryLoaded = true;
+        const input = document.getElementById('today-clock-date');
+        if (input && !input.value) input.value = new Date().toISOString().split('T')[0];
         loadTodayClockSummary();
     }
+}
+
+function onTodayClockDateChange() {
+    loadTodayClockSummary();
 }
 
 async function loadTodayClockSummary() {
     const list = document.getElementById('today-clock-summary-list');
     if (!list) return;
 
-    const dateEl = document.getElementById('today-clock-summary-date');
-    if (dateEl) {
-        dateEl.textContent = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+    const todayStr = new Date().toISOString().split('T')[0];
+    const input    = document.getElementById('today-clock-date');
+    const dateStr  = (input && input.value) ? input.value : todayStr;
+
+    const titleEl = document.getElementById('today-clock-summary-title');
+    if (titleEl) {
+        titleEl.textContent = dateStr === todayStr
+            ? 'Zeiterfassung heute'
+            : 'Zeiterfassung ' + formatDate(dateStr);
     }
 
     list.innerHTML = '<div style="color:var(--color-text-light); font-size:0.85rem;">Lädt…</div>';
 
-    const today = new Date().toISOString().split('T')[0];
     const { data: entries } = await db.from('gh_time_entries')
         .select('id, employee_id, clock_in, clock_out')
         .eq('user_id', adminSession.user.id)
-        .gte('clock_in', today + 'T00:00:00')
-        .lte('clock_in', today + 'T23:59:59')
+        .gte('clock_in', dateStr + 'T00:00:00')
+        .lte('clock_in', dateStr + 'T23:59:59')
         .order('clock_in', { ascending: true });
 
     if (!entries || entries.length === 0) {
-        list.innerHTML = '<div style="color:var(--color-text-light); font-size:0.85rem;">Noch keine Stempelzeiten heute.</div>';
+        list.innerHTML = '<div style="color:var(--color-text-light); font-size:0.85rem;">Keine Stempelzeiten für diesen Tag.</div>';
         return;
     }
 

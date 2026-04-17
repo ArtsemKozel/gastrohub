@@ -583,7 +583,13 @@
         <div style="margin-bottom:1rem; border:1px solid #E8E3DE; border-radius:10px; overflow:hidden;">
             <button type="button" onclick="toggleTodayClockSummary()"
                 style="display:flex; justify-content:space-between; align-items:center; width:100%; background:var(--color-gray); border:none; padding:0.6rem 0.75rem; cursor:pointer; font-size:0.9rem; font-weight:600; color:var(--color-text);">
-                <span>Zeiterfassung heute &nbsp;<span id="today-clock-summary-date" style="font-weight:400; color:var(--color-text-light); font-size:0.82rem;"></span></span>
+                <span style="display:flex; align-items:center; gap:0.6rem;">
+                    <span id="today-clock-summary-title">Zeiterfassung heute</span>
+                    <input type="date" id="today-clock-date"
+                        onclick="event.stopPropagation()"
+                        onchange="onTodayClockDateChange()"
+                        style="font-size:0.8rem; font-weight:400; border:1px solid #ddd; border-radius:6px; padding:0.15rem 0.4rem; color:var(--color-text); background:white; cursor:pointer;">
+                </span>
                 <span id="today-clock-summary-toggle">▶</span>
             </button>
             <div id="today-clock-summary-body" style="display:none; padding:0.75rem;">
