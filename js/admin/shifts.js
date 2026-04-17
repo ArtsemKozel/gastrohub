@@ -524,10 +524,13 @@ async function loadAndRenderClockList(employeeId, dateStr) {
             : '—';
         const label = entries.length > 1 ? `Eintrag ${i + 1}` : '';
 
+        const pauseMin = breakMinByEntry[te.id] || 0;
+        const pause    = pauseMin > 0 ? `${pauseMin} min` : '—';
+
         let netto = '—';
         if (te.clock_out) {
             const diffM = Math.round((new Date(te.clock_out) - new Date(te.clock_in)) / 60000);
-            const netM  = diffM - (breakMinByEntry[te.id] || 0);
+            const netM  = diffM - pauseMin;
             totalNettoMin += netM;
             const h = Math.floor(netM / 60), m = netM % 60;
             netto = h > 0 ? `${h}h ${m}min` : `${m}min`;
@@ -535,7 +538,7 @@ async function loadAndRenderClockList(employeeId, dateStr) {
 
         return `
         <div style="display:flex; align-items:center; gap:0.5rem;">
-            <div style="flex:1; display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem;">
+            <div style="flex:1; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0.5rem;">
                 <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
                     <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">${label ? label + ' · ' : ''}Ein</div>
                     <div style="font-size:0.95rem; font-weight:600; color:var(--color-text);">${cin}</div>
@@ -543,6 +546,10 @@ async function loadAndRenderClockList(employeeId, dateStr) {
                 <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
                     <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Aus</div>
                     <div style="font-size:0.95rem; font-weight:600; color:${te.clock_out ? 'var(--color-text)' : 'var(--color-text-light)'};">${cout}</div>
+                </div>
+                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
+                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Pause</div>
+                    <div style="font-size:0.95rem; font-weight:600; color:${pauseMin > 0 ? 'var(--color-text)' : 'var(--color-text-light)'};">${pause}</div>
                 </div>
                 <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
                     <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Netto</div>
@@ -561,8 +568,8 @@ async function loadAndRenderClockList(employeeId, dateStr) {
         const totalStr = th > 0 ? `${th}h ${tm}min` : `${tm}min`;
         rows.push(`
         <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.25rem;">
-            <div style="flex:1; display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem;">
-                <div style="grid-column:3/4; background:#B28A6E1A; border-radius:8px; padding:0.5rem 0.75rem; border:1px solid #B28A6E44;">
+            <div style="flex:1; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0.5rem;">
+                <div style="grid-column:4/5; background:#B28A6E1A; border-radius:8px; padding:0.5rem 0.75rem; border:1px solid #B28A6E44;">
                     <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Gesamt Netto</div>
                     <div style="font-size:0.95rem; font-weight:700; color:#B28A6E;">${totalStr}</div>
                 </div>
