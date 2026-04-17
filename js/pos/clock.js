@@ -88,10 +88,10 @@ function renderPinScreen() {
             <div class="date">${date}</div>
         </div>
         <div style="text-align:center; font-size:0.85rem; color:var(--color-text-light); margin-bottom:0.75rem;">PIN eingeben</div>
-        <input id="pos-pin-input" type="number" inputmode="numeric" pattern="[0-9]*"
-            placeholder="••••"
+        <input id="pos-pin-input" type="password" inputmode="numeric" pattern="[0-9]*"
+            placeholder="PIN eingeben"
             maxlength="4"
-            style="width:100%; text-align:center; font-size:2rem; letter-spacing:0.3em; padding:0.75rem; border:2px solid var(--color-primary); border-radius:12px; outline:none; margin-bottom:0.75rem; -moz-appearance:textfield;"
+            style="width:100%; text-align:center; font-size:2rem; letter-spacing:0.3em; padding:0.75rem; border:2px solid var(--color-primary); border-radius:12px; outline:none; margin-bottom:0.75rem;"
             oninput="posPinInput(this.value)"
             onkeydown="if(event.key==='Enter') posLogin()">
         <button class="pos-action-btn clock-in" style="width:100%; margin-bottom:0.5rem; background:#B28A6E;" onclick="posLogin()">Anmelden</button>
