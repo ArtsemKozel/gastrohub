@@ -278,7 +278,6 @@ async function posClockOut() {
     const timeStr = new Date(now).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
     posShowToast('✓ Ausgestempelt um ' + timeStr + ' Uhr');
     renderPOS();
-    setTimeout(posLogout, 2200);
 }
 
 // ── KOMMENTAR ─────────────────────────────────────────────
