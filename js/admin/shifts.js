@@ -466,6 +466,25 @@ async function openShiftModal(employeeId, dateStr, existingShift, defaultDept) {
         document.getElementById('shift-clock-out-display').textContent = existingShift?.clock_out ? existingShift.clock_out.slice(0,5) : '—';
     }
 
+    const noteGroup = document.getElementById('shift-time-entry-note-group');
+    if (noteGroup && existingShift) {
+        const { data: te } = await db.from('gh_time_entries')
+            .select('note')
+            .eq('user_id', adminSession.user.id)
+            .eq('employee_id', existingShift.employee_id)
+            .gte('clock_in', dateStr + 'T00:00:00')
+            .lte('clock_in', dateStr + 'T23:59:59')
+            .not('note', 'is', null)
+            .order('clock_in', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        const note = te?.note?.trim();
+        noteGroup.style.display = note ? 'block' : 'none';
+        document.getElementById('shift-time-entry-note').textContent = note || '';
+    } else if (noteGroup) {
+        noteGroup.style.display = 'none';
+    }
+
     document.getElementById('shift-repeat').checked              = false;
     document.getElementById('shift-repeat-group').style.display  = 'none';
     document.getElementById('shift-repeat-weeks').value          = 4;

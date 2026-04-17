@@ -15,7 +15,8 @@ const posState = {
     breaks:      [],          // heutige gh_breaks des Mitarbeiters
     activeBreak: null,        // offene Pause (break_end = null)
     pin:         '',
-    error:       ''
+    error:       '',
+    noteSaved:   false        // Kommentar nach Einstempeln bereits gespeichert
 };
 
 // ── INIT ──────────────────────────────────────────────────
@@ -42,7 +43,7 @@ async function loadPosData() {
             .eq('is_active', true)
             .order('name'),
         db.from('gh_time_entries')
-            .select('id, employee_id, clock_in, clock_out')
+            .select('id, employee_id, clock_in, clock_out, note')
             .eq('user_id', uid)
             .gte('clock_in', today + 'T00:00:00')
             .lte('clock_in', today + 'T23:59:59')
@@ -159,6 +160,17 @@ function renderEmployeeScreen() {
         </div>
         <div class="pos-shift-info">${entryInfo}</div>
         ${renderBreakSection()}
+        ${isClockedIn && !posState.noteSaved ? `
+        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+            <textarea id="pos-note-input" placeholder="Kommentar..."
+                style="width:100%; padding:0.75rem; border:1px solid var(--color-border,#E5E5E5); border-radius:12px; font-family:inherit; font-size:0.9rem; resize:none; outline:none; background:white;"
+                rows="2"></textarea>
+            <div style="display:flex; justify-content:center;">
+                <button onclick="posSubmitNote()" style="width:3.2rem; height:3.2rem; border-radius:50%; background:#B28A6E; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+            </div>
+        </div>` : ''}
     </div>`;
 }
 
@@ -207,6 +219,7 @@ function posLogout() {
     posState.activeBreak = null;
     posState.pin         = '';
     posState.error       = '';
+    posState.noteSaved   = false;
     posState.view        = 'pin';
     renderPOS();
 }
@@ -227,7 +240,7 @@ async function posClockIn() {
     if (error) { posShowToast('Fehler beim Einstempeln'); return; }
 
     const { data } = await db.from('gh_time_entries')
-        .select('id, employee_id, clock_in, clock_out')
+        .select('id, employee_id, clock_in, clock_out, note')
         .eq('user_id', posState.userId)
         .eq('employee_id', emp.id)
         .is('clock_out', null)
@@ -240,6 +253,7 @@ async function posClockIn() {
     posState.entry       = data;
     posState.breaks      = [];
     posState.activeBreak = null;
+    posState.noteSaved   = false;
     posState.entries.push(data);
 
     const timeStr = new Date(now).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
@@ -269,6 +283,25 @@ async function posClockOut() {
     posShowToast('✓ Ausgestempelt um ' + timeStr + ' Uhr');
     renderPOS();
     setTimeout(posLogout, 2200);
+}
+
+// ── KOMMENTAR ─────────────────────────────────────────────
+
+async function posSubmitNote() {
+    const entry = posState.entry;
+    if (!entry) return;
+    const note = (document.getElementById('pos-note-input')?.value || '').trim();
+
+    const { error } = await db.from('gh_time_entries')
+        .update({ note })
+        .eq('id', entry.id);
+
+    if (error) { posShowToast('Fehler beim Speichern'); return; }
+
+    posState.entry.note = note;
+    posState.noteSaved  = true;
+    posShowToast('✓ Kommentar gespeichert');
+    renderPOS();
 }
 
 // ── TOAST ─────────────────────────────────────────────────
