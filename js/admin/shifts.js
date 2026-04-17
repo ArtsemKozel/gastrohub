@@ -460,33 +460,7 @@ async function openShiftModal(employeeId, dateStr, existingShift, defaultDept) {
 
     const clockGroup = document.getElementById('shift-clock-group');
     if (clockGroup && existingShift) {
-        const { data: timeEntries } = await db.from('gh_time_entries')
-            .select('id, clock_in, clock_out')
-            .eq('user_id', adminSession.user.id)
-            .eq('employee_id', existingShift.employee_id)
-            .gte('clock_in', dateStr + 'T00:00:00')
-            .lte('clock_in', dateStr + 'T23:59:59')
-            .order('clock_in', { ascending: true });
-
-        const entries = timeEntries || [];
-        clockGroup.style.display = entries.length ? 'block' : 'none';
-        document.getElementById('shift-clock-list').innerHTML = entries.map((te, i) => {
-            const cin  = new Date(te.clock_in).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-            const cout = te.clock_out
-                ? new Date(te.clock_out).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-                : '—';
-            const label = entries.length > 1 ? `Eintrag ${i + 1}` : '';
-            return `<div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
-                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
-                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">${label ? label + ' · ' : ''}Eingestempelt</div>
-                    <div style="font-size:0.95rem; font-weight:600; color:var(--color-text);">${cin}</div>
-                </div>
-                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
-                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">${label ? label + ' · ' : ''}Ausgestempelt</div>
-                    <div style="font-size:0.95rem; font-weight:600; color:${te.clock_out ? 'var(--color-text)' : 'var(--color-text-light)'};">${cout}</div>
-                </div>
-            </div>`;
-        }).join('');
+        await loadAndRenderClockList(existingShift.employee_id, dateStr);
     } else if (clockGroup) {
         clockGroup.style.display = 'none';
     }
@@ -516,6 +490,68 @@ async function openShiftModal(employeeId, dateStr, existingShift, defaultDept) {
 
     await loadTemplates();
     document.getElementById('shift-modal').classList.add('open');
+}
+
+// ── STEMPELZEITEN AUS GH_TIME_ENTRIES ─────────────────────
+
+async function loadAndRenderClockList(employeeId, dateStr) {
+    const clockGroup = document.getElementById('shift-clock-group');
+    if (!clockGroup) return;
+
+    const { data: timeEntries } = await db.from('gh_time_entries')
+        .select('id, clock_in, clock_out')
+        .eq('user_id', adminSession.user.id)
+        .eq('employee_id', employeeId)
+        .gte('clock_in', dateStr + 'T00:00:00')
+        .lte('clock_in', dateStr + 'T23:59:59')
+        .order('clock_in', { ascending: true });
+
+    const entries = timeEntries || [];
+    clockGroup.style.display = entries.length ? 'block' : 'none';
+
+    document.getElementById('shift-clock-list').innerHTML = entries.map((te, i) => {
+        const cin   = new Date(te.clock_in).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        const cout  = te.clock_out
+            ? new Date(te.clock_out).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+            : '—';
+        const label = entries.length > 1 ? `Eintrag ${i + 1}` : '';
+
+        let netto = '—';
+        if (te.clock_out) {
+            const diffM = Math.round((new Date(te.clock_out) - new Date(te.clock_in)) / 60000);
+            const h = Math.floor(diffM / 60), m = diffM % 60;
+            netto = h > 0 ? `${h}h ${m}min` : `${m}min`;
+        }
+
+        return `
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+            <div style="flex:1; display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem;">
+                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
+                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">${label ? label + ' · ' : ''}Eingestempelt</div>
+                    <div style="font-size:0.95rem; font-weight:600; color:var(--color-text);">${cin}</div>
+                </div>
+                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
+                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Ausgestempelt</div>
+                    <div style="font-size:0.95rem; font-weight:600; color:${te.clock_out ? 'var(--color-text)' : 'var(--color-text-light)'};">${cout}</div>
+                </div>
+                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
+                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Netto</div>
+                    <div style="font-size:0.95rem; font-weight:600; color:var(--color-text);">${netto}</div>
+                </div>
+            </div>
+            <button onclick="deleteTimeEntry('${te.id}','${employeeId}','${dateStr}')"
+                style="flex-shrink:0; background:none; border:none; cursor:pointer; color:var(--color-red); font-size:1.1rem; padding:0.25rem;" title="Eintrag löschen">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+        </div>`;
+    }).join('');
+}
+
+async function deleteTimeEntry(id, employeeId, dateStr) {
+    if (!confirm('Stempel-Eintrag wirklich löschen?')) return;
+    const { error } = await db.from('gh_time_entries').delete().eq('id', id);
+    if (error) { alert('Fehler: ' + error.message); return; }
+    await loadAndRenderClockList(employeeId, dateStr);
 }
 
 function toggleShiftActual() {
