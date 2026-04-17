@@ -90,7 +90,7 @@ function renderPinScreen() {
         <input id="pos-pin-input" type="password" inputmode="numeric" pattern="[0-9]*"
             placeholder="PIN eingeben"
             maxlength="4"
-            style="width:100%; text-align:center; font-size:2rem; letter-spacing:0.3em; padding:0.75rem; border:2px solid var(--color-primary); border-radius:12px; outline:none;"
+            style="width:100%; text-align:center; font-size:1rem; letter-spacing:0.3em; padding:0.75rem; border:2px solid var(--color-primary); border-radius:12px; outline:none;"
             oninput="posPinInput(this.value)"
             onkeydown="if(event.key==='Enter') posLogin()">
         <div style="display:flex; justify-content:center;">
