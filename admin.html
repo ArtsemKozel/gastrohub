@@ -582,7 +582,7 @@
         <!-- Zeiterfassung heute -->
         <div style="margin-bottom:1rem; border:1px solid #E8E3DE; border-radius:10px; overflow:hidden;">
             <div style="display:flex; align-items:center; gap:0.6rem; background:var(--color-gray); padding:0.6rem 0.75rem; cursor:pointer;" onclick="toggleTodayClockSummary()">
-                <span style="font-size:0.9rem; font-weight:600; color:var(--color-text);">Zeiterfassung am</span>
+                <span style="font-size:0.9rem; font-weight:600; color:var(--color-text); white-space:nowrap;">Zeiterfassung am</span>
                 <input type="date" id="today-clock-date"
                     onclick="event.stopPropagation()"
                     onchange="onTodayClockDateChange()"
