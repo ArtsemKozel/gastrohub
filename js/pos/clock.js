@@ -208,16 +208,25 @@ async function posClockIn() {
     const emp  = posState.employee;
     const now  = new Date().toISOString();
 
-    const { data, error } = await db.from('time_entries')
+    const { error } = await db.from('time_entries')
         .insert({
             user_id:     posState.userId,
             employee_id: emp.id,
             clock_in:    now
-        })
-        .select()
+        });
+
+    if (error) { posShowToast('Fehler beim Einstempeln'); return; }
+
+    const { data } = await db.from('time_entries')
+        .select('id, employee_id, clock_in, clock_out')
+        .eq('user_id', posState.userId)
+        .eq('employee_id', emp.id)
+        .is('clock_out', null)
+        .order('clock_in', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
-    if (error || !data) { posShowToast('Fehler beim Einstempeln'); return; }
+    if (!data) { posShowToast('Fehler beim Einstempeln'); return; }
 
     posState.entry = data;
     posState.entries.push(data);
