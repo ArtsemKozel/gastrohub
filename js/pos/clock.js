@@ -10,10 +10,12 @@ const posState = {
     userId:    null,        // restaurant user_id (aus URL-Parameter)
     employees: [],          // employees_planit (is_active)
     entries:   [],          // heutige gh_time_entries
-    employee:  null,        // eingeloggter Mitarbeiter
-    entry:     null,        // letzter time_entry des Mitarbeiters
-    pin:       '',
-    error:     ''
+    employee:    null,        // eingeloggter Mitarbeiter
+    entry:       null,        // letzter time_entry des Mitarbeiters
+    breaks:      [],          // heutige gh_breaks des Mitarbeiters
+    activeBreak: null,        // offene Pause (break_end = null)
+    pin:         '',
+    error:       ''
 };
 
 // ── INIT ──────────────────────────────────────────────────
@@ -153,6 +155,7 @@ function renderEmployeeScreen() {
             </button>
         </div>
         <div class="pos-shift-info">${entryInfo}</div>
+        ${renderBreakSection()}
     </div>`;
 }
 
@@ -190,15 +193,18 @@ async function posLogin() {
     posState.pin      = '';
     posState.error    = '';
     posState.view     = 'employee';
+    await loadBreakData();
     renderPOS();
 }
 
 function posLogout() {
-    posState.employee = null;
-    posState.entry    = null;
-    posState.pin      = '';
-    posState.error    = '';
-    posState.view     = 'pin';
+    posState.employee    = null;
+    posState.entry       = null;
+    posState.breaks      = [];
+    posState.activeBreak = null;
+    posState.pin         = '';
+    posState.error       = '';
+    posState.view        = 'pin';
     renderPOS();
 }
 
@@ -228,7 +234,9 @@ async function posClockIn() {
 
     if (!data) { posShowToast('Fehler beim Einstempeln'); return; }
 
-    posState.entry = data;
+    posState.entry       = data;
+    posState.breaks      = [];
+    posState.activeBreak = null;
     posState.entries.push(data);
 
     const timeStr = new Date(now).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
