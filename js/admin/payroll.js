@@ -72,7 +72,12 @@ function renderPayrollWizardHTML() {
     return `
     <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:1000;overflow-y:auto;padding:1rem;box-sizing:border-box;">
         <div style="background:#F9F5F1;border-radius:24px;padding:1.5rem;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;">
-            <h2 style="color:var(--color-text);margin-bottom:0.25rem;">Vorlohnabrechnung</h2>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.25rem;">
+                <h2 style="color:var(--color-text);margin:0;">Vorlohnabrechnung</h2>
+                <button onclick="closePayrollWizard()" style="background:none;border:none;cursor:pointer;padding:0.25rem;color:var(--color-text-light);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
             <p style="color:var(--color-text-light);font-size:0.85rem;margin-bottom:1.5rem;">Schritt ${payrollState.step} von 4</p>
 
             ${payrollState.step === 1 ? renderPayrollStep1() : ''}
@@ -80,10 +85,7 @@ function renderPayrollWizardHTML() {
             ${payrollState.step === 3 ? renderPayrollStep3() : ''}
             ${payrollState.step === 4 ? renderPayrollStep4() : ''}
 
-            <div style="display:flex;gap:0.75rem;margin-top:1.25rem;">
-                ${payrollState.step > 1 ? `<button onclick="previousPayrollStep()" class="btn-secondary" style="flex:1;">← Zurück</button>` : ''}
-                <button onclick="closePayrollWizard()" class="btn-secondary" style="flex:1;">Abbrechen</button>
-            </div>
+            ${payrollState.step > 1 ? `<div style="margin-top:1.25rem;"><button onclick="previousPayrollStep()" class="btn-secondary" style="width:100%;">← Zurück</button></div>` : ''}
         </div>
     </div>`;
 }
@@ -132,7 +134,11 @@ function renderPayrollStep1() {
                 + Feiertag hinzufügen
             </button>
         </div>
-        <button onclick="nextPayrollStep()" class="btn-primary" style="width:100%;">Weiter →</button>
+        <div style="display:flex;justify-content:flex-end;margin-top:1rem;">
+            <button onclick="nextPayrollStep()" style="width:3.2rem;height:3.2rem;border-radius:50%;background:#B28A6E;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+        </div>
     </div>`;
 }
 
