@@ -209,8 +209,8 @@ function renderPayrollStep3() {
                 </div>
                 <div class="form-group">
                     <label style="font-size:0.8rem;">AV-Art</label>
-                    <select onchange="payrollState.employees[${i}].avType=this.value"
-                        style="width:100%;padding:0.6rem;border:1px solid #ddd;border-radius:8px;">
+                    <select disabled
+                        style="width:100%;padding:0.6rem;border:1px solid #ddd;border-radius:8px;background:#F5F5F5;color:#555;">
                         <option value="">Bitte wählen</option>
                         <option value="Minijob"        ${emp.avType==='Minijob'        ?'selected':''}>Minijob</option>
                         <option value="Teilzeit"       ${emp.avType==='Teilzeit'       ?'selected':''}>Teilzeit</option>
@@ -220,9 +220,8 @@ function renderPayrollStep3() {
                 </div>
                 <div class="form-group">
                     <label style="font-size:0.8rem;">Stundenlohn (€)</label>
-                    <input type="number" step="0.01" value="${emp.hourlyRate}"
-                        oninput="updatePayrollHourlyRate(${i}, this.value)"
-                        style="width:100%;padding:0.6rem;border:1px solid #ddd;border-radius:8px;">
+                    <input type="number" step="0.01" value="${emp.hourlyRate}" readonly
+                        style="width:100%;padding:0.6rem;border:1px solid #ddd;border-radius:8px;background:#F5F5F5;color:#555;">
                 </div>
                 <div class="form-group">
                     <label style="font-size:0.8rem;">Vereinbarte Std./Monat (für Überstunden)</label>
