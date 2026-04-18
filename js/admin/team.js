@@ -191,6 +191,8 @@ async function submitNewEmployee() {
     const startDate           = document.getElementById('new-emp-start-date').value || null;
     const hoursPerVacationDay = parseFloat(document.getElementById('new-emp-hours-per-vacation-day').value) || 8.0;
     const vacationDays        = parseInt(document.getElementById('new-emp-vacation-days')?.value) || 20;
+    const employmentType      = document.getElementById('new-emp-employment-type').value || null;
+    const hourlyRate          = parseFloat(document.getElementById('new-emp-hourly-rate').value) || null;
     const hygieneErste        = document.getElementById('new-emp-hygiene-erste').value || null;
     const hygieneLetzte       = document.getElementById('new-emp-hygiene-letzte').value || null;
     const hygieneMonate       = parseInt(document.getElementById('new-emp-hygiene-monate').value) || 12;
@@ -207,6 +209,8 @@ async function submitNewEmployee() {
         start_date:             startDate,
         hours_per_vacation_day: hoursPerVacationDay,
         vacation_days_per_year: vacationDays,
+        employment_type:        employmentType,
+        hourly_rate:            hourlyRate,
         hygiene_erste:          hygieneErste,
         hygiene_letzte:         hygieneLetzte,
         hygiene_gueltig_monate: hygieneMonate,
