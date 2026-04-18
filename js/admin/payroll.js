@@ -145,10 +145,10 @@ function renderPayrollStep1() {
 function renderPayrollStep2() {
     const col = payrollState.columns;
     const checkbox = (key, label) =>
-        `<label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;cursor:pointer;">
-            <input type="checkbox" ${col[key] ? 'checked' : ''}
+        `<label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;cursor:pointer;min-width:0;">
+            <input type="checkbox" style="flex-shrink:0;" ${col[key] ? 'checked' : ''}
                 onchange="payrollState.columns.${key}=this.checked; renderPayrollUI();">
-            <span>${label}</span>
+            <span style="flex:1;">${label}</span>
         </label>`;
     return `
     <div>
@@ -167,7 +167,11 @@ function renderPayrollStep2() {
         <p style="font-weight:700;margin:1rem 0 0.5rem;">ZUSATZ-TABELLEN:</p>
         ${checkbox('allowancesDetail', 'Zuschläge-Detail')}
         ${checkbox('sickHoursDetail',  'Krankstunden-Detail')}
-        <button onclick="nextPayrollStep()" class="btn-primary" style="width:100%;margin-top:1.25rem;">Weiter →</button>
+        <div style="display:flex;justify-content:center;margin-top:1.25rem;">
+            <button onclick="nextPayrollStep()" style="width:3.2rem;height:3.2rem;border-radius:50%;background:#B28A6E;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+        </div>
     </div>`;
 }
 
