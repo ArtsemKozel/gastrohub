@@ -15,7 +15,6 @@ async function loadTerminations() {
         return;
     }
 
-    data.forEach(t => console.log('termination id:', t.id, '| pdf_url:', t.pdf_url));
     container.innerHTML = data.map(t => {
         const name = t.employees_planit?.name || '–';
         const date = t.requested_date ? new Date(t.requested_date + 'T12:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }) : '–';
@@ -74,7 +73,6 @@ async function downloadTerminationPdf(filePath) {
     const { data, error } = await db.storage
         .from('termination-pdfs')
         .createSignedUrl(filePath, 60);
-    console.log('filePath:', filePath, '| error:', error, '| signedUrl:', data?.signedUrl);
     if (error || !data?.signedUrl) {
         win.close();
         alert('PDF konnte nicht geladen werden.');

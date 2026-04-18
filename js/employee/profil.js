@@ -320,12 +320,8 @@ async function submitTermination() {
             .from('termination-pdfs')
             .upload(fileName, pdfBlob, { contentType: 'application/pdf', upsert: true });
 
-        console.log('vor UPDATE — inserted:', inserted, '| uploadError:', uploadError);
         if (!uploadError && inserted?.id) {
-            const { error: updateError } = await db.from('planit_terminations').update({ pdf_url: fileName }).eq('id', inserted.id);
-            console.log('UPDATE pdf_url — updateError:', updateError);
-        } else {
-            console.log('UPDATE übersprungen — Bedingung nicht erfüllt');
+            await db.from('planit_terminations').update({ pdf_url: fileName }).eq('id', inserted.id);
         }
     } catch(pdfErr) {
         console.error('PDF-Generierung fehlgeschlagen:', pdfErr);
