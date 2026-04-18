@@ -85,7 +85,16 @@ function renderPayrollWizardHTML() {
             ${payrollState.step === 3 ? renderPayrollStep3() : ''}
             ${payrollState.step === 4 ? renderPayrollStep4() : ''}
 
-            ${payrollState.step > 1 ? `<div style="margin-top:1.25rem;"><button onclick="previousPayrollStep()" class="btn-secondary" style="width:100%;">← Zurück</button></div>` : ''}
+            ${payrollState.step < 4 ? `
+            <div style="display:flex;justify-content:center;align-items:center;gap:1rem;margin-top:1.25rem;">
+                ${payrollState.step > 1 ? `
+                <button onclick="previousPayrollStep()" style="width:3.2rem;height:3.2rem;border-radius:50%;background:#8B6F47;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                </button>` : ''}
+                <button onclick="nextPayrollStep()" style="width:3.2rem;height:3.2rem;border-radius:50%;background:#B28A6E;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+            </div>` : ''}
         </div>
     </div>`;
 }
@@ -134,11 +143,6 @@ function renderPayrollStep1() {
                 + Feiertag hinzufügen
             </button>
         </div>
-        <div style="display:flex;justify-content:center;margin-top:1rem;">
-            <button onclick="nextPayrollStep()" style="width:3.2rem;height:3.2rem;border-radius:50%;background:#B28A6E;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </button>
-        </div>
     </div>`;
 }
 
@@ -168,11 +172,6 @@ function renderPayrollStep2() {
         <p style="font-weight:700;margin:1rem 0 0.5rem;">ZUSATZ-TABELLEN:</p>
         ${checkbox('allowancesDetail', 'Zuschläge-Detail')}
         ${checkbox('sickHoursDetail',  'Krankstunden-Detail')}
-        <div style="display:flex;justify-content:center;margin-top:1.25rem;">
-            <button onclick="nextPayrollStep()" style="width:3.2rem;height:3.2rem;border-radius:50%;background:#B28A6E;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </button>
-        </div>
     </div>`;
 }
 
@@ -254,7 +253,6 @@ function renderPayrollStep3() {
     <div>
         <h3 style="margin-bottom:0.75rem;">Mitarbeiter-Daten</h3>
         ${rows}
-        <button onclick="nextPayrollStep()" class="btn-primary" style="width:100%;">Weiter →</button>
     </div>`;
 }
 
