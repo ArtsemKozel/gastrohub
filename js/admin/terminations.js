@@ -15,6 +15,7 @@ async function loadTerminations() {
         return;
     }
 
+    data.forEach(t => console.log('termination id:', t.id, '| pdf_url:', t.pdf_url));
     container.innerHTML = data.map(t => {
         const name = t.employees_planit?.name || '–';
         const date = t.requested_date ? new Date(t.requested_date + 'T12:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }) : '–';
