@@ -73,6 +73,7 @@ async function downloadTerminationPdf(filePath) {
     const { data, error } = await db.storage
         .from('termination-pdfs')
         .createSignedUrl(filePath, 60);
+    console.log('filePath:', filePath, '| error:', error, '| signedUrl:', data?.signedUrl);
     if (error || !data?.signedUrl) {
         win.close();
         alert('PDF konnte nicht geladen werden.');
