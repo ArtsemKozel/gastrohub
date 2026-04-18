@@ -373,7 +373,7 @@ async function loadPayrollEmployeeData() {
             monthlyHours:        e.monthly_hours   ? String(parseFloat(e.monthly_hours)) : '',
             workedHours:         calcWorkedHours(empShifts).toFixed(2),
             sickHours:           calcSickHours(e.id, sickLeaves || [], empShifts, startDate, endDate).toFixed(2),
-            vacationHours:       calcVacationHours(e.id, vacations || [], startDate, endDate).toFixed(2),
+            vacationHours:       calcVacationHours(e.id, vacations || [], startDate, endDate, parseFloat(e.hours_per_vacation_day) || 8).toFixed(2),
             nightHours:          calcNightHours(empShifts).toFixed(2),
             sundayHours:         calcSundayHours(empShifts).toFixed(2),
             holidayHours:        calcHolidayHours(empShifts).toFixed(2),
@@ -423,13 +423,12 @@ function calcSickHours(empId, sickLeaves, empShifts, startDate, endDate) {
     return total;
 }
 
-function calcVacationHours(empId, vacations, startDate, endDate) {
+function calcVacationHours(empId, vacations, startDate, endDate, hoursPerDay = 8) {
     return vacations
         .filter(v => v.employee_id === empId)
         .reduce((sum, v) => {
             if (v.deducted_hours) return sum + parseFloat(v.deducted_hours);
-            // Fallback: deducted_days × 8h
-            if (v.deducted_days) return sum + parseFloat(v.deducted_days) * 8;
+            if (v.deducted_days) return sum + parseFloat(v.deducted_days) * hoursPerDay;
             return sum;
         }, 0);
 }
