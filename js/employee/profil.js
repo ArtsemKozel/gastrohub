@@ -213,7 +213,7 @@ async function submitTermination() {
         errorDiv.style.display = 'block';
     }
 
-    const { data: inserted, error } = await db
+    const { error } = await db
         .from('planit_terminations')
         .insert({
             user_id:        currentEmployee.user_id,
@@ -224,15 +224,23 @@ async function submitTermination() {
             requested_date: date,
             reason:         reason || null,
             status:         'pending',
-        })
-        .select('id')
-        .single();
+        });
 
     if (error) {
         errorDiv.textContent   = 'Fehler beim Speichern. Bitte erneut versuchen.';
         errorDiv.style.display = 'block';
         return;
     }
+
+    const { data: inserted } = await db
+        .from('planit_terminations')
+        .select('id')
+        .eq('user_id', currentEmployee.user_id)
+        .eq('employee_id', currentEmployee.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
     // PDF generieren und hochladen
     try {
