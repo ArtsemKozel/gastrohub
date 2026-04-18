@@ -334,7 +334,7 @@ function renderEmploymentPhases() {
                     <option value="Vollzeit"       ${p.employment_type === 'Vollzeit'       ? 'selected' : ''}>Vollzeit</option>
                     <option value="Teilzeit"       ${p.employment_type === 'Teilzeit'       ? 'selected' : ''}>Teilzeit</option>
                     <option value="Minijob"        ${p.employment_type === 'Minijob'        ? 'selected' : ''}>Minijob</option>
-                    <option value="Auszubildender" ${p.employment_type === 'Auszubildender' ? 'selected' : ''}>Auszubildender</option>
+                    <option value="Auszubildender" ${p.employment_type === 'Auszubildender' ? 'selected' : ''}>Azubi</option>
                     <option value="Elternzeit"     ${p.employment_type === 'Elternzeit'     ? 'selected' : ''}>Elternzeit</option>
                 </select>
             </div>
