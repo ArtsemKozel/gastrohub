@@ -195,11 +195,17 @@ function renderPayrollStep3() {
         ].filter(Boolean).join('');
         return `
         <div style="background:#F5EFEA;padding:1.25rem;border-radius:16px;margin-bottom:0.75rem;">
-            <h4 onclick="const b=this.nextElementSibling;const o=b.style.display==='none';b.style.display=o?'block':'none';this.querySelector('.prl-arr').textContent=o?'▼':'▶';"
+            <h4 onclick="const b=this.nextElementSibling.nextElementSibling;const o=b.style.display==='none';b.style.display=o?'block':'none';this.querySelector('.prl-arr').textContent=o?'▼':'▶';"
                 style="margin:0 0 0 0;cursor:pointer;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
                 <span class="prl-arr">▶</span> ${emp.name}
                 ${badges}
             </h4>
+            <label style="display:flex;align-items:center;gap:0.4rem;margin-top:0.4rem;font-size:0.8rem;color:#8B6F47;cursor:pointer;">
+                <input type="checkbox" ${emp.excluded ? 'checked' : ''}
+                    onchange="payrollState.employees[${i}].excluded=this.checked;"
+                    style="width:auto;flex-shrink:0;">
+                Vom PDF ausschließen
+            </label>
             <div style="display:none;">
                 <div style="background:#718974;color:white;padding:0.75rem 1rem;border-radius:10px;margin:0.75rem 0;font-size:0.85rem;">
                     <div>Gearbeitet: <strong>${fmtHours(emp.workedHours)}</strong></div>
@@ -404,7 +410,8 @@ async function loadPayrollEmployeeData() {
             payHolidayAllowance: false,
             overtimePayout:      false,
             overtimePercent:     payrollState.allowanceRates.overtime,
-            bonus: '', vwl: '', benefits: '', comment: ''
+            bonus: '', vwl: '', benefits: '', comment: '',
+            excluded: false
         };
     });
 }
@@ -600,6 +607,8 @@ async function buildPayrollPDF() {
     const fmt = n => parseFloat(n || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const fmtDate = d => new Date(d + 'T12:00:00').toLocaleDateString('de-DE');
 
+    const pdfEmployees = payrollState.employees.filter(emp => !emp.excluded);
+
     let yPos = 15;
     const checkBreak = () => { if (yPos > 180) { doc.addPage(); yPos = 20; } };
 
@@ -631,7 +640,7 @@ async function buildPayrollPDF() {
     yPos += 2; doc.setLineWidth(0.3); doc.line(14, yPos, 282, yPos); yPos += 5;
 
     doc.setFont(undefined, 'normal');
-    payrollState.employees.forEach(emp => {
+    pdfEmployees.forEach(emp => {
         x = 14;
         const rate = parseFloat(emp.hourlyRate || 0);
         const { brutto, displayHours } = calcEmpBrutto(emp);
@@ -672,7 +681,7 @@ async function buildPayrollPDF() {
         if (cols.benefits) { doc.text('Sachbezug', x, yPos); x += 35; }
         yPos += 2; doc.line(14, yPos, 282, yPos); yPos += 5;
         doc.setFont(undefined, 'normal');
-        payrollState.employees.forEach(emp => {
+        pdfEmployees.forEach(emp => {
             x = 14;
             doc.text(emp.name, x, yPos); x += 50;
             if (cols.bonus)    { doc.text(emp.bonus    ? fmt(emp.bonus)    + ' €' : '–', x, yPos); x += 30; }
@@ -684,7 +693,7 @@ async function buildPayrollPDF() {
     }
 
     // ── Tabelle 2: Zuschläge Detail ──
-    const hasAllowances = payrollState.employees.some(e => e.payAllowances || e.payOvertime);
+    const hasAllowances = pdfEmployees.some(e => e.payAllowances || e.payOvertime);
     if (cols.allowancesDetail && hasAllowances) {
         if (yPos > 140) { doc.addPage(); yPos = 20; }
         const rates = payrollState.allowanceRates;
@@ -698,7 +707,7 @@ async function buildPayrollPDF() {
         doc.text(`Überstd (${rates.overtime}%)`, x, yPos);
         yPos += 2; doc.line(14, yPos, 282, yPos); yPos += 5;
         doc.setFont(undefined, 'normal');
-        payrollState.employees.forEach(emp => {
+        pdfEmployees.forEach(emp => {
             if (!emp.payAllowances && !emp.payOvertime) return;
             x = 14;
             const rate  = parseFloat(emp.hourlyRate || 0);
@@ -719,7 +728,7 @@ async function buildPayrollPDF() {
     if (yPos > 140) { doc.addPage(); yPos = 20; }
     const rates = payrollState.allowanceRates;
     let bruttoGes = 0, zuschlGes = 0, sonstGes = 0;
-    payrollState.employees.forEach(emp => {
+    pdfEmployees.forEach(emp => {
         const rate = parseFloat(emp.hourlyRate || 0);
         bruttoGes += calcEmpBrutto(emp).brutto;
         if (emp.payNightAllowance)    zuschlGes += parseFloat(emp.nightHours||0)   * rate * rates.night   / 100;
@@ -751,7 +760,7 @@ async function buildPayrollPDF() {
     const sickCache   = payrollState._sickCache   || [];
     const shiftsCache = payrollState._shiftsCache  || [];
 
-    const empSickRows = payrollState.employees.map(emp => {
+    const empSickRows = pdfEmployees.map(emp => {
         const leaves = sickCache.filter(sl => sl.employee_id === emp.id);
         if (leaves.length === 0) return null;
 
@@ -862,7 +871,7 @@ async function downloadPayrollPDF() {
     const doc = await buildPayrollPDF();
     // Abrechnung in DB speichern
     let totalGross = 0;
-    payrollState.employees.forEach(emp => {
+    payrollState.employees.filter(emp => !emp.excluded).forEach(emp => {
         totalGross += calcEmpBrutto(emp).brutto;
     });
     await db.from('planit_payrolls').insert({
