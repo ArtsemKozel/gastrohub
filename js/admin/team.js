@@ -328,7 +328,7 @@ function renderEmploymentPhases() {
                 <input type="number" value="${p.hours_per_vacation_day ?? 8}" min="0" max="24" step="0.5" onchange="updatePhase(${i}, 'hours_per_vacation_day', parseFloat(this.value) || 0)" style="padding:0.4rem; font-size:0.8rem; width:100%;">
             </div>
             <div style="margin-bottom:0.5rem;">
-                <label style="font-size:0.75rem;">Beschäftigungsart</label>
+                <label style="font-size:0.75rem;">AV-Art</label>
                 <select onchange="updatePhase(${i}, 'employment_type', this.value)" style="padding:0.4rem; font-size:0.8rem; width:100%;">
                     <option value="">— bitte wählen —</option>
                     <option value="Vollzeit"       ${p.employment_type === 'Vollzeit'       ? 'selected' : ''}>Vollzeit</option>
@@ -336,6 +336,13 @@ function renderEmploymentPhases() {
                     <option value="Minijob"        ${p.employment_type === 'Minijob'        ? 'selected' : ''}>Minijob</option>
                     <option value="Auszubildender" ${p.employment_type === 'Auszubildender' ? 'selected' : ''}>Auszubildender</option>
                     <option value="Elternzeit"     ${p.employment_type === 'Elternzeit'     ? 'selected' : ''}>Elternzeit</option>
+                </select>
+            </div>
+            <div style="margin-bottom:0.5rem;">
+                <label style="font-size:0.75rem;">Lohnart</label>
+                <select onchange="updatePhase(${i}, 'wage_type', this.value)" style="padding:0.4rem; font-size:0.8rem; width:100%;">
+                    <option value="Stundenlohn" ${(p.wage_type || 'Stundenlohn') === 'Stundenlohn' ? 'selected' : ''}>Stundenlohn</option>
+                    <option value="Festgehalt"  ${p.wage_type === 'Festgehalt'  ? 'selected' : ''}>Festgehalt</option>
                 </select>
             </div>
             <div>
@@ -420,6 +427,7 @@ async function submitEditEmployee() {
         vacation_days_per_year: p.vacation_days_per_year,
         notes:                  p.notes || null,
         employment_type:        p.employment_type || null,
+        wage_type:              p.wage_type || null,
         hourly_rate:            p.hourly_rate || null,
     }));
     if (phasesToInsert.length > 0) {
