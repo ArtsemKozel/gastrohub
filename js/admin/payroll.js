@@ -214,7 +214,7 @@ function renderPayrollStep3() {
                         : '—';
                     const unit = emp.wageType === 'Festgehalt' ? '€/Monat' : '€/Std';
                     const parts = [emp.avType, rate ? `${rate} ${unit}` : null].filter(Boolean).join(' · ');
-                    return `<div style="font-size:0.85rem;font-weight:500;color:#555;background:#F5F5F5;border-radius:8px;padding:0.5rem 0.75rem;margin-bottom:0.75rem;">${parts}</div>`;
+                    return `<div style="font-size:0.85rem;font-weight:500;color:#555;background:#F9F5F1;border-radius:8px;padding:0.5rem 0.75rem;margin-bottom:0.75rem;">${parts}</div>`;
                 })()}
                 <div class="form-group">
                     <label style="font-size:0.8rem;">Vereinbarte Std./Monat (für Überstunden)</label>
