@@ -287,7 +287,7 @@ function closeEditEmployeeModal() {
 function renderEmploymentPhases() {
     const container = document.getElementById('edit-emp-phases');
 
-    const infoEl = document.getElementById('edit-emp-current-phase-info');
+    /* const infoEl = document.getElementById('edit-emp-current-phase-info');
     if (infoEl) {
         const today = new Date().toISOString().split('T')[0];
         const current = currentPhases
@@ -300,7 +300,7 @@ function renderEmploymentPhases() {
         } else {
             infoEl.style.display = 'none';
         }
-    }
+    } */
 
     if (currentPhases.length === 0) {
         container.innerHTML = '<div style="font-size:0.85rem; color:var(--color-text-light); margin-bottom:0.5rem;">Keine Phasen — Standardwerte gelten fürs ganze Jahr.</div>';
