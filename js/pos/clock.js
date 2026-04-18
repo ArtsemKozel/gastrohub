@@ -223,9 +223,6 @@ function renderEmployeeScreen() {
                     return (h > 0 ? h + 'h ' : '') + m + 'min';
                 };
 
-                const rowStyle = 'display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; gap:0.25rem; font-size:0.78rem; padding:0.5rem 0; border-bottom:1px solid #EDE7E0; color:#2C3E50;';
-                const cellStyle = 'overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
-
                 const renderRow = e => {
                     const breakMins = (e.breaks || []).reduce((sum, b) => {
                         if (!b.break_end) return sum;
@@ -236,12 +233,14 @@ function renderEmployeeScreen() {
                     const nettoStr = e.clock_out
                         ? fmtDur(Math.max(0, Math.floor((new Date(e.clock_out) - new Date(e.clock_in)) / 60000) - breakMins))
                         : '–';
-                    return `<div style="${rowStyle}">
-                        <span style="${cellStyle}">${fmtDate(e.clock_in)}</span>
-                        <span style="${cellStyle}">${fmtTime(e.clock_in)}</span>
-                        <span style="${cellStyle}">${ausStr}</span>
-                        <span style="${cellStyle}">${pauseStr}</span>
-                        <span style="${cellStyle}; font-weight:600;">${nettoStr}</span>
+                    return `<div style="padding:0.5rem 0; border-bottom:1px solid #EDE7E0; color:#2C3E50;">
+                        <div style="text-align:center; font-weight:700; font-size:0.82rem; margin-bottom:0.3rem;">${fmtDate(e.clock_in)}</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0.25rem; font-size:0.76rem; text-align:center;">
+                            <span><span style="opacity:0.6;">Ein</span><br>${fmtTime(e.clock_in)}</span>
+                            <span><span style="opacity:0.6;">Aus</span><br>${ausStr}</span>
+                            <span><span style="opacity:0.6;">Pause</span><br>${pauseStr}</span>
+                            <span><span style="opacity:0.6;">Netto</span><br><strong>${nettoStr}</strong></span>
+                        </div>
                     </div>`;
                 };
 
@@ -256,9 +255,6 @@ function renderEmployeeScreen() {
                         <span id="pos-shifts-arrow" style="font-size:0.75rem;">▶</span>
                     </button>
                     <div id="pos-shifts-body" style="display:none; margin-top:0.75rem;">
-                        <div style="${rowStyle} font-weight:600; color:#8B6F47; border-bottom:2px solid #D4C5B5;">
-                            <span>Datum</span><span>Ein</span><span>Aus</span><span>Pause</span><span>Netto</span>
-                        </div>
                         ${visible}
                         ${hasMore ? `<div id="pos-shifts-extra" style="display:none;">${hidden}</div>
                         <button onclick="document.getElementById('pos-shifts-extra').style.display='block'; this.style.display='none';"
