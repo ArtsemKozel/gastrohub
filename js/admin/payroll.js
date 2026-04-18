@@ -498,12 +498,16 @@ function updatePayrollOvertime(index) {
 
     const rate = parseFloat(emp.hourlyRate) || 0;
     let brutto;
-    const vacationPay = parseFloat(emp.vacationHours || 0) * rate;
-    if ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0) {
-        brutto = (parseFloat(emp.monthlyHours) * rate + vacationPay).toFixed(2).replace('.', ',');
+    if (emp.wageType === 'Festgehalt') {
+        brutto = rate.toFixed(2).replace('.', ',');
     } else {
-        const total = parseFloat(emp.workedHours) + parseFloat(emp.sickHours || 0) + parseFloat(emp.vacationHours || 0);
-        brutto = (total * rate).toFixed(2).replace('.', ',');
+        const vacationPay = parseFloat(emp.vacationHours || 0) * rate;
+        if ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0) {
+            brutto = (parseFloat(emp.monthlyHours) * rate + vacationPay).toFixed(2).replace('.', ',');
+        } else {
+            const total = parseFloat(emp.workedHours) + parseFloat(emp.sickHours || 0) + parseFloat(emp.vacationHours || 0);
+            brutto = (total * rate).toFixed(2).replace('.', ',');
+        }
     }
     const bEl = document.getElementById(`payroll-brutto-${index}`);
     if (bEl) bEl.textContent = brutto + ' €';
@@ -610,8 +614,9 @@ async function buildPayrollPDF() {
         x = 14;
         const rate       = parseFloat(emp.hourlyRate || 0);
         const totalHours = parseFloat(emp.workedHours) + parseFloat(emp.sickHours || 0) + parseFloat(emp.vacationHours || 0);
-        let brutto = ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
-            ? parseFloat(emp.monthlyHours) * rate : totalHours * rate;
+        let brutto = emp.wageType === 'Festgehalt' ? rate
+            : ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
+                ? parseFloat(emp.monthlyHours) * rate : totalHours * rate;
 
         doc.text(emp.name, x, yPos); x += colW.name;
         doc.text(emp.avType || '–', x, yPos); x += colW.avType;
@@ -695,8 +700,9 @@ async function buildPayrollPDF() {
     payrollState.employees.forEach(emp => {
         const rate       = parseFloat(emp.hourlyRate || 0);
         const totalHours = parseFloat(emp.workedHours) + parseFloat(emp.sickHours||0) + parseFloat(emp.vacationHours||0);
-        bruttoGes += ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
-            ? parseFloat(emp.monthlyHours) * rate : totalHours * rate;
+        bruttoGes += emp.wageType === 'Festgehalt' ? rate
+            : ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
+                ? parseFloat(emp.monthlyHours) * rate : totalHours * rate;
         if (emp.payNightAllowance)    zuschlGes += parseFloat(emp.nightHours||0)   * rate * rates.night   / 100;
         if (emp.paySundayAllowance)   zuschlGes += parseFloat(emp.sundayHours||0)  * rate * rates.sunday  / 100;
         if (emp.payHolidayAllowance)  zuschlGes += parseFloat(emp.holidayHours||0) * rate * rates.holiday / 100;
@@ -786,8 +792,9 @@ async function downloadPayrollPDF() {
     payrollState.employees.forEach(emp => {
         const rate       = parseFloat(emp.hourlyRate || 0);
         const totalHours = parseFloat(emp.workedHours) + parseFloat(emp.sickHours || 0) + parseFloat(emp.vacationHours || 0);
-        totalGross += ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
-            ? parseFloat(emp.monthlyHours) * rate : totalHours * rate;
+        totalGross += emp.wageType === 'Festgehalt' ? rate
+            : ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
+                ? parseFloat(emp.monthlyHours) * rate : totalHours * rate;
     });
     await db.from('planit_payrolls').insert({
         user_id:        adminSession.user.id,
