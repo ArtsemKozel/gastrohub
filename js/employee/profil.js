@@ -245,10 +245,12 @@ async function submitTermination() {
 
     // PDF generieren und hochladen
     try {
+        console.log('PDF-Block gestartet — currentEmployee:', currentEmployee);
         const [{ data: restaurant }, { data: emp }] = await Promise.all([
             db.from('planit_restaurants').select('*').eq('user_id', currentEmployee.user_id).maybeSingle(),
             db.from('employees_planit').select('name').eq('id', currentEmployee.id).maybeSingle(),
         ]);
+        console.log('Promise.all abgeschlossen — restaurant:', restaurant, '| emp:', emp);
 
         const empName     = emp?.name || currentEmployee.name || '';
         const restName    = restaurant?.name   || '[Restaurant-Name]';
