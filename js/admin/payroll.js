@@ -347,7 +347,7 @@ async function loadPayrollEmployeeData() {
     const periodStart  = new Date(startDate + 'T12:00:00');
     const prevMonthStr = `${periodStart.getFullYear()}-${String(periodStart.getMonth() + 1).padStart(2, '0')}`;
 
-    const [{ data: emps }, { data: shifts }, { data: sickLeaves }, { data: vacations }, { data: vacTaken }, { data: restaurant }, { data: actualHours }] = await Promise.all([
+    const [{ data: emps }, { data: shifts }, { data: sickLeaves }, { data: vacTaken }, { data: restaurant }, { data: actualHours }] = await Promise.all([
         db.from('employees_planit').select('*').eq('user_id', uid).eq('is_active', true).order('name'),
         db.from('shifts')
             .select('employee_id, shift_date, start_time, end_time, break_minutes, actual_start_time, actual_end_time, actual_break_minutes')
@@ -358,10 +358,7 @@ async function loadPayrollEmployeeData() {
             .lte('start_date', endDate).gte('end_date', startDate),
         db.from('vacation_requests')
             .select('employee_id, start_date, end_date, deducted_hours, deducted_days')
-            .eq('user_id', uid).eq('status', 'approved').eq('type', 'payout'),
-        db.from('vacation_requests')
-            .select('employee_id, start_date, end_date')
-            .eq('user_id', uid).eq('status', 'approved').neq('type', 'payout')
+            .eq('user_id', uid).eq('status', 'approved')
             .lte('start_date', endDate).gte('end_date', startDate),
         db.from('planit_restaurants').select('name').eq('user_id', uid).maybeSingle(),
         db.from('actual_hours').select('employee_id, carry_over_minutes').eq('month', prevMonthStr)
@@ -371,10 +368,9 @@ async function loadPayrollEmployeeData() {
         payrollState.period.restaurantName = restaurant.name;
     }
 
-    payrollState._shiftsCache   = shifts      || [];
-    payrollState._sickCache     = sickLeaves  || [];
-    payrollState._vacCache      = vacations   || [];
-    payrollState._vacTakenCache = vacTaken    || [];
+    payrollState._shiftsCache   = shifts    || [];
+    payrollState._sickCache     = sickLeaves || [];
+    payrollState._vacTakenCache = vacTaken  || [];
 
     payrollState.employees = (emps || []).map(e => {
         const empShifts = (shifts || []).filter(s => s.employee_id === e.id);
@@ -387,7 +383,7 @@ async function loadPayrollEmployeeData() {
             monthlyHours:        e.monthly_hours   ? String(parseFloat(e.monthly_hours)) : '',
             workedHours:         calcWorkedHours(empShifts).toFixed(2),
             sickHours:           calcSickHours(e.id, sickLeaves || [], empShifts, startDate, endDate).toFixed(2),
-            vacationHours:       calcVacationHours(e.id, vacations || [], startDate, endDate, parseFloat(e.hours_per_vacation_day) || 8).toFixed(2),
+            vacationHours:       calcVacationHours(e.id, vacTaken || [], startDate, endDate, parseFloat(e.hours_per_vacation_day) || 8).toFixed(2),
             nightHours:          calcNightHours(empShifts).toFixed(2),
             sundayHours:         calcSundayHours(empShifts).toFixed(2),
             holidayHours:        calcHolidayHours(empShifts).toFixed(2),
