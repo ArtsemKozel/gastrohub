@@ -145,10 +145,9 @@ function renderPayrollStep1() {
 function renderPayrollStep2() {
     const col = payrollState.columns;
     const checkbox = (key, label) =>
-        `<label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;cursor:pointer;min-width:0;">
-            <input type="checkbox" style="flex-shrink:0;" ${col[key] ? 'checked' : ''}
-                onchange="payrollState.columns.${key}=this.checked; renderPayrollUI();">
-            <span style="flex:1;">${label}</span>
+        `<label style="display:flex;align-items:center;gap:8px;margin-bottom:0.5rem;cursor:pointer;">
+            <input type="checkbox" ${col[key] ? 'checked' : ''}
+                onchange="payrollState.columns.${key}=this.checked; renderPayrollUI();">${label}
         </label>`;
     return `
     <div>
