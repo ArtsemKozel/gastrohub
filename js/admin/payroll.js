@@ -475,8 +475,9 @@ function updatePayrollOvertime(index) {
 
     const rate = parseFloat(emp.hourlyRate) || 0;
     let brutto;
+    const vacationPay = parseFloat(emp.vacationHours || 0) * rate;
     if ((emp.avType === 'VZ' || emp.avType === 'AZU') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0) {
-        brutto = (parseFloat(emp.monthlyHours) * rate).toFixed(2).replace('.', ',');
+        brutto = (parseFloat(emp.monthlyHours) * rate + vacationPay).toFixed(2).replace('.', ',');
     } else {
         const total = parseFloat(emp.workedHours) + parseFloat(emp.sickHours || 0) + parseFloat(emp.vacationHours || 0);
         brutto = (total * rate).toFixed(2).replace('.', ',');
