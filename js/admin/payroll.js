@@ -185,11 +185,20 @@ function renderPayrollStep2() {
 }
 
 function renderPayrollStep3() {
-    const rows = payrollState.employees.map((emp, i) => `
+    const { startDate, endDate } = payrollState.period;
+    const rows = payrollState.employees.map((emp, i) => {
+        const hasVacation = (payrollState._vacTakenCache || []).some(v => v.employee_id === emp.id);
+        const hasSick     = (payrollState._sickCache     || []).some(v => v.employee_id === emp.id);
+        const badges = [
+            hasVacation ? `<span style="font-size:0.72rem;font-weight:500;padding:2px 8px;border-radius:20px;background:#D8F0D8;color:#4CAF50;">🌴 Urlaub vorhanden</span>` : '',
+            hasSick     ? `<span style="font-size:0.72rem;font-weight:500;padding:2px 8px;border-radius:20px;background:#FEF3C7;color:#D97706;">🤒 Krankmeldung vorhanden</span>` : '',
+        ].filter(Boolean).join('');
+        return `
         <div style="background:#F5EFEA;padding:1.25rem;border-radius:16px;margin-bottom:0.75rem;">
             <h4 onclick="const b=this.nextElementSibling;const o=b.style.display==='none';b.style.display=o?'block':'none';this.querySelector('.prl-arr').textContent=o?'▼':'▶';"
-                style="margin:0 0 0 0;cursor:pointer;display:flex;align-items:center;gap:0.5rem;">
+                style="margin:0 0 0 0;cursor:pointer;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
                 <span class="prl-arr">▶</span> ${emp.name}
+                ${badges}
             </h4>
             <div style="display:none;">
                 <div style="background:#718974;color:white;padding:0.75rem 1rem;border-radius:10px;margin:0.75rem 0;font-size:0.85rem;">
@@ -256,7 +265,8 @@ function renderPayrollStep3() {
                     Brutto: <span id="payroll-brutto-${i}">0,00 €</span>
                 </p>
             </div>
-        </div>`).join('');
+        </div>`;
+    }).join('');
 
     return `
     <div>
@@ -337,7 +347,7 @@ async function loadPayrollEmployeeData() {
     const periodStart  = new Date(startDate + 'T12:00:00');
     const prevMonthStr = `${periodStart.getFullYear()}-${String(periodStart.getMonth() + 1).padStart(2, '0')}`;
 
-    const [{ data: emps }, { data: shifts }, { data: sickLeaves }, { data: vacations }, { data: restaurant }, { data: actualHours }] = await Promise.all([
+    const [{ data: emps }, { data: shifts }, { data: sickLeaves }, { data: vacations }, { data: vacTaken }, { data: restaurant }, { data: actualHours }] = await Promise.all([
         db.from('employees_planit').select('*').eq('user_id', uid).eq('is_active', true).order('name'),
         db.from('shifts')
             .select('employee_id, shift_date, start_time, end_time, break_minutes, actual_start_time, actual_end_time, actual_break_minutes')
@@ -349,6 +359,10 @@ async function loadPayrollEmployeeData() {
         db.from('vacation_requests')
             .select('employee_id, start_date, end_date, deducted_hours, deducted_days')
             .eq('user_id', uid).eq('status', 'approved').eq('type', 'payout'),
+        db.from('vacation_requests')
+            .select('employee_id, start_date, end_date')
+            .eq('user_id', uid).eq('status', 'approved').neq('type', 'payout')
+            .lte('start_date', endDate).gte('end_date', startDate),
         db.from('planit_restaurants').select('name').eq('user_id', uid).maybeSingle(),
         db.from('actual_hours').select('employee_id, carry_over_minutes').eq('month', prevMonthStr)
     ]);
@@ -357,9 +371,10 @@ async function loadPayrollEmployeeData() {
         payrollState.period.restaurantName = restaurant.name;
     }
 
-    payrollState._shiftsCache  = shifts  || [];
-    payrollState._sickCache    = sickLeaves || [];
-    payrollState._vacCache     = vacations || [];
+    payrollState._shiftsCache   = shifts      || [];
+    payrollState._sickCache     = sickLeaves  || [];
+    payrollState._vacCache      = vacations   || [];
+    payrollState._vacTakenCache = vacTaken    || [];
 
     payrollState.employees = (emps || []).map(e => {
         const empShifts = (shifts || []).filter(s => s.employee_id === e.id);
