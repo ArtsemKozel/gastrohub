@@ -263,6 +263,7 @@ function openEditEmployeeModal(id) {
     document.getElementById('edit-emp-start-date').value           = emp.start_date || '';
     document.getElementById('edit-emp-hours-per-vacation-day').value = emp.hours_per_vacation_day || 8.0;
     document.getElementById('edit-emp-apprentice').checked         = emp.is_apprentice || false;
+    document.getElementById('edit-emp-employment-type').value      = emp.employment_type || '';
     const wageTypeEl = document.getElementById('edit-emp-wage-type');
     wageTypeEl.value = emp.wage_type || 'Stundenlohn';
     document.getElementById('edit-emp-wage-label').textContent = wageTypeEl.value === 'Festgehalt' ? 'Festgehalt (€/Monat)' : 'Stundenlohn (€)';
@@ -370,6 +371,7 @@ async function submitEditEmployee() {
     const vacationDays = parseInt(document.getElementById('edit-emp-vacation-days').value) || 20;
     const startDate    = document.getElementById('edit-emp-start-date').value || null;
     const hoursPerVacationDay = parseFloat(document.getElementById('edit-emp-hours-per-vacation-day').value) || 8.0;
+    const employmentType = document.getElementById('edit-emp-employment-type').value || null;
     const wageType     = document.getElementById('edit-emp-wage-type').value || null;
     const hourlyRate   = parseFloat(document.getElementById('edit-emp-hourly-rate').value) || null;
     const errorDiv     = document.getElementById('edit-emp-error');
@@ -395,7 +397,7 @@ async function submitEditEmployee() {
         name, login_code: loginCode, department, departments, birthdate,
         vacation_days_per_year: vacationDays, is_apprentice, start_date: startDate,
         hours_per_vacation_day: hoursPerVacationDay,
-        wage_type: wageType, hourly_rate: hourlyRate,
+        employment_type: employmentType, wage_type: wageType, hourly_rate: hourlyRate,
         hygiene_erste: hygieneErste, hygiene_letzte: hygieneLetzte, hygiene_gueltig_monate: hygieneMonate,
     };
     if (password) payload.password_hash = password;

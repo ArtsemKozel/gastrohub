@@ -1486,6 +1486,17 @@
             <div id="edit-emp-block-vertrag" style="display:none; padding:0.75rem;">
                 <div id="edit-emp-current-phase-info" style="display:none; font-size:0.85rem; font-weight:600; color:var(--color-primary); background:#F5EFEA; border-radius:8px; padding:0.5rem 0.75rem; margin-bottom:0.75rem;"></div>
                 <div class="form-group">
+                    <label>AV-Art</label>
+                    <select id="edit-emp-employment-type">
+                        <option value="">— bitte wählen —</option>
+                        <option value="Vollzeit">Vollzeit</option>
+                        <option value="Teilzeit">Teilzeit</option>
+                        <option value="Minijob">Minijob</option>
+                        <option value="Auszubildender">Auszubildender</option>
+                        <option value="Elternzeit">Elternzeit</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Lohnart</label>
                     <select id="edit-emp-wage-type" onchange="document.getElementById('edit-emp-wage-label').textContent=this.value==='Festgehalt'?'Festgehalt (€/Monat)':'Stundenlohn (€)'">
                         <option value="Stundenlohn">Stundenlohn</option>
