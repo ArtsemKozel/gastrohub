@@ -252,7 +252,7 @@ function renderEmployeeScreen() {
                 return `
                 <div style="margin-top:1.5rem; background:#FBF8F5; border-radius:12px; padding:1rem;">
                     <button onclick="posToggleShifts()" style="width:100%; background:none; border:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:0; font-size:0.9rem; font-weight:600; color:#5C4033;">
-                        <span>Meine letzten Schichten</span>
+                        <span>Meine Schichten</span>
                         <span id="pos-shifts-arrow" style="font-size:0.75rem;">▶</span>
                     </button>
                     <div id="pos-shifts-body" style="display:none; margin-top:0.75rem;">
