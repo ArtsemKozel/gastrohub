@@ -209,6 +209,7 @@ function renderPayrollStep3() {
                     ${emp.avType ? `<div>AV-Art: <strong>${emp.avType}</strong></div>` : ''}
                     ${emp.hourlyRate ? `<div>${emp.wageType === 'Festgehalt' ? 'Festgehalt' : 'Stundenlohn'}: <strong>${parseFloat(emp.hourlyRate).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${emp.wageType === 'Festgehalt' ? '€/Monat' : '€'}</strong></div>` : ''}
                 </div>
+                ${false ? `
                 <div class="form-group">
                     <label style="font-size:0.8rem;">Vereinbarte Std./Monat (für Überstunden)</label>
                     <input type="number" step="0.5" value="${emp.monthlyHours}"
@@ -219,6 +220,7 @@ function renderPayrollStep3() {
                     Überstunden: <strong id="payroll-overtime-${i}">0h</strong>
                 </p>
                 <div id="payroll-allowances-${i}" style="margin-bottom:0.75rem;"></div>
+                ` : ''}
                 ${payrollState.columns.bonus ? `
                 <div class="form-group">
                     <label style="font-size:0.8rem;">Prämie (€)</label>
