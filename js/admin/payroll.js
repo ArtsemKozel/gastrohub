@@ -625,7 +625,11 @@ async function buildPayrollPDF() {
             : ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
                 ? parseFloat(emp.monthlyHours) * rate : totalHours * rate;
 
-        doc.text(emp.name, x, yPos); x += colW.name;
+        const nameLines = doc.splitTextToSize(emp.name, colW.name - 1);
+        const rowH = Math.max(6, nameLines.length * 5);
+        if (yPos + rowH > 185) { doc.addPage(); yPos = 20; }
+
+        doc.text(nameLines, x, yPos); x += colW.name;
         doc.text(emp.avType || '–', x, yPos); x += colW.avType;
         doc.text(fmt(rate) + ' €', x, yPos); x += colW.rate;
         doc.text(fmt(emp.workedHours) + ' h', x, yPos); x += colW.worked;
@@ -640,7 +644,7 @@ async function buildPayrollPDF() {
         doc.text(fmt(totalHours) + ' h', x, yPos); x += colW.total;
         doc.text(fmt(brutto) + ' €', x, yPos); x += colW.gross;
         if (cols.comment && emp.comment) doc.text(emp.comment.substring(0, 30), x, yPos);
-        yPos += 6;
+        yPos += rowH;
     });
     yPos += 5; checkBreak();
 
