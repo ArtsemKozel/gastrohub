@@ -279,12 +279,10 @@ function renderEmploymentPhases() {
 
     const infoEl = document.getElementById('edit-emp-current-phase-info');
     if (infoEl) {
+        const today = new Date().toISOString().split('T')[0];
         const current = currentPhases
-            .filter(p => p.start_date)
-            .sort((a, b) => (b.start_date || '').localeCompare(a.start_date || ''))
-            .find(p => !p.end_date) || currentPhases
-            .filter(p => p.start_date)
-            .sort((a, b) => (b.start_date || '').localeCompare(a.start_date || ''))[0];
+            .filter(p => p.start_date && p.start_date <= today && (!p.end_date || p.end_date >= today))
+            .sort((a, b) => b.start_date.localeCompare(a.start_date))[0];
         if (current && current.employment_type && current.hourly_rate) {
             const rate = parseFloat(current.hourly_rate).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             infoEl.textContent = `Aktuell: ${current.employment_type} · ${rate} €/Std`;
