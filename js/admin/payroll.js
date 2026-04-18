@@ -147,7 +147,8 @@ function renderPayrollStep2() {
     const checkbox = (key, label) =>
         `<label style="display:flex;align-items:center;gap:8px;margin-bottom:0.5rem;cursor:pointer;">
             <input type="checkbox" ${col[key] ? 'checked' : ''}
-                onchange="payrollState.columns.${key}=this.checked; renderPayrollUI();">${label}
+                onchange="payrollState.columns.${key}=this.checked; renderPayrollUI();">
+            <span>${label}</span>
         </label>`;
     return `
     <div>
