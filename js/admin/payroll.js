@@ -212,10 +212,10 @@ function renderPayrollStep3() {
                     <select onchange="payrollState.employees[${i}].avType=this.value"
                         style="width:100%;padding:0.6rem;border:1px solid #ddd;border-radius:8px;">
                         <option value="">Bitte wählen</option>
-                        <option value="MJ" ${emp.avType==='MJ'?'selected':''}>Minijob</option>
-                        <option value="TZ" ${emp.avType==='TZ'?'selected':''}>Teilzeit</option>
-                        <option value="VZ" ${emp.avType==='VZ'?'selected':''}>Vollzeit</option>
-                        <option value="AZU" ${emp.avType==='AZU'?'selected':''}>Azubi</option>
+                        <option value="Minijob"        ${emp.avType==='Minijob'        ?'selected':''}>Minijob</option>
+                        <option value="Teilzeit"       ${emp.avType==='Teilzeit'       ?'selected':''}>Teilzeit</option>
+                        <option value="Vollzeit"       ${emp.avType==='Vollzeit'       ?'selected':''}>Vollzeit</option>
+                        <option value="Auszubildender" ${emp.avType==='Auszubildender' ?'selected':''}>Auszubildender</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -512,7 +512,7 @@ function updatePayrollOvertime(index) {
     const rate = parseFloat(emp.hourlyRate) || 0;
     let brutto;
     const vacationPay = parseFloat(emp.vacationHours || 0) * rate;
-    if ((emp.avType === 'VZ' || emp.avType === 'AZU') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0) {
+    if ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0) {
         brutto = (parseFloat(emp.monthlyHours) * rate + vacationPay).toFixed(2).replace('.', ',');
     } else {
         const total = parseFloat(emp.workedHours) + parseFloat(emp.sickHours || 0) + parseFloat(emp.vacationHours || 0);
@@ -623,7 +623,7 @@ async function buildPayrollPDF() {
         x = 14;
         const rate       = parseFloat(emp.hourlyRate || 0);
         const totalHours = parseFloat(emp.workedHours) + parseFloat(emp.sickHours || 0) + parseFloat(emp.vacationHours || 0);
-        let brutto = ((emp.avType === 'VZ' || emp.avType === 'AZU') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
+        let brutto = ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
             ? parseFloat(emp.monthlyHours) * rate : totalHours * rate;
 
         doc.text(emp.name, x, yPos); x += colW.name;
@@ -708,7 +708,7 @@ async function buildPayrollPDF() {
     payrollState.employees.forEach(emp => {
         const rate       = parseFloat(emp.hourlyRate || 0);
         const totalHours = parseFloat(emp.workedHours) + parseFloat(emp.sickHours||0) + parseFloat(emp.vacationHours||0);
-        bruttoGes += ((emp.avType === 'VZ' || emp.avType === 'AZU') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
+        bruttoGes += ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
             ? parseFloat(emp.monthlyHours) * rate : totalHours * rate;
         if (emp.payNightAllowance)    zuschlGes += parseFloat(emp.nightHours||0)   * rate * rates.night   / 100;
         if (emp.paySundayAllowance)   zuschlGes += parseFloat(emp.sundayHours||0)  * rate * rates.sunday  / 100;
@@ -799,7 +799,7 @@ async function downloadPayrollPDF() {
     payrollState.employees.forEach(emp => {
         const rate       = parseFloat(emp.hourlyRate || 0);
         const totalHours = parseFloat(emp.workedHours) + parseFloat(emp.sickHours || 0) + parseFloat(emp.vacationHours || 0);
-        totalGross += ((emp.avType === 'VZ' || emp.avType === 'AZU') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
+        totalGross += ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
             ? parseFloat(emp.monthlyHours) * rate : totalHours * rate;
     });
     await db.from('planit_payrolls').insert({
