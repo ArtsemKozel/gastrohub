@@ -333,7 +333,11 @@ async function loadPayrollEmployeeData() {
     const { startDate, endDate } = payrollState.period;
     const uid = adminSession.user.id;
 
-    const [{ data: emps }, { data: shifts }, { data: sickLeaves }, { data: vacations }, { data: restaurant }] = await Promise.all([
+    // Vormonat-Monatsstring für actual_hours (carry_over_minutes)
+    const periodStart  = new Date(startDate + 'T12:00:00');
+    const prevMonthStr = `${periodStart.getFullYear()}-${String(periodStart.getMonth() + 1).padStart(2, '0')}`;
+
+    const [{ data: emps }, { data: shifts }, { data: sickLeaves }, { data: vacations }, { data: restaurant }, { data: actualHours }] = await Promise.all([
         db.from('employees_planit').select('*').eq('user_id', uid).eq('is_active', true).order('name'),
         db.from('shifts')
             .select('employee_id, shift_date, start_time, end_time, break_minutes, actual_start_time, actual_end_time, actual_break_minutes')
@@ -346,7 +350,8 @@ async function loadPayrollEmployeeData() {
             .select('employee_id, start_date, end_date, deducted_hours, deducted_days')
             .eq('user_id', uid).eq('status', 'approved').eq('type', 'vacation')
             .lte('start_date', endDate).gte('end_date', startDate),
-        db.from('planit_restaurants').select('name').eq('user_id', uid).maybeSingle()
+        db.from('planit_restaurants').select('name').eq('user_id', uid).maybeSingle(),
+        db.from('actual_hours').select('employee_id, carry_over_minutes').eq('month', prevMonthStr)
     ]);
 
     if (restaurant?.name && !payrollState.period.restaurantName) {
@@ -372,7 +377,10 @@ async function loadPayrollEmployeeData() {
             nightHours:          calcNightHours(empShifts).toFixed(2),
             sundayHours:         calcSundayHours(empShifts).toFixed(2),
             holidayHours:        calcHolidayHours(empShifts).toFixed(2),
-            overtimeFromPrevMonth: 0,
+            overtimeFromPrevMonth: (() => {
+                const entry = (actualHours || []).find(a => a.employee_id === e.id);
+                return entry ? parseFloat((entry.carry_over_minutes / 60).toFixed(2)) : 0;
+            })(),
             payOvertime:         false,
             payOvertimeAllowance:false,
             payAllowances:       false,
