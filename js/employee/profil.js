@@ -242,7 +242,6 @@ async function submitTermination() {
         .limit(1)
         .maybeSingle();
 
-    console.log('SELECT nach INSERT — inserted:', inserted, '| selectError:', selectError);
 
     // PDF generieren und hochladen
     try {
@@ -320,12 +319,6 @@ async function submitTermination() {
         const { error: uploadError } = await db.storage
             .from('termination-pdfs')
             .upload(fileName, pdfBlob, { contentType: 'application/pdf', upsert: true });
-
-        console.log('Storage upload error (full):', uploadError);
-        if (uploadError) {
-            console.log('message:', uploadError.message);
-            console.log('statusCode:', uploadError.statusCode);
-        }
 
         if (!uploadError && inserted?.id) {
             await db.from('planit_terminations').update({ pdf_url: fileName }).eq('id', inserted.id);
