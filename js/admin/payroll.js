@@ -206,15 +206,8 @@ function renderPayrollStep3() {
                     <div>Krank: <strong>${fmtHours(emp.sickHours)}</strong></div>
                     <div>Urlaub: <strong>${fmtHours(emp.vacationHours)}</strong></div>
                     <div>Überstd. Vormonat: <strong>${fmtHours(emp.overtimeFromPrevMonth || 0)}</strong></div>
-                    ${(() => {
-                        if (!emp.avType && !emp.hourlyRate) return '';
-                        const rate = emp.hourlyRate
-                            ? parseFloat(emp.hourlyRate).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                            : '—';
-                        const unit = emp.wageType === 'Festgehalt' ? '€/Monat' : '€/Std';
-                        const parts = [emp.avType, `${rate} ${unit}`].filter(Boolean).join(' · ');
-                        return `<div>AV-Art: <strong>${parts}</strong></div>`;
-                    })()}
+                    ${emp.avType ? `<div>AV-Art: <strong>${emp.avType}</strong></div>` : ''}
+                    ${emp.hourlyRate ? `<div>${emp.wageType === 'Festgehalt' ? 'Festgehalt' : 'Stundenlohn'}: <strong>${parseFloat(emp.hourlyRate).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${emp.wageType === 'Festgehalt' ? '€/Monat' : '€'}</strong></div>` : ''}
                 </div>
                 <div class="form-group">
                     <label style="font-size:0.8rem;">Vereinbarte Std./Monat (für Überstunden)</label>
