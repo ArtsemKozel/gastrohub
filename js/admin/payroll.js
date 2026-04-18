@@ -134,7 +134,7 @@ function renderPayrollStep1() {
                 + Feiertag hinzufügen
             </button>
         </div>
-        <div style="display:flex;justify-content:flex-end;margin-top:1rem;">
+        <div style="display:flex;justify-content:center;margin-top:1rem;">
             <button onclick="nextPayrollStep()" style="width:3.2rem;height:3.2rem;border-radius:50%;background:#B28A6E;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </button>
