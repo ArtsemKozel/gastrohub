@@ -340,13 +340,13 @@ function renderEmploymentPhases() {
             </div>
             <div style="margin-bottom:0.5rem;">
                 <label style="font-size:0.75rem;">Lohnart</label>
-                <select onchange="updatePhase(${i}, 'wage_type', this.value)" style="padding:0.4rem; font-size:0.8rem; width:100%;">
+                <select onchange="updatePhase(${i}, 'wage_type', this.value); document.getElementById('phase-wage-label-${i}').textContent=this.value==='Festgehalt'?'Festgehalt (€/Monat)':'Stundenlohn (€)'" style="padding:0.4rem; font-size:0.8rem; width:100%;">
                     <option value="Stundenlohn" ${(p.wage_type || 'Stundenlohn') === 'Stundenlohn' ? 'selected' : ''}>Stundenlohn</option>
                     <option value="Festgehalt"  ${p.wage_type === 'Festgehalt'  ? 'selected' : ''}>Festgehalt</option>
                 </select>
             </div>
             <div>
-                <label style="font-size:0.75rem;">Stundenlohn (€)</label>
+                <label id="phase-wage-label-${i}" style="font-size:0.75rem;">${p.wage_type === 'Festgehalt' ? 'Festgehalt (€/Monat)' : 'Stundenlohn (€)'}</label>
                 <input type="number" value="${p.hourly_rate ?? ''}" min="0" step="0.01" placeholder="0.00" onchange="updatePhase(${i}, 'hourly_rate', parseFloat(this.value) || null)" style="padding:0.4rem; font-size:0.8rem; width:100%;">
             </div>
         </div>
