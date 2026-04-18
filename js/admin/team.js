@@ -300,9 +300,20 @@ function renderEmploymentPhases() {
                 <label style="font-size:0.75rem;">Std/Urlaubstag</label>
                 <input type="number" value="${p.hours_per_vacation_day ?? 8}" min="0" max="24" step="0.5" onchange="updatePhase(${i}, 'hours_per_vacation_day', parseFloat(this.value) || 0)" style="padding:0.4rem; font-size:0.8rem; width:100%;">
             </div>
+            <div style="margin-bottom:0.5rem;">
+                <label style="font-size:0.75rem;">Beschäftigungsart</label>
+                <select onchange="updatePhase(${i}, 'employment_type', this.value)" style="padding:0.4rem; font-size:0.8rem; width:100%;">
+                    <option value="">— bitte wählen —</option>
+                    <option value="Vollzeit"       ${p.employment_type === 'Vollzeit'       ? 'selected' : ''}>Vollzeit</option>
+                    <option value="Teilzeit"       ${p.employment_type === 'Teilzeit'       ? 'selected' : ''}>Teilzeit</option>
+                    <option value="Minijob"        ${p.employment_type === 'Minijob'        ? 'selected' : ''}>Minijob</option>
+                    <option value="Auszubildender" ${p.employment_type === 'Auszubildender' ? 'selected' : ''}>Auszubildender</option>
+                    <option value="Elternzeit"     ${p.employment_type === 'Elternzeit'     ? 'selected' : ''}>Elternzeit</option>
+                </select>
+            </div>
             <div>
-                <label style="font-size:0.75rem;">Kommentar (optional)</label>
-                <input type="text" value="${p.notes || ''}" placeholder="z.B. Vollzeit, Minijob, Elternzeit..." onchange="updatePhase(${i}, 'notes', this.value)" style="padding:0.4rem; font-size:0.8rem;">
+                <label style="font-size:0.75rem;">Stundenlohn (€)</label>
+                <input type="number" value="${p.hourly_rate ?? ''}" min="0" step="0.01" placeholder="0.00" onchange="updatePhase(${i}, 'hourly_rate', parseFloat(this.value) || null)" style="padding:0.4rem; font-size:0.8rem; width:100%;">
             </div>
         </div>
     `).join('');
@@ -377,6 +388,8 @@ async function submitEditEmployee() {
         hours_per_vacation_day: p.hours_per_vacation_day,
         vacation_days_per_year: p.vacation_days_per_year,
         notes:                  p.notes || null,
+        employment_type:        p.employment_type || null,
+        hourly_rate:            p.hourly_rate || null,
     }));
     if (phasesToInsert.length > 0) {
         await db.from('employment_phases').insert(phasesToInsert);
