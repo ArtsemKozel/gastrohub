@@ -60,6 +60,15 @@ function startPosClock() {
     setInterval(() => {
         const el = document.getElementById('pos-time');
         if (el) el.textContent = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        const elapsedEl = document.getElementById('pos-elapsed');
+        if (elapsedEl && posState.entry?.clock_in) {
+            const diffS = Math.floor((Date.now() - new Date(posState.entry.clock_in)) / 1000);
+            const h = Math.floor(diffS / 3600);
+            const m = Math.floor((diffS % 3600) / 60);
+            const s = diffS % 60;
+            elapsedEl.textContent = (h > 0 ? h + 'h ' : '') + m + 'min ' + s + 's';
+        }
     }, 1000);
 }
 
@@ -120,7 +129,7 @@ function renderEmployeeScreen() {
         const h = Math.floor(diffM / 60), m = diffM % 60;
         clockSub = `
             <div style="font-size: 0.875rem; opacity: 0.9;">Eingestempelt seit: ${since}</div>
-            <div style="font-size: 1.5rem; margin-top: 0.5rem; font-weight: 600;">${h > 0 ? h + 'h ' : ''}${m}min</div>`;
+            <div id="pos-elapsed" style="font-size: 1.5rem; margin-top: 0.5rem; font-weight: 600;">${h > 0 ? h + 'h ' : ''}${m}min</div>`;
     } else if (onBreak) {
         const since = new Date(posState.activeBreak.break_start).toLocaleTimeString('de-DE');
         const diffM = Math.floor((Date.now() - new Date(posState.activeBreak.break_start)) / 60000);
