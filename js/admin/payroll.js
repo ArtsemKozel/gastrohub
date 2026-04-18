@@ -207,22 +207,15 @@ function renderPayrollStep3() {
                     <div>Urlaub: <strong>${fmtHours(emp.vacationHours)}</strong></div>
                     <div>Überstd. Vormonat: <strong>${fmtHours(emp.overtimeFromPrevMonth || 0)}</strong></div>
                 </div>
-                <div class="form-group">
-                    <label style="font-size:0.8rem;">AV-Art</label>
-                    <select disabled
-                        style="width:100%;padding:0.6rem;border:1px solid #ddd;border-radius:8px;background:#F5F5F5;color:#555;">
-                        <option value="">Bitte wählen</option>
-                        <option value="Minijob"        ${emp.avType==='Minijob'        ?'selected':''}>Minijob</option>
-                        <option value="Teilzeit"       ${emp.avType==='Teilzeit'       ?'selected':''}>Teilzeit</option>
-                        <option value="Vollzeit"       ${emp.avType==='Vollzeit'       ?'selected':''}>Vollzeit</option>
-                        <option value="Auszubildender" ${emp.avType==='Auszubildender' ?'selected':''}>Auszubildender</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label style="font-size:0.8rem;">Stundenlohn (€)</label>
-                    <input type="number" step="0.01" value="${emp.hourlyRate}" readonly
-                        style="width:100%;padding:0.6rem;border:1px solid #ddd;border-radius:8px;background:#F5F5F5;color:#555;">
-                </div>
+                ${(() => {
+                    if (!emp.avType && !emp.hourlyRate) return '';
+                    const rate = emp.hourlyRate
+                        ? parseFloat(emp.hourlyRate).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        : '—';
+                    const unit = emp.wageType === 'Festgehalt' ? '€/Monat' : '€/Std';
+                    const parts = [emp.avType, rate ? `${rate} ${unit}` : null].filter(Boolean).join(' · ');
+                    return `<div style="font-size:0.85rem;font-weight:500;color:#555;background:#F5F5F5;border-radius:8px;padding:0.5rem 0.75rem;margin-bottom:0.75rem;">${parts}</div>`;
+                })()}
                 <div class="form-group">
                     <label style="font-size:0.8rem;">Vereinbarte Std./Monat (für Überstunden)</label>
                     <input type="number" step="0.5" value="${emp.monthlyHours}"
