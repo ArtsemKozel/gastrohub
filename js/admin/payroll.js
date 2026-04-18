@@ -273,6 +273,9 @@ function renderPayrollStep4() {
             <div><strong>Mitarbeiter:</strong> ${payrollState.employees.length}</div>
         </div>
         <div style="display:flex;justify-content:center;gap:1rem;margin-top:0.5rem;">
+            <button onclick="previousPayrollStep()" title="Zurück" style="width:3.2rem;height:3.2rem;border-radius:50%;background:#8B6F47;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            </button>
             <button onclick="previewPayrollPDF()" title="Vorschau" style="width:3.2rem;height:3.2rem;border-radius:50%;background:#8B6F47;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
