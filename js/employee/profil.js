@@ -252,6 +252,7 @@ async function submitTermination() {
 
         const empName     = emp?.name || currentEmployee.name || '';
         const restName    = restaurant?.name   || '[Restaurant-Name]';
+        console.log('restaurant query result:', restaurant, '| restName:', restName);
         const restStreet  = restaurant?.street || '';
         const restZip     = restaurant?.zip    || '';
         const restCity    = restaurant?.city   || '';
