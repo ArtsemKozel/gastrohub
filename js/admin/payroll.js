@@ -347,7 +347,7 @@ async function loadPayrollEmployeeData() {
     const periodStart  = new Date(startDate + 'T12:00:00');
     const prevMonthStr = `${periodStart.getFullYear()}-${String(periodStart.getMonth() + 1).padStart(2, '0')}`;
 
-    const [{ data: emps }, { data: shifts }, { data: sickLeaves }, { data: vacTaken }, { data: restaurant }, { data: actualHours }] = await Promise.all([
+    const [{ data: emps }, { data: shifts }, { data: sickLeaves }, { data: vacTaken }, { data: restaurant }, { data: actualHours }, { data: phases }] = await Promise.all([
         db.from('employees_planit').select('*').eq('user_id', uid).eq('is_active', true).order('name'),
         db.from('shifts')
             .select('employee_id, shift_date, start_time, end_time, break_minutes, actual_start_time, actual_end_time, actual_break_minutes')
@@ -361,7 +361,8 @@ async function loadPayrollEmployeeData() {
             .eq('user_id', uid).eq('status', 'approved')
             .lte('start_date', endDate).gte('end_date', startDate),
         db.from('planit_restaurants').select('name').eq('user_id', uid).maybeSingle(),
-        db.from('actual_hours').select('employee_id, carry_over_minutes').eq('month', prevMonthStr)
+        db.from('actual_hours').select('employee_id, carry_over_minutes').eq('month', prevMonthStr),
+        db.from('employment_phases').select('employee_id, start_date, end_date, employment_type, hourly_rate').eq('user_id', uid)
     ]);
 
     if (restaurant?.name && !payrollState.period.restaurantName) {
@@ -375,11 +376,21 @@ async function loadPayrollEmployeeData() {
     payrollState.employees = (emps || []).map(e => {
         const empShifts = (shifts || []).filter(s => s.employee_id === e.id);
 
+        const activePhase = (phases || [])
+            .filter(p => p.employee_id === e.id
+                && p.start_date <= startDate
+                && (!p.end_date || p.end_date >= endDate))
+            .sort((a, b) => b.start_date.localeCompare(a.start_date))[0];
+
+        const resolvedAvType    = activePhase?.employment_type || e.employment_type || '';
+        const resolvedHourlyRate = activePhase?.hourly_rate ?? e.hourly_rate ?? null;
+
         return {
             id:                  e.id,
             name:                e.name,
-            avType:              e.employment_type || '',
-            hourlyRate:          e.hourly_rate     ? String(parseFloat(e.hourly_rate)) : '',
+            avType:              resolvedAvType,
+            wageType:            e.wage_type || 'Stundenlohn',
+            hourlyRate:          resolvedHourlyRate ? String(parseFloat(resolvedHourlyRate)) : '',
             monthlyHours:        e.monthly_hours   ? String(parseFloat(e.monthly_hours)) : '',
             workedHours:         calcWorkedHours(empShifts).toFixed(2),
             sickHours:           calcSickHours(e.id, sickLeaves || [], empShifts, startDate, endDate).toFixed(2),
