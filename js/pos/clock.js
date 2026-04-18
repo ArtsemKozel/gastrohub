@@ -223,7 +223,7 @@ function renderEmployeeScreen() {
                     return (h > 0 ? h + 'h ' : '') + m + 'min';
                 };
 
-                const renderRow = e => {
+                const renderEntry = e => {
                     const breakMins = (e.breaks || []).reduce((sum, b) => {
                         if (!b.break_end) return sum;
                         return sum + Math.floor((new Date(b.break_end) - new Date(b.break_start)) / 60000);
@@ -233,20 +233,31 @@ function renderEmployeeScreen() {
                     const nettoStr = e.clock_out
                         ? fmtDur(Math.max(0, Math.floor((new Date(e.clock_out) - new Date(e.clock_in)) / 60000) - breakMins))
                         : '–';
-                    return `<div style="padding:0.5rem 0; border-bottom:1px solid #EDE7E0; color:#2C3E50;">
-                        <div style="text-align:center; font-weight:700; font-size:0.82rem; margin-bottom:0.3rem;">${fmtDate(e.clock_in)}</div>
-                        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0.25rem; font-size:0.76rem; text-align:center;">
-                            <span><span style="opacity:0.6;">Ein</span><br>${fmtTime(e.clock_in)}</span>
-                            <span><span style="opacity:0.6;">Aus</span><br>${ausStr}</span>
-                            <span><span style="opacity:0.6;">Pause</span><br>${pauseStr}</span>
-                            <span><span style="opacity:0.6;">Netto</span><br><strong>${nettoStr}</strong></span>
-                        </div>
+                    return `<div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0.25rem; font-size:0.76rem; text-align:center; padding:0.35rem 0; border-bottom:1px solid #EDE7E0; color:#2C3E50;">
+                        <span><span style="opacity:0.6;">Ein</span><br>${fmtTime(e.clock_in)}</span>
+                        <span><span style="opacity:0.6;">Aus</span><br>${ausStr}</span>
+                        <span><span style="opacity:0.6;">Pause</span><br>${pauseStr}</span>
+                        <span><span style="opacity:0.6;">Netto</span><br><strong>${nettoStr}</strong></span>
                     </div>`;
                 };
 
-                const visible = all.slice(0, 3).map(renderRow).join('');
-                const hidden  = all.slice(3).map(renderRow).join('');
-                const hasMore = all.length > 3;
+                // Einträge nach Datum (YYYY-MM-DD) gruppieren
+                const groups = [];
+                const groupMap = {};
+                all.forEach(e => {
+                    const key = e.clock_in.split('T')[0];
+                    if (!groupMap[key]) { groupMap[key] = []; groups.push({ key, entries: groupMap[key] }); }
+                    groupMap[key].push(e);
+                });
+
+                const renderGroup = g => `<div style="margin-bottom:0.5rem;">
+                    <div style="text-align:center; font-weight:700; font-size:0.82rem; padding:0.4rem 0 0.2rem; color:#5C4033; border-bottom:2px solid #D4C5B5; margin-bottom:0.1rem;">${fmtDate(g.entries[0].clock_in)}</div>
+                    ${g.entries.map(renderEntry).join('')}
+                </div>`;
+
+                const visible = groups.slice(0, 3).map(renderGroup).join('');
+                const hidden  = groups.slice(3).map(renderGroup).join('');
+                const hasMore = groups.length > 3;
 
                 return `
                 <div style="margin-top:1.5rem; background:#FBF8F5; border-radius:12px; padding:1rem;">
@@ -259,7 +270,7 @@ function renderEmployeeScreen() {
                         ${hasMore ? `<div id="pos-shifts-extra" style="display:none;">${hidden}</div>
                         <button onclick="document.getElementById('pos-shifts-extra').style.display='block'; this.style.display='none';"
                             style="margin-top:0.5rem; background:none; border:none; cursor:pointer; font-size:0.78rem; color:#B28A6E; padding:0;">
-                            + ${all.length - 3} weitere anzeigen
+                            + ${groups.length - 3} weitere Tage anzeigen
                         </button>` : ''}
                     </div>
                 </div>`;
