@@ -630,7 +630,7 @@ async function buildPayrollPDF() {
         if (yPos + rowH > 185) { doc.addPage(); yPos = 20; }
 
         doc.text(nameLines, x, yPos); x += colW.name;
-        doc.text(emp.avType || '–', x, yPos); x += colW.avType;
+        doc.text((emp.avType === 'Auszubildender' ? 'Azubi' : emp.avType) || '–', x, yPos); x += colW.avType;
         doc.text(fmt(rate) + ' €', x, yPos); x += colW.rate;
         doc.text(fmt(emp.workedHours) + ' h', x, yPos); x += colW.worked;
         if (cols.sickHours)     { doc.text(fmt(emp.sickHours) + ' h', x, yPos); x += colW.sick; }
