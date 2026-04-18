@@ -72,13 +72,13 @@ function renderPayrollWizardHTML() {
     return `
     <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:1000;overflow-y:auto;padding:1rem;box-sizing:border-box;">
         <div style="background:#F9F5F1;border-radius:24px;padding:1.5rem;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.25rem;">
+            <div style="position:relative;text-align:center;margin-bottom:0.25rem;">
                 <h2 style="color:var(--color-text);margin:0;">Vorlohnabrechnung</h2>
-                <button onclick="closePayrollWizard()" style="background:none;border:none;cursor:pointer;padding:0.25rem;color:var(--color-text-light);">
+                <button onclick="closePayrollWizard()" style="position:absolute;top:0;right:0;background:none;border:none;cursor:pointer;padding:0.25rem;color:var(--color-text-light);">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
             </div>
-            <p style="color:var(--color-text-light);font-size:0.85rem;margin-bottom:1.5rem;">Schritt ${payrollState.step} von 4</p>
+            <p style="color:var(--color-text-light);font-size:0.85rem;margin-bottom:1.5rem;text-align:center;">Schritt ${payrollState.step} von 4</p>
 
             ${payrollState.step === 1 ? renderPayrollStep1() : ''}
             ${payrollState.step === 2 ? renderPayrollStep2() : ''}
