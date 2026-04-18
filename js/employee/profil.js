@@ -232,7 +232,7 @@ async function submitTermination() {
         return;
     }
 
-    const { data: inserted } = await db
+    const { data: inserted, error: selectError } = await db
         .from('planit_terminations')
         .select('id')
         .eq('user_id', currentEmployee.user_id)
@@ -241,6 +241,8 @@ async function submitTermination() {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
+
+    console.log('SELECT nach INSERT — inserted:', inserted, '| selectError:', selectError);
 
     // PDF generieren und hochladen
     try {
