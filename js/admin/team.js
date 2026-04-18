@@ -276,6 +276,24 @@ function closeEditEmployeeModal() {
 
 function renderEmploymentPhases() {
     const container = document.getElementById('edit-emp-phases');
+
+    const infoEl = document.getElementById('edit-emp-current-phase-info');
+    if (infoEl) {
+        const current = currentPhases
+            .filter(p => p.start_date)
+            .sort((a, b) => (b.start_date || '').localeCompare(a.start_date || ''))
+            .find(p => !p.end_date) || currentPhases
+            .filter(p => p.start_date)
+            .sort((a, b) => (b.start_date || '').localeCompare(a.start_date || ''))[0];
+        if (current && current.employment_type && current.hourly_rate) {
+            const rate = parseFloat(current.hourly_rate).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            infoEl.textContent = `Aktuell: ${current.employment_type} · ${rate} €/Std`;
+            infoEl.style.display = 'block';
+        } else {
+            infoEl.style.display = 'none';
+        }
+    }
+
     if (currentPhases.length === 0) {
         container.innerHTML = '<div style="font-size:0.85rem; color:var(--color-text-light); margin-bottom:0.5rem;">Keine Phasen — Standardwerte gelten fürs ganze Jahr.</div>';
         return;
