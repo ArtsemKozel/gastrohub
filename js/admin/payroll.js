@@ -387,6 +387,7 @@ async function loadPayrollEmployeeData() {
 
         return {
             id:                  e.id,
+            department:          e.department || '',
             name:                e.name,
             avType:              resolvedAvType,
             wageType:            e.wage_type || 'Stundenlohn',
@@ -639,16 +640,22 @@ async function buildPayrollPDF() {
     if (cols.comment) doc.text('Kommentar', x, yPos);
     yPos += 2; doc.setLineWidth(0.3); doc.line(14, yPos, 282, yPos); yPos += 5;
 
-    doc.setFont(undefined, 'normal');
+    // Mitarbeiter nach Abteilung gruppieren
+    const deptGroups = [];
+    const deptMap = {};
     pdfEmployees.forEach(emp => {
+        const key = emp.department || '–';
+        if (!deptMap[key]) { deptMap[key] = []; deptGroups.push({ key, emps: deptMap[key] }); }
+        deptMap[key].push(emp);
+    });
+
+    const renderEmpRow = emp => {
         x = 14;
         const rate = parseFloat(emp.hourlyRate || 0);
         const { brutto, displayHours } = calcEmpBrutto(emp);
-
         const nameLines = doc.splitTextToSize(emp.name, colW.name - 1);
         const rowH = Math.max(6, nameLines.length * 5);
         if (yPos + rowH > 185) { doc.addPage(); yPos = 20; }
-
         doc.text(nameLines, x, yPos); x += colW.name;
         doc.text((emp.avType === 'Auszubildender' ? 'Azubi' : emp.avType) || '–', x, yPos); x += colW.avType;
         doc.text(fmt(rate) + ' €', x, yPos); x += colW.rate;
@@ -665,8 +672,21 @@ async function buildPayrollPDF() {
         doc.text(fmt(brutto) + ' €', x, yPos); x += colW.gross;
         if (cols.comment && emp.comment) doc.text(emp.comment.substring(0, 30), x, yPos);
         yPos += rowH;
+    };
+
+    doc.setFont(undefined, 'normal');
+    deptGroups.forEach(group => {
+        checkBreak();
+        doc.setFont(undefined, 'bold'); doc.setFontSize(9);
+        doc.setFillColor(235, 228, 220);
+        doc.rect(14, yPos - 4, 268, 7, 'F');
+        doc.text(group.key, 16, yPos);
+        yPos += 5;
+        doc.setFont(undefined, 'normal');
+        group.emps.forEach(renderEmpRow);
+        yPos += 2;
     });
-    yPos += 5; checkBreak();
+    yPos += 3; checkBreak();
 
     // ── Tabelle 1B: Zusatzleistungen ──
     const hasAdd = cols.bonus || cols.vwl || cols.benefits;
