@@ -658,17 +658,18 @@ async function buildPayrollPDF() {
         if (yPos + rowH > 185) { doc.addPage(); yPos = 20; }
         doc.text(nameLines, x, yPos); x += colW.name;
         doc.text((emp.avType === 'Auszubildender' ? 'Azubi' : emp.avType) || '–', x, yPos); x += colW.avType;
+        const isFest = emp.wageType === 'Festgehalt';
         doc.text(fmt(rate) + ' €', x, yPos); x += colW.rate;
-        doc.text(fmt(emp.workedHours) + ' h', x, yPos); x += colW.worked;
+        doc.text(isFest ? '–' : fmt(emp.workedHours) + ' h', x, yPos); x += colW.worked;
         if (cols.sickHours)     { doc.text(fmt(emp.sickHours) + ' h', x, yPos); x += colW.sick; }
         if (cols.vacationHours) { doc.text(fmt(emp.vacationHours) + ' h', x, yPos); x += colW.vac; }
         if (cols.overtime) {
-            const ot = emp.monthlyHours
+            const ot = (!isFest && emp.monthlyHours)
                 ? Math.max(0, parseFloat(emp.workedHours) + parseFloat(emp.overtimeFromPrevMonth||0) - parseFloat(emp.monthlyHours))
                 : 0;
-            doc.text(fmt(ot) + ' h', x, yPos); x += colW.ot;
+            doc.text(isFest ? '–' : fmt(ot) + ' h', x, yPos); x += colW.ot;
         }
-        doc.text(fmt(displayHours) + ' h', x, yPos); x += colW.total;
+        doc.text(isFest ? '–' : fmt(displayHours) + ' h', x, yPos); x += colW.total;
         doc.text(fmt(brutto) + ' €', x, yPos); x += colW.gross;
         if (cols.comment && emp.comment) doc.text(emp.comment.substring(0, 30), x, yPos);
         yPos += rowH;
