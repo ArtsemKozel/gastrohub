@@ -43,6 +43,15 @@ function payrollIsHoliday(dateStr) {
     return Object.values(bwHols).includes(dateStr);
 }
 
+// ── HILFSFUNKTION: Dezimalstunden → "Xh Ymin" ─────────────
+
+function fmtHours(decimalHours) {
+    const total = parseFloat(decimalHours) || 0;
+    const h = Math.floor(total);
+    const m = Math.round((total - h) * 60);
+    return m > 0 ? `${h}h ${m}min` : `${h}h`;
+}
+
 // ── UI-RENDERING ──────────────────────────────────────────
 
 function renderPayrollUI() {
@@ -184,10 +193,10 @@ function renderPayrollStep3() {
             </h4>
             <div style="display:none;">
                 <div style="background:#718974;color:white;padding:0.75rem 1rem;border-radius:10px;margin:0.75rem 0;font-size:0.85rem;">
-                    <div>Gearbeitet: <strong>${emp.workedHours}h</strong></div>
-                    <div>Krank: <strong>${emp.sickHours}h</strong></div>
-                    <div>Urlaub: <strong>${emp.vacationHours}h</strong></div>
-                    <div>Überstd. Vormonat: <strong>${emp.overtimeFromPrevMonth || 0}h</strong></div>
+                    <div>Gearbeitet: <strong>${fmtHours(emp.workedHours)}</strong></div>
+                    <div>Krank: <strong>${fmtHours(emp.sickHours)}</strong></div>
+                    <div>Urlaub: <strong>${fmtHours(emp.vacationHours)}</strong></div>
+                    <div>Überstd. Vormonat: <strong>${fmtHours(emp.overtimeFromPrevMonth || 0)}</strong></div>
                 </div>
                 <div class="form-group">
                     <label style="font-size:0.8rem;">AV-Art</label>
@@ -462,7 +471,7 @@ function updatePayrollOvertime(index) {
         ? (totalWorked - parseFloat(emp.monthlyHours)).toFixed(2) : '0';
 
     const el = document.getElementById(`payroll-overtime-${index}`);
-    if (el) el.textContent = overtime + 'h';
+    if (el) el.textContent = fmtHours(overtime);
 
     const rate = parseFloat(emp.hourlyRate) || 0;
     let brutto;
