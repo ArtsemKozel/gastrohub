@@ -16,7 +16,9 @@ const posState = {
     activeBreak: null,        // offene Pause (break_end = null)
     pin:         '',
     error:       '',
-    noteSaved:   false        // Kommentar nach Einstempeln bereits gespeichert
+    noteSaved:   false,       // Kommentar nach Einstempeln bereits gespeichert
+    recentEntries: [],        // letzte Schichten des Mitarbeiters (mit Pausen)
+    shiftsOpen:    false      // klappbares Schichten-Menü offen/zu
 };
 
 // ── INIT ──────────────────────────────────────────────────
@@ -54,6 +56,31 @@ async function loadPosData() {
     posState.entries   = entries || [];
 }
 
+async function loadRecentEntries() {
+    const emp = posState.employee;
+    if (!emp) return;
+
+    const { data: entries } = await db.from('gh_time_entries')
+        .select('id, clock_in, clock_out, note')
+        .eq('user_id', posState.userId)
+        .eq('employee_id', emp.id)
+        .order('clock_in', { ascending: false })
+        .limit(20);
+
+    if (!entries || entries.length === 0) { posState.recentEntries = []; return; }
+
+    const ids = entries.map(e => e.id);
+    const { data: breaks } = await db.from('gh_breaks')
+        .select('time_entry_id, break_start, break_end')
+        .in('time_entry_id', ids)
+        .not('break_end', 'is', null);
+
+    posState.recentEntries = entries.map(e => ({
+        ...e,
+        breaks: (breaks || []).filter(b => b.time_entry_id === e.id)
+    }));
+}
+
 // ── UHRZEIT-TICKER ────────────────────────────────────────
 
 function startPosClock() {
@@ -70,6 +97,14 @@ function startPosClock() {
             elapsedEl.textContent = (h > 0 ? h + 'h ' : '') + m + 'min ' + s + 's';
         }
     }, 1000);
+}
+
+function posToggleShifts() {
+    posState.shiftsOpen = !posState.shiftsOpen;
+    const body  = document.getElementById('pos-shifts-body');
+    const arrow = document.getElementById('pos-shifts-arrow');
+    if (body)  body.style.display  = posState.shiftsOpen ? 'block' : 'none';
+    if (arrow) arrow.textContent   = posState.shiftsOpen ? '▼' : '▶';
 }
 
 // ── RENDER ────────────────────────────────────────────────
@@ -177,6 +212,63 @@ function renderEmployeeScreen() {
                 </div>
             </div>` : ''}
 
+            ${(() => {
+                const all = posState.recentEntries || [];
+                if (all.length === 0) return '';
+
+                const fmtTime = iso => new Date(iso).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                const fmtDate = iso => new Date(iso).toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+                const fmtDur  = mins => {
+                    const h = Math.floor(mins / 60), m = mins % 60;
+                    return (h > 0 ? h + 'h ' : '') + m + 'min';
+                };
+
+                const rowStyle = 'display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; gap:0.25rem; font-size:0.78rem; padding:0.5rem 0; border-bottom:1px solid #EDE7E0; color:#2C3E50;';
+                const cellStyle = 'overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+
+                const renderRow = e => {
+                    const breakMins = (e.breaks || []).reduce((sum, b) => {
+                        if (!b.break_end) return sum;
+                        return sum + Math.floor((new Date(b.break_end) - new Date(b.break_start)) / 60000);
+                    }, 0);
+                    const ausStr   = e.clock_out ? fmtTime(e.clock_out) : '–';
+                    const pauseStr = breakMins > 0 ? fmtDur(breakMins) : '–';
+                    const nettoStr = e.clock_out
+                        ? fmtDur(Math.max(0, Math.floor((new Date(e.clock_out) - new Date(e.clock_in)) / 60000) - breakMins))
+                        : '–';
+                    return `<div style="${rowStyle}">
+                        <span style="${cellStyle}">${fmtDate(e.clock_in)}</span>
+                        <span style="${cellStyle}">${fmtTime(e.clock_in)}</span>
+                        <span style="${cellStyle}">${ausStr}</span>
+                        <span style="${cellStyle}">${pauseStr}</span>
+                        <span style="${cellStyle}; font-weight:600;">${nettoStr}</span>
+                    </div>`;
+                };
+
+                const visible = all.slice(0, 3).map(renderRow).join('');
+                const hidden  = all.slice(3).map(renderRow).join('');
+                const hasMore = all.length > 3;
+
+                return `
+                <div style="margin-top:1.5rem; background:#FBF8F5; border-radius:12px; padding:1rem;">
+                    <button onclick="posToggleShifts()" style="width:100%; background:none; border:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:0; font-size:0.9rem; font-weight:600; color:#5C4033;">
+                        <span>Meine letzten Schichten</span>
+                        <span id="pos-shifts-arrow" style="font-size:0.75rem;">▶</span>
+                    </button>
+                    <div id="pos-shifts-body" style="display:none; margin-top:0.75rem;">
+                        <div style="${rowStyle} font-weight:600; color:#8B6F47; border-bottom:2px solid #D4C5B5;">
+                            <span>Datum</span><span>Ein</span><span>Aus</span><span>Pause</span><span>Netto</span>
+                        </div>
+                        ${visible}
+                        ${hasMore ? `<div id="pos-shifts-extra" style="display:none;">${hidden}</div>
+                        <button onclick="document.getElementById('pos-shifts-extra').style.display='block'; this.style.display='none';"
+                            style="margin-top:0.5rem; background:none; border:none; cursor:pointer; font-size:0.78rem; color:#B28A6E; padding:0;">
+                            + ${all.length - 3} weitere anzeigen
+                        </button>` : ''}
+                    </div>
+                </div>`;
+            })()}
+
         </div>
     </div>`;
 }
@@ -210,12 +302,14 @@ async function posLogin() {
     const empEntries = posState.entries.filter(e => e.employee_id === emp.id);
     const lastEntry  = empEntries.length ? empEntries[empEntries.length - 1] : null;
 
-    posState.employee = emp;
-    posState.entry    = lastEntry;
-    posState.pin      = '';
-    posState.error    = '';
-    posState.view     = 'employee';
+    posState.employee    = emp;
+    posState.entry       = lastEntry;
+    posState.pin         = '';
+    posState.error       = '';
+    posState.shiftsOpen  = false;
+    posState.view        = 'employee';
     await loadBreakData();
+    await loadRecentEntries();
     renderPOS();
 }
 
@@ -263,6 +357,7 @@ async function posClockIn() {
     posState.noteSaved   = false;
     posState.entries.push(data);
 
+    await loadRecentEntries();
     const timeStr = new Date(now).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
     posShowToast('✓ Eingestempelt um ' + timeStr + ' Uhr');
     renderPOS();
@@ -286,6 +381,7 @@ async function posClockOut() {
     const idx = posState.entries.findIndex(e => e.id === entry.id);
     if (idx > -1) posState.entries[idx] = data;
 
+    await loadRecentEntries();
     const timeStr = new Date(now).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
     posShowToast('✓ Ausgestempelt um ' + timeStr + ' Uhr');
     renderPOS();
