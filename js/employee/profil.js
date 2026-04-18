@@ -317,9 +317,7 @@ async function submitTermination() {
         const fileName = `${currentEmployee.user_id}/${currentEmployee.id}_${date}.pdf`;
         const { error: uploadError } = await db.storage
             .from('termination-pdfs')
-            .upload(fileName, pdfBlob, { contentType: 'application/pdf' });
-
-        console.log('Storage upload error:', uploadError);
+            .upload(fileName, pdfBlob, { contentType: 'application/pdf', upsert: true });
 
         if (!uploadError && inserted?.id) {
             await db.from('planit_terminations').update({ pdf_url: fileName }).eq('id', inserted.id);
