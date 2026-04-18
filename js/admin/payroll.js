@@ -272,9 +272,13 @@ function renderPayrollStep4() {
             <div><strong>Zeitraum:</strong> ${fmtDate(s.startDate)} – ${fmtDate(s.endDate)}</div>
             <div><strong>Mitarbeiter:</strong> ${payrollState.employees.length}</div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-            <button onclick="previewPayrollPDF()" class="btn-secondary">Vorschau</button>
-            <button onclick="downloadPayrollPDF()" class="btn-primary">Herunterladen</button>
+        <div style="display:flex;justify-content:center;gap:1rem;margin-top:0.5rem;">
+            <button onclick="previewPayrollPDF()" title="Vorschau" style="width:3.2rem;height:3.2rem;border-radius:50%;background:#8B6F47;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button onclick="downloadPayrollPDF()" title="Herunterladen" style="width:3.2rem;height:3.2rem;border-radius:50%;background:#B28A6E;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
         </div>
     </div>`;
 }
