@@ -677,11 +677,11 @@ async function buildPayrollPDF() {
 
     doc.setFont(undefined, 'normal');
     deptGroups.forEach(group => {
-        checkBreak();
+        yPos += 4; checkBreak();
         doc.setFont(undefined, 'bold'); doc.setFontSize(9);
-        doc.setFillColor(235, 228, 220);
-        doc.rect(14, yPos - 4, 268, 7, 'F');
-        doc.text(group.key, 16, yPos);
+        doc.setTextColor(178, 138, 110);
+        doc.text(group.key, 14, yPos);
+        doc.setTextColor(0);
         yPos += 5;
         doc.setFont(undefined, 'normal');
         group.emps.forEach(renderEmpRow);
