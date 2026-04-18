@@ -319,6 +319,8 @@ async function submitTermination() {
             .from('termination-pdfs')
             .upload(fileName, pdfBlob, { contentType: 'application/pdf' });
 
+        console.log('Storage upload error:', uploadError);
+
         if (!uploadError && inserted?.id) {
             await db.from('planit_terminations').update({ pdf_url: fileName }).eq('id', inserted.id);
         }
