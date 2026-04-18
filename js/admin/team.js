@@ -192,6 +192,7 @@ async function submitNewEmployee() {
     const hoursPerVacationDay = parseFloat(document.getElementById('new-emp-hours-per-vacation-day').value) || 8.0;
     const vacationDays        = parseInt(document.getElementById('new-emp-vacation-days')?.value) || 20;
     const employmentType      = document.getElementById('new-emp-employment-type').value || null;
+    const wageType            = document.getElementById('new-emp-wage-type').value || null;
     const hourlyRate          = parseFloat(document.getElementById('new-emp-hourly-rate').value) || null;
     const hygieneErste        = document.getElementById('new-emp-hygiene-erste').value || null;
     const hygieneLetzte       = document.getElementById('new-emp-hygiene-letzte').value || null;
@@ -210,6 +211,7 @@ async function submitNewEmployee() {
         hours_per_vacation_day: hoursPerVacationDay,
         vacation_days_per_year: vacationDays,
         employment_type:        employmentType,
+        wage_type:              wageType,
         hourly_rate:            hourlyRate,
         hygiene_erste:          hygieneErste,
         hygiene_letzte:         hygieneLetzte,
@@ -261,6 +263,10 @@ function openEditEmployeeModal(id) {
     document.getElementById('edit-emp-start-date').value           = emp.start_date || '';
     document.getElementById('edit-emp-hours-per-vacation-day').value = emp.hours_per_vacation_day || 8.0;
     document.getElementById('edit-emp-apprentice').checked         = emp.is_apprentice || false;
+    const wageTypeEl = document.getElementById('edit-emp-wage-type');
+    wageTypeEl.value = emp.wage_type || 'Stundenlohn';
+    document.getElementById('edit-emp-wage-label').textContent = wageTypeEl.value === 'Festgehalt' ? 'Festgehalt (€/Monat)' : 'Stundenlohn (€)';
+    document.getElementById('edit-emp-hourly-rate').value = emp.hourly_rate || '';
     document.getElementById('edit-emp-hygiene-erste').value        = emp.hygiene_erste || '';
     document.getElementById('edit-emp-hygiene-letzte').value       = emp.hygiene_letzte || '';
     document.getElementById('edit-emp-hygiene-monate').value       = emp.hygiene_gueltig_monate ?? 12;
@@ -363,6 +369,8 @@ async function submitEditEmployee() {
     const vacationDays = parseInt(document.getElementById('edit-emp-vacation-days').value) || 20;
     const startDate    = document.getElementById('edit-emp-start-date').value || null;
     const hoursPerVacationDay = parseFloat(document.getElementById('edit-emp-hours-per-vacation-day').value) || 8.0;
+    const wageType     = document.getElementById('edit-emp-wage-type').value || null;
+    const hourlyRate   = parseFloat(document.getElementById('edit-emp-hourly-rate').value) || null;
     const errorDiv     = document.getElementById('edit-emp-error');
     errorDiv.style.display = 'none';
 
@@ -386,6 +394,7 @@ async function submitEditEmployee() {
         name, login_code: loginCode, department, departments, birthdate,
         vacation_days_per_year: vacationDays, is_apprentice, start_date: startDate,
         hours_per_vacation_day: hoursPerVacationDay,
+        wage_type: wageType, hourly_rate: hourlyRate,
         hygiene_erste: hygieneErste, hygiene_letzte: hygieneLetzte, hygiene_gueltig_monate: hygieneMonate,
     };
     if (password) payload.password_hash = password;

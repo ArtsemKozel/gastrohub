@@ -1365,7 +1365,14 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Stundenlohn (€)</label>
+                    <label>Lohnart</label>
+                    <select id="new-emp-wage-type" onchange="document.getElementById('new-emp-wage-label').textContent=this.value==='Festgehalt'?'Festgehalt (€/Monat)':'Stundenlohn (€)'">
+                        <option value="Stundenlohn">Stundenlohn</option>
+                        <option value="Festgehalt">Festgehalt</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label id="new-emp-wage-label">Stundenlohn (€)</label>
                     <input type="number" id="new-emp-hourly-rate" min="0" step="0.01" placeholder="0.00">
                 </div>
                 <div class="form-group">
@@ -1478,6 +1485,17 @@
             </div>
             <div id="edit-emp-block-vertrag" style="display:none; padding:0.75rem;">
                 <div id="edit-emp-current-phase-info" style="display:none; font-size:0.85rem; font-weight:600; color:var(--color-primary); background:#F5EFEA; border-radius:8px; padding:0.5rem 0.75rem; margin-bottom:0.75rem;"></div>
+                <div class="form-group">
+                    <label>Lohnart</label>
+                    <select id="edit-emp-wage-type" onchange="document.getElementById('edit-emp-wage-label').textContent=this.value==='Festgehalt'?'Festgehalt (€/Monat)':'Stundenlohn (€)'">
+                        <option value="Stundenlohn">Stundenlohn</option>
+                        <option value="Festgehalt">Festgehalt</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label id="edit-emp-wage-label">Stundenlohn (€)</label>
+                    <input type="number" id="edit-emp-hourly-rate" min="0" step="0.01" placeholder="0.00">
+                </div>
                 <div class="form-group">
                     <label>Stunden pro Urlaubstag</label>
                     <input type="number" id="edit-emp-hours-per-vacation-day" min="1" max="24" step="0.5" value="8">
