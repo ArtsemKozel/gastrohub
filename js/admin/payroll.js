@@ -492,6 +492,32 @@ function calcHolidayHours(empShifts) {
     }, 0);
 }
 
+// ── BRUTTO-HILFSBERECHNUNG ────────────────────────────────
+
+const MINIJOB_CAP = 603;
+
+function calcEmpBrutto(emp) {
+    const rate       = parseFloat(emp.hourlyRate || 0);
+    const totalHours = parseFloat(emp.workedHours) + parseFloat(emp.sickHours || 0) + parseFloat(emp.vacationHours || 0);
+    let brutto, displayHours;
+    if (emp.wageType === 'Festgehalt') {
+        brutto       = rate;
+        displayHours = totalHours;
+    } else if ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0) {
+        const vacPay = parseFloat(emp.vacationHours || 0) * rate;
+        brutto       = parseFloat(emp.monthlyHours) * rate + vacPay;
+        displayHours = totalHours;
+    } else {
+        brutto       = totalHours * rate;
+        displayHours = totalHours;
+    }
+    if (emp.avType === 'Minijob' && brutto > MINIJOB_CAP) {
+        brutto       = MINIJOB_CAP;
+        displayHours = rate > 0 ? MINIJOB_CAP / rate : displayHours;
+    }
+    return { brutto, displayHours };
+}
+
 // ── LIVE-UPDATE-FUNKTIONEN ────────────────────────────────
 
 function updatePayrollOvertime(index) {
@@ -503,21 +529,9 @@ function updatePayrollOvertime(index) {
     const el = document.getElementById(`payroll-overtime-${index}`);
     if (el) el.textContent = fmtHours(overtime);
 
-    const rate = parseFloat(emp.hourlyRate) || 0;
-    let brutto;
-    if (emp.wageType === 'Festgehalt') {
-        brutto = rate.toFixed(2).replace('.', ',');
-    } else {
-        const vacationPay = parseFloat(emp.vacationHours || 0) * rate;
-        if ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0) {
-            brutto = (parseFloat(emp.monthlyHours) * rate + vacationPay).toFixed(2).replace('.', ',');
-        } else {
-            const total = parseFloat(emp.workedHours) + parseFloat(emp.sickHours || 0) + parseFloat(emp.vacationHours || 0);
-            brutto = (total * rate).toFixed(2).replace('.', ',');
-        }
-    }
+    const { brutto } = calcEmpBrutto(emp);
     const bEl = document.getElementById(`payroll-brutto-${index}`);
-    if (bEl) bEl.textContent = brutto + ' €';
+    if (bEl) bEl.textContent = brutto.toFixed(2).replace('.', ',') + ' €';
 
     updatePayrollAllowancesUI(index);
 }
@@ -619,11 +633,8 @@ async function buildPayrollPDF() {
     doc.setFont(undefined, 'normal');
     payrollState.employees.forEach(emp => {
         x = 14;
-        const rate       = parseFloat(emp.hourlyRate || 0);
-        const totalHours = parseFloat(emp.workedHours) + parseFloat(emp.sickHours || 0) + parseFloat(emp.vacationHours || 0);
-        let brutto = emp.wageType === 'Festgehalt' ? rate
-            : ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
-                ? parseFloat(emp.monthlyHours) * rate : totalHours * rate;
+        const rate = parseFloat(emp.hourlyRate || 0);
+        const { brutto, displayHours } = calcEmpBrutto(emp);
 
         const nameLines = doc.splitTextToSize(emp.name, colW.name - 1);
         const rowH = Math.max(6, nameLines.length * 5);
@@ -641,7 +652,7 @@ async function buildPayrollPDF() {
                 : 0;
             doc.text(fmt(ot) + ' h', x, yPos); x += colW.ot;
         }
-        doc.text(fmt(totalHours) + ' h', x, yPos); x += colW.total;
+        doc.text(fmt(displayHours) + ' h', x, yPos); x += colW.total;
         doc.text(fmt(brutto) + ' €', x, yPos); x += colW.gross;
         if (cols.comment && emp.comment) doc.text(emp.comment.substring(0, 30), x, yPos);
         yPos += rowH;
@@ -709,11 +720,8 @@ async function buildPayrollPDF() {
     const rates = payrollState.allowanceRates;
     let bruttoGes = 0, zuschlGes = 0, sonstGes = 0;
     payrollState.employees.forEach(emp => {
-        const rate       = parseFloat(emp.hourlyRate || 0);
-        const totalHours = parseFloat(emp.workedHours) + parseFloat(emp.sickHours||0) + parseFloat(emp.vacationHours||0);
-        bruttoGes += emp.wageType === 'Festgehalt' ? rate
-            : ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
-                ? parseFloat(emp.monthlyHours) * rate : totalHours * rate;
+        const rate = parseFloat(emp.hourlyRate || 0);
+        bruttoGes += calcEmpBrutto(emp).brutto;
         if (emp.payNightAllowance)    zuschlGes += parseFloat(emp.nightHours||0)   * rate * rates.night   / 100;
         if (emp.paySundayAllowance)   zuschlGes += parseFloat(emp.sundayHours||0)  * rate * rates.sunday  / 100;
         if (emp.payHolidayAllowance)  zuschlGes += parseFloat(emp.holidayHours||0) * rate * rates.holiday / 100;
@@ -801,11 +809,7 @@ async function downloadPayrollPDF() {
     // Abrechnung in DB speichern
     let totalGross = 0;
     payrollState.employees.forEach(emp => {
-        const rate       = parseFloat(emp.hourlyRate || 0);
-        const totalHours = parseFloat(emp.workedHours) + parseFloat(emp.sickHours || 0) + parseFloat(emp.vacationHours || 0);
-        totalGross += emp.wageType === 'Festgehalt' ? rate
-            : ((emp.avType === 'Vollzeit' || emp.avType === 'Auszubildender') && emp.monthlyHours && parseFloat(emp.monthlyHours) > 0)
-                ? parseFloat(emp.monthlyHours) * rate : totalHours * rate;
+        totalGross += calcEmpBrutto(emp).brutto;
     });
     await db.from('planit_payrolls').insert({
         user_id:        adminSession.user.id,
