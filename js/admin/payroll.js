@@ -746,6 +746,61 @@ async function buildPayrollPDF() {
     doc.text('GESAMT:', 20, yPos + 29);                    doc.text(fmt(gesamt) + ' €', 250, yPos + 29, { align: 'right' });
     yPos += 48; checkBreak();
 
+    // ── Kranktage pro Mitarbeiter ──
+    const { startDate, endDate } = payrollState.period;
+    const sickCache   = payrollState._sickCache   || [];
+    const shiftsCache = payrollState._shiftsCache  || [];
+
+    const empSickRows = payrollState.employees.map(emp => {
+        const leaves = sickCache.filter(sl => sl.employee_id === emp.id);
+        if (leaves.length === 0) return null;
+
+        const rows = [];
+        leaves.forEach(sl => {
+            const sickStart = sl.start_date > startDate ? sl.start_date : startDate;
+            const sickEnd   = sl.end_date   < endDate   ? sl.end_date   : endDate;
+            let cur = new Date(sickStart + 'T12:00:00');
+            const last = new Date(sickEnd + 'T12:00:00');
+            while (cur <= last) {
+                const dateStr = cur.toISOString().split('T')[0];
+                const shift = shiftsCache.find(s => s.employee_id === emp.id && s.shift_date === dateStr);
+                const hrs = shift ? shiftMinutes(shift) / 60 : 0;
+                rows.push({ date: dateStr, hrs });
+                cur.setDate(cur.getDate() + 1);
+            }
+        });
+        return rows.length > 0 ? { emp, rows } : null;
+    }).filter(Boolean);
+
+    if (empSickRows.length > 0) {
+        if (yPos > 140) { doc.addPage(); yPos = 20; }
+        doc.setFont(undefined, 'bold'); doc.setFontSize(12);
+        doc.text('Kranktage', 14, yPos); yPos += 7;
+
+        empSickRows.forEach(({ emp, rows }) => {
+            checkBreak();
+            doc.setFont(undefined, 'bold'); doc.setFontSize(10);
+            doc.text(emp.name, 14, yPos); yPos += 5;
+            doc.setFontSize(9);
+            doc.text('Datum', 20, yPos);
+            doc.text('Geplante Stunden', 70, yPos);
+            yPos += 2; doc.setLineWidth(0.3); doc.line(20, yPos, 130, yPos); yPos += 4;
+            doc.setFont(undefined, 'normal');
+            rows.forEach(r => {
+                doc.text(fmtDate(r.date), 20, yPos);
+                doc.text(r.hrs > 0 ? fmt(r.hrs) + ' h' : '–', 70, yPos);
+                yPos += 5;
+            });
+            const total = rows.reduce((s, r) => s + r.hrs, 0);
+            doc.setFont(undefined, 'bold');
+            doc.text('Gesamt:', 20, yPos);
+            doc.text(fmt(total) + ' h', 70, yPos);
+            doc.setFont(undefined, 'normal');
+            yPos += 8;
+        });
+        checkBreak();
+    }
+
     // ── Tabelle 3: Krankstunden-Detail ──
     if (cols.sickHoursDetail) {
         doc.setFont(undefined, 'bold'); doc.setFontSize(12);
@@ -756,7 +811,6 @@ async function buildPayrollPDF() {
         doc.text('Stunden', x, yPos);
         yPos += 2; doc.line(14, yPos, 282, yPos); yPos += 5;
         doc.setFont(undefined, 'normal');
-        const { startDate, endDate } = payrollState.period;
         const sickRows = (payrollState._sickCache || []);
         if (sickRows.length > 0) {
             sickRows.forEach(sl => {
