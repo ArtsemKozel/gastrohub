@@ -347,9 +347,10 @@ async function loadPayrollEmployeeData() {
             .eq('user_id', uid)
             .lte('start_date', endDate).gte('end_date', startDate),
         db.from('vacation_requests')
-            .select('employee_id, start_date, end_date, deducted_hours, deducted_days')
-            .eq('user_id', uid).eq('status', 'approved').eq('type', 'vacation')
-            .lte('start_date', endDate).gte('end_date', startDate),
+            .select('employee_id, deducted_hours, deducted_days, payout_month')
+            .eq('user_id', uid).eq('status', 'approved').eq('type', 'payout')
+            .gte('payout_month', startDate.substring(0, 7))
+            .lte('payout_month', endDate.substring(0, 7)),
         db.from('planit_restaurants').select('name').eq('user_id', uid).maybeSingle(),
         db.from('actual_hours').select('employee_id, carry_over_minutes').eq('month', prevMonthStr)
     ]);
