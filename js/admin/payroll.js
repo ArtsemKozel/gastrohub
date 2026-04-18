@@ -347,10 +347,8 @@ async function loadPayrollEmployeeData() {
             .eq('user_id', uid)
             .lte('start_date', endDate).gte('end_date', startDate),
         db.from('vacation_requests')
-            .select('employee_id, deducted_hours, deducted_days, payout_month')
-            .eq('user_id', uid).eq('status', 'approved').eq('type', 'payout')
-            .gte('payout_month', startDate.substring(0, 7))
-            .lte('payout_month', endDate.substring(0, 7)),
+            .select('employee_id, start_date, end_date, deducted_hours, deducted_days')
+            .eq('user_id', uid).eq('status', 'approved').eq('type', 'payout'),
         db.from('planit_restaurants').select('name').eq('user_id', uid).maybeSingle(),
         db.from('actual_hours').select('employee_id, carry_over_minutes').eq('month', prevMonthStr)
     ]);
@@ -425,12 +423,20 @@ function calcSickHours(empId, sickLeaves, empShifts, startDate, endDate) {
 }
 
 function calcVacationHours(empId, vacations, startDate, endDate, hoursPerDay = 8) {
+    const pStart = new Date(startDate);
+    const pEnd   = new Date(endDate);
     return vacations
         .filter(v => v.employee_id === empId)
         .reduce((sum, v) => {
-            if (v.deducted_hours) return sum + parseFloat(v.deducted_hours);
-            if (v.deducted_days) return sum + parseFloat(v.deducted_days) * hoursPerDay;
-            return sum;
+            const vStart = new Date(v.start_date);
+            const vEnd   = new Date(v.end_date);
+            const totalDays   = Math.round((vEnd - vStart) / 86400000) + 1;
+            const overlapStart = pStart > vStart ? pStart : vStart;
+            const overlapEnd   = pEnd   < vEnd   ? pEnd   : vEnd;
+            const overlapDays  = Math.round((overlapEnd - overlapStart) / 86400000) + 1;
+            if (overlapDays <= 0) return sum;
+            const hours = parseFloat(v.deducted_hours) || parseFloat(v.deducted_days) * hoursPerDay || 0;
+            return sum + hours * (overlapDays / totalDays);
         }, 0);
 }
 
