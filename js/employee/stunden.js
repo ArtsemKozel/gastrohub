@@ -31,33 +31,52 @@ async function loadMeineStunden() {
         return;
     }
 
-    // Geplante Stunden
-    let totalMinutes = 0;
+    // Tatsächliche Stunden aus Schichten (Fallback auf Planzeiten)
+    let actualMinutes = 0;
     shifts.forEach(s => {
-        const [sh, sm] = s.start_time.split(':').map(Number);
-        const [eh, em] = s.end_time.split(':').map(Number);
-        totalMinutes += (eh * 60 + em) - (sh * 60 + sm) - (s.break_minutes || 0);
+        const startStr = s.actual_start_time || s.start_time;
+        const endStr   = s.actual_end_time   || s.end_time;
+        const breakMin = (s.actual_break_minutes !== null && s.actual_break_minutes !== undefined)
+            ? s.actual_break_minutes : (s.break_minutes || 0);
+        const [sh, sm] = startStr.split(':').map(Number);
+        const [eh, em] = endStr.split(':').map(Number);
+        actualMinutes += (eh * 60 + em) - (sh * 60 + sm) - breakMin;
     });
-    const ph = Math.floor(totalMinutes / 60);
-    const pm = String(totalMinutes % 60).padStart(2, '0');
 
-    // Abgerechnete & tatsächliche Stunden
-    const [{ data: approved }, { data: actualEntry }] = await Promise.all([
+    // Abgerechnete Stunden, Übertrag & Urlaubsanträge
+    const [{ data: approved }, { data: actualEntry }, { data: vacations }] = await Promise.all([
         db.from('approved_hours').select('*')
             .eq('employee_id', currentEmployee.id)
             .eq('month', monthStr)
             .maybeSingle(),
-        db.from('actual_hours').select('*')
+        db.from('actual_hours').select('carry_over_minutes')
             .eq('employee_id', currentEmployee.id)
             .eq('month', monthStr)
             .maybeSingle(),
+        db.from('vacation_requests')
+            .select('deducted_hours, deducted_days')
+            .eq('employee_id', currentEmployee.id)
+            .eq('type', 'vacation')
+            .eq('status', 'approved')
+            .lte('start_date', lastDay)
+            .gte('end_date', firstDay),
     ]);
 
-    const approvedMinutes = approved     ? approved.approved_minutes         : null;
-    const actualMinutes   = actualEntry  ? actualEntry.actual_minutes        : null;
-    const carryOver       = actualEntry  ? (actualEntry.carry_over_minutes || 0) : 0;
-    const diffMinutes     = actualMinutes !== null && approvedMinutes !== null
-        ? actualMinutes - approvedMinutes + carryOver
+    const hoursPerDay   = currentEmployee.hours_per_vacation_day || 8;
+    let vacationMinutes = 0;
+    (vacations || []).forEach(v => {
+        if (v.deducted_hours != null) {
+            vacationMinutes += Math.round(v.deducted_hours * 60);
+        } else if (v.deducted_days) {
+            vacationMinutes += Math.round(v.deducted_days * hoursPerDay * 60);
+        }
+    });
+
+    const totalMinutes    = actualMinutes + vacationMinutes;
+    const approvedMinutes = approved    ? approved.approved_minutes      : null;
+    const carryOver       = actualEntry ? (actualEntry.carry_over_minutes || 0) : 0;
+    const diffMinutes     = approvedMinutes !== null
+        ? totalMinutes - approvedMinutes + carryOver
         : null;
 
     const fmtMin    = m => `${Math.floor(Math.abs(m)/60)}h ${String(Math.abs(m)%60).padStart(2,'0')}m`;
@@ -76,7 +95,7 @@ async function loadMeineStunden() {
             </div>
             <div>
                 <div style="font-size:0.75rem; color:var(--color-text-light); margin-bottom:0.25rem;">GEARBEITET</div>
-                <div style="font-weight:600;">${actualMinutes !== null ? fmtMin(actualMinutes) : '–'}</div>
+                <div style="font-weight:600;">${fmtMin(totalMinutes)}</div>
             </div>
             <div>
                 <div style="font-size:0.75rem; color:var(--color-text-light); margin-bottom:0.25rem;">VORMONAT</div>
