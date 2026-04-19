@@ -18,7 +18,7 @@ async function loadEmployerTerminationSection() {
     list.innerHTML = employees.map(e => `
         <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0; border-bottom:1px solid var(--color-border);">
             <span style="font-size:0.9rem;">${e.name}</span>
-            <button class="btn-small btn-delete" onclick="openEmployerTerminationModal('${e.id}', '${e.name.replace(/'/g, "\\'")}')">Kündigen</button>
+            <button class="btn-small btn-delete btn-icon" onclick="openEmployerTerminationModal('${e.id}', '${e.name.replace(/'/g, "\\'")}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg></button>
         </div>`).join('');
 }
 
