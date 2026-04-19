@@ -1,3 +1,96 @@
+// ── ARBEITGEBER-KÜNDIGUNG ─────────────────────────────────
+
+let _employerTerminationEmployeeId = null;
+
+async function loadEmployerTerminationSection() {
+    const { data: employees } = await db
+        .from('employees_planit')
+        .select('id, name')
+        .eq('user_id', adminSession.user.id)
+        .eq('is_active', true)
+        .order('name', { ascending: true });
+
+    const list = document.getElementById('employer-termination-list');
+    if (!employees || employees.length === 0) {
+        list.innerHTML = '<div style="font-size:0.85rem; color:var(--color-text-light); padding:0.5rem 0;">Keine aktiven Mitarbeiter.</div>';
+        return;
+    }
+    list.innerHTML = employees.map(e => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0; border-bottom:1px solid var(--color-border);">
+            <span style="font-size:0.9rem;">${e.name}</span>
+            <button class="btn-small btn-delete" onclick="openEmployerTerminationModal('${e.id}', '${e.name.replace(/'/g, "\\'")}')">Kündigen</button>
+        </div>`).join('');
+}
+
+function toggleEmployerTerminationMenu() {
+    const body  = document.getElementById('employer-termination-body');
+    const arrow = document.getElementById('employer-termination-arrow');
+    const open  = body.style.display === 'none';
+    body.style.display  = open ? 'block' : 'none';
+    arrow.textContent   = open ? '▼' : '▶';
+    if (open) loadEmployerTerminationSection();
+}
+
+function openEmployerTerminationModal(employeeId, employeeName) {
+    _employerTerminationEmployeeId = employeeId;
+    document.getElementById('employer-termination-modal-title').textContent = `Kündigung — ${employeeName}`;
+    document.getElementById('employer-termination-type').value  = 'Ordentlich';
+    document.getElementById('employer-termination-date').value  = '';
+    document.getElementById('employer-termination-reason').value = '';
+    document.getElementById('employer-termination-error').style.display = 'none';
+    document.getElementById('employer-termination-modal').classList.add('active');
+}
+
+function closeEmployerTerminationModal() {
+    document.getElementById('employer-termination-modal').classList.remove('active');
+    _employerTerminationEmployeeId = null;
+}
+
+async function submitEmployerTermination() {
+    const type     = document.getElementById('employer-termination-type').value;
+    const date     = document.getElementById('employer-termination-date').value;
+    const reason   = document.getElementById('employer-termination-reason').value.trim();
+    const errorDiv = document.getElementById('employer-termination-error');
+    errorDiv.style.display = 'none';
+
+    if (!date) {
+        errorDiv.textContent   = 'Bitte einen letzten Arbeitstag auswählen.';
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    const { error } = await db.from('planit_terminations').insert({
+        user_id:        adminSession.user.id,
+        employee_id:    _employerTerminationEmployeeId,
+        requested_date: date,
+        reason:         reason ? `[${type}] ${reason}` : `[${type}]`,
+        status:         'approved',
+        approved_date:  date,
+        initiated_by:   'employer',
+    });
+
+    if (error) {
+        errorDiv.textContent   = 'Fehler beim Speichern. Bitte erneut versuchen.';
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    // Beschäftigungsphase abschließen
+    await db.from('employment_phases')
+        .delete()
+        .eq('employee_id', _employerTerminationEmployeeId)
+        .gt('start_date', date);
+    await db.from('employment_phases')
+        .update({ end_date: date })
+        .eq('employee_id', _employerTerminationEmployeeId)
+        .is('end_date', null);
+
+    closeEmployerTerminationModal();
+    await loadTerminations();
+    await loadTerminationBadge();
+    await loadMehrBadge();
+}
+
 // ── KÜNDIGUNGEN ───────────────────────────────────────────
 
 async function loadTerminations() {

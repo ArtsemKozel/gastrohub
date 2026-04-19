@@ -817,6 +817,17 @@
             <div style="font-size:1.1rem; font-weight:700; color:var(--color-text);">Kündigungen</div>
             <div></div>
         </div>
+        <!-- Mitarbeiter kündigen (klappbar) -->
+        <div style="margin-bottom:1.5rem;">
+            <div onclick="toggleEmployerTerminationMenu()" style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:var(--color-gray); border-radius:8px; cursor:pointer; user-select:none;">
+                <span style="font-weight:600; font-size:0.9rem;">Mitarbeiter kündigen</span>
+                <span id="employer-termination-arrow" style="font-size:0.75rem; color:var(--color-text-light);">▶</span>
+            </div>
+            <div id="employer-termination-body" style="display:none; margin-top:0.5rem;">
+                <div id="employer-termination-list"></div>
+            </div>
+        </div>
+
         <div id="terminations-list"></div>
     </div>
 
@@ -1763,6 +1774,34 @@
             <input type="date" id="extend-sick-leave-end" style="width:100%; height:48px; font-size:16px;">
         </div>
         <button class="btn-primary" onclick="submitExtendSickLeave()">Speichern</button>
+    </div>
+</div>
+
+<!-- MODAL: ARBEITGEBER-KÜNDIGUNG -->
+<div id="employer-termination-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="employer-termination-modal-title">Kündigung</div>
+            <button class="modal-close" onclick="closeEmployerTerminationModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Kündigungsart</label>
+            <select id="employer-termination-type" style="width:100%; height:48px; font-size:16px;">
+                <option value="Ordentlich">Ordentlich</option>
+                <option value="Fristlos">Fristlos</option>
+                <option value="Probezeit">Probezeit</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Letzter Arbeitstag</label>
+            <input type="date" id="employer-termination-date" style="width:100%; height:48px; font-size:16px;">
+        </div>
+        <div class="form-group">
+            <label>Grund (optional)</label>
+            <textarea id="employer-termination-reason" rows="3" style="width:100%; font-size:15px; padding:0.6rem; border:1px solid var(--color-border); border-radius:8px; resize:vertical;"></textarea>
+        </div>
+        <div id="employer-termination-error" style="display:none; color:var(--color-danger); font-size:0.85rem; margin-bottom:0.75rem;"></div>
+        <button class="btn-primary" onclick="submitEmployerTermination()">Speichern</button>
     </div>
 </div>
 
