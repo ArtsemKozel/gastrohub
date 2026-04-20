@@ -456,8 +456,14 @@ async function openShiftModal(employeeId, dateStr, existingShift, defaultDept) {
     document.getElementById('shift-actual-group').style.display  = existingShift ? 'block' : 'none';
     document.getElementById('shift-actual-body').style.display   = 'none';
     document.getElementById('shift-actual-toggle').textContent   = '▶';
-    document.getElementById('shift-actual-start').value          = existingShift?.actual_start_time ? existingShift.actual_start_time.slice(0,5) : '';
-    document.getElementById('shift-actual-end').value            = existingShift?.actual_end_time   ? existingShift.actual_end_time.slice(0,5)   : '';
+    const _aStart = document.getElementById('shift-actual-start');
+    const _aEnd   = document.getElementById('shift-actual-end');
+    _aStart.value              = existingShift?.actual_start_time ? existingShift.actual_start_time.slice(0,5) : (existingShift?.start_time ? existingShift.start_time.slice(0,5) : '');
+    _aStart.dataset.hadActual  = existingShift?.actual_start_time ? '1' : '';
+    _aStart.dataset.planned    = existingShift?.start_time ? existingShift.start_time.slice(0,5) : '';
+    _aEnd.value                = existingShift?.actual_end_time   ? existingShift.actual_end_time.slice(0,5)   : (existingShift?.end_time   ? existingShift.end_time.slice(0,5)   : '');
+    _aEnd.dataset.hadActual    = existingShift?.actual_end_time   ? '1' : '';
+    _aEnd.dataset.planned      = existingShift?.end_time   ? existingShift.end_time.slice(0,5)   : '';
     document.getElementById('shift-actual-break').value          = existingShift?.actual_break_minutes ?? '';
 
     const clockGroup = document.getElementById('shift-clock-group');
@@ -884,9 +890,18 @@ async function submitShift() {
     }
 
     const isOpen  = document.getElementById('shift-is-open').checked;
+    const _aStartEl = document.getElementById('shift-actual-start');
+    const _aEndEl   = document.getElementById('shift-actual-end');
+    const _resolveActual = el => {
+        const val = el.value;
+        if (!val) return null;
+        if (el.dataset.hadActual === '1') return val;
+        if (val !== el.dataset.planned)   return val;
+        return null;
+    };
     const payload = editShiftId ? {
-        actual_start_time:    document.getElementById('shift-actual-start').value || null,
-        actual_end_time:      document.getElementById('shift-actual-end').value   || null,
+        actual_start_time:    _resolveActual(_aStartEl),
+        actual_end_time:      _resolveActual(_aEndEl),
         actual_break_minutes: document.getElementById('shift-actual-break').value !== '' ? parseInt(document.getElementById('shift-actual-break').value) : null,
     } : {};
     Object.assign(payload, {
