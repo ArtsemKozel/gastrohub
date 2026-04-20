@@ -890,14 +890,19 @@ async function submitShift() {
     }
 
     const isOpen  = document.getElementById('shift-is-open').checked;
-    const _aStartEl = document.getElementById('shift-actual-start');
-    const _aEndEl   = document.getElementById('shift-actual-end');
+    const _aStartEl   = document.getElementById('shift-actual-start');
+    const _aEndEl     = document.getElementById('shift-actual-end');
+    const _aBreakEl   = document.getElementById('shift-actual-break');
+    const _anyChanged =
+        _aStartEl.dataset.hadActual === '1' ||
+        _aEndEl.dataset.hadActual   === '1' ||
+        (_aStartEl.value && _aStartEl.value !== _aStartEl.dataset.planned) ||
+        (_aEndEl.value   && _aEndEl.value   !== _aEndEl.dataset.planned)   ||
+        (_aBreakEl.value !== '' && _aBreakEl.value !== document.getElementById('shift-break').value);
     const _resolveActual = el => {
         const val = el.value;
         if (!val) return null;
-        if (el.dataset.hadActual === '1') return val;
-        if (val !== el.dataset.planned)   return val;
-        return null;
+        return _anyChanged ? val : null;
     };
     const payload = editShiftId ? {
         actual_start_time:    _resolveActual(_aStartEl),
