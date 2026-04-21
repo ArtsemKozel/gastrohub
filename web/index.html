@@ -66,6 +66,17 @@
             color: var(--color-white);
         }
 
+        .nav-icon-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 3.2rem; height: 3.2rem;
+            background: var(--color-primary);
+            border-radius: 999px;
+            text-decoration: none;
+            transition: background 0.15s, transform 0.1s;
+            flex-shrink: 0;
+        }
+        .nav-icon-btn:hover { background: var(--color-dark); transform: translateY(-1px); }
+
         /* ── HERO ────────────────────────────────────────── */
         .hero {
             text-align: center;
@@ -293,7 +304,12 @@
     <!-- NAV -->
     <nav>
         <span class="nav-logo">GastroHub</span>
-        <a href="../app/login.html" class="nav-link">Anmelden</a>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            <a href="contact.html" class="nav-icon-btn" title="Kontakt">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </a>
+            <a href="../app/login.html" class="nav-link">Anmelden</a>
+        </div>
     </nav>
 
     <!-- HERO -->
