@@ -514,6 +514,19 @@
         }
         .nav-tab.active { color: var(--color-text); border-bottom-color: var(--color-primary); }
     </style>
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "05a71a0f-9a52-4dee-b147-d9bfb6fb64cd",
+          safari_web_id: "web.onesignal.auto.31ba082c-c81b-42a5-be17-ec59d526e60e",
+          notifyButton: {
+            enable: true,
+          },
+        });
+      });
+    </script>
 </head>
 <body>
 
