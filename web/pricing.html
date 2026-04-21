@@ -65,8 +65,8 @@
             color: var(--color-white);
         }
 
-        .nav-btn-back { display:flex; align-items:center; justify-content:center; width:3.2rem; height:3.2rem; background:var(--color-dark); border-radius:999px; text-decoration:none; transition:background 0.15s, transform 0.1s; flex-shrink:0; }
-        .nav-btn-back:hover { background:#6e5738; transform:translateY(-1px); }
+        .nav-back { display:flex; align-items:center; gap:0.3rem; font-size:0.9rem; font-weight:600; color:var(--color-dark); text-decoration:none; }
+        .nav-back:hover { opacity:0.75; }
 
         .section-sub {
             text-align: center;
@@ -324,11 +324,12 @@
 <body>
 
     <nav>
-        <a href="index.html" class="nav-btn-back" title="Zurück">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <a href="index.html" class="nav-back">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Zurück
         </a>
         <span class="nav-logo">GastroHub</span>
-        <div style="width:3.2rem;"></div>
+        <div style="width:4rem;"></div>
     </nav>
 
     <section class="paket-section">
