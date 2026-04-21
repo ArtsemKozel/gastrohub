@@ -534,10 +534,16 @@
             enable: true,
           },
         });
-        OneSignal.Notifications.addEventListener('permissionChange', function() {
+        function hideBell() {
           const bell = document.getElementById('onesignal-bell-container');
           if (bell) bell.style.display = 'none';
-        });
+        }
+        if (OneSignal.User.PushSubscription.optedIn) {
+          hideBell();
+          setTimeout(hideBell, 500);
+        } else {
+          OneSignal.Notifications.addEventListener('permissionChange', hideBell);
+        }
       });
     </script>
 </head>
