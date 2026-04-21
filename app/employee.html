@@ -525,6 +525,10 @@
             enable: true,
           },
         });
+        OneSignal.Notifications.addEventListener('permissionChange', function() {
+          const bell = document.getElementById('onesignal-bell-container');
+          if (bell) bell.style.display = 'none';
+        });
       });
     </script>
 </head>
