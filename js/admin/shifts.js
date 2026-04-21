@@ -898,7 +898,7 @@ async function submitShift() {
         _aEndEl.dataset.hadActual   === '1' ||
         (_aStartEl.value && _aStartEl.value !== _aStartEl.dataset.planned) ||
         (_aEndEl.value   && _aEndEl.value   !== _aEndEl.dataset.planned)   ||
-        (_aBreakEl.value !== '' && _aBreakEl.value !== document.getElementById('shift-break').value);
+        (_aBreakEl.value !== '');
     const _resolveActual = el => {
         if (!_anyChanged) return null;
         return el.value || el.dataset.planned || null;
