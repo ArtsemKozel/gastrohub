@@ -924,7 +924,7 @@ async function submitShift() {
     const repeat = document.getElementById('shift-repeat').checked;
     const weeks  = parseInt(document.getElementById('shift-repeat-weeks').value) || 1;
 
-    if (!isOpen) {
+    if (!isOpen && !editShiftId) {
         const warning = await checkAvailabilityWarning(employeeId, date, start, end);
         if (warning) {
             pendingShiftPayload  = payload;
