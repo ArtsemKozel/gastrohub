@@ -28,8 +28,8 @@
             display: flex; align-items: center; justify-content: space-between;
         }
         .nav-logo { font-size: 1.2rem; font-weight: 800; color: var(--color-primary); text-decoration: none; letter-spacing: -0.02em; }
-        .nav-back { font-size: 0.9rem; color: var(--color-light); text-decoration: none; display: flex; align-items: center; gap: 0.3rem; }
-        .nav-back:hover { color: var(--color-primary); }
+        .nav-btn-back { display:flex; align-items:center; justify-content:center; width:3.2rem; height:3.2rem; background:var(--color-dark); border-radius:999px; text-decoration:none; transition:background 0.15s, transform 0.1s; flex-shrink:0; }
+        .nav-btn-back:hover { background:#6e5738; transform:translateY(-1px); }
 
         .page-wrap { max-width: 680px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
 
@@ -88,11 +88,11 @@
 <body>
 
     <nav>
-        <a href="index.html" class="nav-logo">GastroHub</a>
-        <a href="index.html" class="nav-back">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-            Startseite
+        <a href="index.html" class="nav-btn-back" title="Zurück">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </a>
+        <span class="nav-logo">GastroHub</span>
+        <div style="width:3.2rem;"></div>
     </nav>
 
     <div class="page-wrap">
