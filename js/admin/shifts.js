@@ -900,9 +900,8 @@ async function submitShift() {
         (_aEndEl.value   && _aEndEl.value   !== _aEndEl.dataset.planned)   ||
         (_aBreakEl.value !== '' && _aBreakEl.value !== document.getElementById('shift-break').value);
     const _resolveActual = el => {
-        const val = el.value;
-        if (!val) return null;
-        return _anyChanged ? val : null;
+        if (!_anyChanged) return null;
+        return el.value || el.dataset.planned || null;
     };
     const payload = editShiftId ? {
         actual_start_time:    _resolveActual(_aStartEl),
