@@ -1036,7 +1036,10 @@ async function syncTipHoursForShift(employeeId, dateStr) {
         const minutes  = (eh*60+em) - (sh*60+sm) - breakMin;
         if (minutes > 0) rows.push({ user_id: adminSession.user.id, employee_id: employeeId, work_date: dateStr, minutes, department: shift.department || null });
     }
-    if (rows.length > 0) await db.from('tip_hours').upsert(rows, { onConflict: 'user_id,employee_id,work_date,department' });
+    if (rows.length > 0) {
+        const { error: tipErr } = await db.from('tip_hours').upsert(rows, { onConflict: 'user_id,employee_id,work_date,department' });
+        if (tipErr) console.error('tip_hours upsert error:', tipErr.message, tipErr.details);
+    }
 }
 
 async function updateShiftCell(employeeId, dateStr) {
