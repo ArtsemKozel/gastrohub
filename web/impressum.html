@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GastroHub — Impressum</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --color-bg:      #F5F0EB;
+            --color-primary: #B28A6E;
+            --color-dark:    #8B6F47;
+            --color-text:    #2C2C2C;
+            --color-light:   #7A7A7A;
+            --color-white:   #FFFFFF;
+            --radius:        14px;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--color-bg); color: var(--color-text); line-height: 1.6; }
+
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(245,240,235,0.92); backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(178,138,110,0.15);
+            padding: 0 1.5rem; height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .nav-logo { font-size: 1.2rem; font-weight: 800; color: var(--color-primary); text-decoration: none; letter-spacing: -0.02em; }
+        .nav-back { font-size: 0.9rem; color: var(--color-light); text-decoration: none; display: flex; align-items: center; gap: 0.3rem; }
+        .nav-back:hover { color: var(--color-primary); }
+
+        .page-wrap { max-width: 640px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+
+        h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+
+        .notice {
+            background: rgba(178,138,110,0.1);
+            border-left: 3px solid var(--color-primary);
+            border-radius: 0 8px 8px 0;
+            padding: 0.85rem 1rem;
+            font-size: 0.88rem;
+            color: var(--color-dark);
+            margin: 1.5rem 0 2.5rem;
+        }
+
+        .imprint-card { background: var(--color-white); border-radius: var(--radius); padding: 2rem; border: 1px solid rgba(178,138,110,0.12); margin-bottom: 1.25rem; }
+
+        .imprint-section { margin-bottom: 1.75rem; }
+        .imprint-section:last-child { margin-bottom: 0; }
+
+        .imprint-section h2 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--color-primary); margin-bottom: 0.75rem; }
+
+        .imprint-row { display: flex; gap: 1rem; padding: 0.45rem 0; border-bottom: 1px solid rgba(178,138,110,0.07); font-size: 0.92rem; }
+        .imprint-row:last-child { border-bottom: none; }
+        .imprint-label { min-width: 130px; color: var(--color-light); font-weight: 500; flex-shrink: 0; }
+        .imprint-value { color: var(--color-text); }
+        .placeholder { color: #BFAA96; font-style: italic; }
+
+        footer { border-top: 1px solid rgba(178,138,110,0.15); padding: 2rem 1.5rem; text-align: center; font-size: 0.83rem; color: var(--color-light); }
+        footer a { color: var(--color-primary); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .footer-inner { max-width: 700px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 1.5rem; }
+
+        @media (max-width: 480px) {
+            .page-wrap { padding: 2rem 1.25rem 3rem; }
+            .imprint-card { padding: 1.5rem; }
+            .imprint-row { flex-direction: column; gap: 0.15rem; }
+            .imprint-label { min-width: unset; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="nav-logo">GastroHub</a>
+        <a href="index.html" class="nav-back">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            Startseite
+        </a>
+    </nav>
+
+    <div class="page-wrap">
+        <h1>Impressum</h1>
+
+        <div class="notice">
+            Diese Seite wird noch vervollständigt. Die folgenden Angaben sind Platzhalter und müssen durch die korrekten rechtlichen Informationen ersetzt werden.
+        </div>
+
+        <div class="imprint-card">
+            <div class="imprint-section">
+                <h2>Angaben gemäß § 5 TMG</h2>
+                <div class="imprint-row">
+                    <span class="imprint-label">Name</span>
+                    <span class="imprint-value placeholder">[Vollständiger Name / Firmenname]</span>
+                </div>
+                <div class="imprint-row">
+                    <span class="imprint-label">Straße</span>
+                    <span class="imprint-value placeholder">[Straße und Hausnummer]</span>
+                </div>
+                <div class="imprint-row">
+                    <span class="imprint-label">PLZ / Ort</span>
+                    <span class="imprint-value placeholder">[PLZ] [Ort]</span>
+                </div>
+                <div class="imprint-row">
+                    <span class="imprint-label">Land</span>
+                    <span class="imprint-value">Deutschland</span>
+                </div>
+            </div>
+
+            <div class="imprint-section">
+                <h2>Kontakt</h2>
+                <div class="imprint-row">
+                    <span class="imprint-label">E-Mail</span>
+                    <span class="imprint-value"><a href="mailto:kontakt@gastrohub.de">kontakt@gastrohub.de</a></span>
+                </div>
+                <div class="imprint-row">
+                    <span class="imprint-label">Telefon</span>
+                    <span class="imprint-value placeholder">[Telefonnummer]</span>
+                </div>
+            </div>
+
+            <div class="imprint-section">
+                <h2>Steuerliche Angaben</h2>
+                <div class="imprint-row">
+                    <span class="imprint-label">Steuernummer</span>
+                    <span class="imprint-value placeholder">[Steuernummer]</span>
+                </div>
+                <div class="imprint-row">
+                    <span class="imprint-label">USt-IdNr.</span>
+                    <span class="imprint-value placeholder">[USt-Identifikationsnummer gemäß § 27a UStG]</span>
+                </div>
+            </div>
+
+            <div class="imprint-section">
+                <h2>Verantwortlich für den Inhalt (§ 18 Abs. 2 MStV)</h2>
+                <div class="imprint-row">
+                    <span class="imprint-label">Name</span>
+                    <span class="imprint-value placeholder">[Vollständiger Name]</span>
+                </div>
+                <div class="imprint-row">
+                    <span class="imprint-label">Anschrift</span>
+                    <span class="imprint-value placeholder">[Anschrift wie oben]</span>
+                </div>
+            </div>
+
+            <div class="imprint-section">
+                <h2>Haftungsausschluss</h2>
+                <p style="font-size:0.88rem; color:var(--color-light); line-height:1.65;">
+                    Die Inhalte dieser Website wurden mit größtmöglicher Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte übernehmen wir jedoch keine Gewähr. Als Diensteanbieter sind wir gemäß § 7 Abs. 1 TMG für eigene Inhalte nach den allgemeinen Gesetzen verantwortlich.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-inner">
+            <span>© 2026 GastroHub</span>
+            <span>·</span>
+            <a href="impressum.html">Impressum</a>
+            <span>·</span>
+            <a href="datenschutz.html">Datenschutz</a>
+            <span>·</span>
+            <a href="mailto:kontakt@gastrohub.de">kontakt@gastrohub.de</a>
+        </div>
+    </footer>
+
+</body>
+</html>

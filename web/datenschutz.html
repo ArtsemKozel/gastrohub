@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GastroHub — Datenschutz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --color-bg:      #F5F0EB;
+            --color-primary: #B28A6E;
+            --color-dark:    #8B6F47;
+            --color-text:    #2C2C2C;
+            --color-light:   #7A7A7A;
+            --color-white:   #FFFFFF;
+            --radius:        14px;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--color-bg); color: var(--color-text); line-height: 1.6; }
+
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(245,240,235,0.92); backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(178,138,110,0.15);
+            padding: 0 1.5rem; height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .nav-logo { font-size: 1.2rem; font-weight: 800; color: var(--color-primary); text-decoration: none; letter-spacing: -0.02em; }
+        .nav-back { font-size: 0.9rem; color: var(--color-light); text-decoration: none; display: flex; align-items: center; gap: 0.3rem; }
+        .nav-back:hover { color: var(--color-primary); }
+
+        .page-wrap { max-width: 680px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+
+        h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+        .page-date { font-size: 0.85rem; color: var(--color-light); margin-bottom: 1.5rem; }
+
+        .notice {
+            background: rgba(178,138,110,0.1);
+            border-left: 3px solid var(--color-primary);
+            border-radius: 0 8px 8px 0;
+            padding: 0.85rem 1rem;
+            font-size: 0.88rem;
+            color: var(--color-dark);
+            margin-bottom: 2.5rem;
+        }
+
+        .dsg-section {
+            background: var(--color-white);
+            border-radius: var(--radius);
+            padding: 1.75rem 2rem;
+            border: 1px solid rgba(178,138,110,0.12);
+            margin-bottom: 1rem;
+        }
+
+        .dsg-section h2 {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--color-primary);
+            margin-bottom: 0.85rem;
+        }
+
+        .dsg-section p { font-size: 0.92rem; color: var(--color-text); margin-bottom: 0.75rem; line-height: 1.65; }
+        .dsg-section p:last-child { margin-bottom: 0; }
+
+        .dsg-section ul { font-size: 0.92rem; color: var(--color-text); padding-left: 1.25rem; margin-bottom: 0.75rem; }
+        .dsg-section ul li { padding: 0.2rem 0; line-height: 1.6; }
+
+        .dsg-section a { color: var(--color-primary); text-decoration: none; }
+        .dsg-section a:hover { text-decoration: underline; }
+
+        .placeholder { color: #BFAA96; font-style: italic; }
+
+        footer { border-top: 1px solid rgba(178,138,110,0.15); padding: 2rem 1.5rem; text-align: center; font-size: 0.83rem; color: var(--color-light); }
+        footer a { color: var(--color-primary); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .footer-inner { max-width: 700px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 1.5rem; }
+
+        @media (max-width: 480px) {
+            .page-wrap { padding: 2rem 1.25rem 3rem; }
+            .dsg-section { padding: 1.25rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="nav-logo">GastroHub</a>
+        <a href="index.html" class="nav-back">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            Startseite
+        </a>
+    </nav>
+
+    <div class="page-wrap">
+        <h1>Datenschutzerklärung</h1>
+        <p class="page-date">Stand: April 2026 — Platzhalter, wird noch vervollständigt</p>
+
+        <div class="notice">
+            Diese Datenschutzerklärung ist ein Platzhalter und muss vor dem öffentlichen Launch durch eine rechtlich geprüfte Fassung ersetzt werden.
+        </div>
+
+        <div class="dsg-section">
+            <h2>1. Verantwortlicher</h2>
+            <p>Verantwortlicher im Sinne der DSGVO für die Verarbeitung personenbezogener Daten auf dieser Website ist:</p>
+            <p class="placeholder">[Name / Firmenname]<br>[Straße und Hausnummer]<br>[PLZ] [Ort]<br>E-Mail: kontakt@gastrohub.de<br>Telefon: [Telefonnummer]</p>
+        </div>
+
+        <div class="dsg-section">
+            <h2>2. Welche Daten wir erheben</h2>
+            <p>GastroHub erhebt und verarbeitet folgende personenbezogene Daten:</p>
+            <ul>
+                <li><strong>Bei der Registrierung:</strong> Name des Restaurants, E-Mail-Adresse, Passwort (verschlüsselt gespeichert)</li>
+                <li><strong>Mitarbeiterdaten:</strong> Name, Personalnummer, Abteilung, Beschäftigungsart, Stundenmodell, PIN zur Authentifizierung</li>
+                <li><strong>Schichtdaten:</strong> Geplante Schichtzeiten, tatsächliche Arbeitszeiten, Pausen, Abteilung</li>
+                <li><strong>Stempelzeiten:</strong> Ein- und Ausstempelzeitpunkte, Pausenzeiten, optionale Kommentare</li>
+                <li><strong>Urlaubsanträge:</strong> Urlaubszeitraum, Status, Antragsdatum</li>
+                <li><strong>Lohndaten:</strong> Stundenlohn, Monatsgehalt, berechnete Bruttolöhne (nur für Admin sichtbar)</li>
+            </ul>
+        </div>
+
+        <div class="dsg-section">
+            <h2>3. Wo die Daten gespeichert werden</h2>
+            <p>Alle Daten werden in der Cloud-Datenbank <strong>Supabase</strong> gespeichert. Supabase ist ein US-amerikanischer Anbieter mit Servern in der EU (Frankfurt, AWS eu-central-1). Die Datenübertragung erfolgt verschlüsselt via TLS.</p>
+            <p>Weitere Informationen zum Datenschutz bei Supabase: <a href="https://supabase.com/privacy" target="_blank" rel="noopener">supabase.com/privacy</a></p>
+        </div>
+
+        <div class="dsg-section">
+            <h2>4. Zweck der Datenverarbeitung</h2>
+            <p>Die erhobenen Daten werden ausschließlich zum Betrieb der Gastronomie-Verwaltungssoftware GastroHub verwendet:</p>
+            <ul>
+                <li>Schichtplanung und Arbeitszeiterfassung</li>
+                <li>Urlaubsverwaltung und Abwesenheitsplanung</li>
+                <li>Erstellung von Lohnabrechnungsvorlagen</li>
+                <li>Trinkgeldverteilung und Inventurverwaltung</li>
+            </ul>
+            <p>Eine Weitergabe an Dritte findet nicht statt, soweit dies nicht zur Vertragserfüllung erforderlich ist.</p>
+        </div>
+
+        <div class="dsg-section">
+            <h2>5. Speicherdauer</h2>
+            <p>Personenbezogene Daten werden so lange gespeichert, wie das Vertragsverhältnis besteht. Nach Vertragsende werden alle Daten auf Anfrage gelöscht, spätestens jedoch nach Ablauf der gesetzlichen Aufbewahrungsfristen.</p>
+        </div>
+
+        <div class="dsg-section">
+            <h2>6. Ihre Rechte (DSGVO)</h2>
+            <p>Sie haben gemäß DSGVO folgende Rechte:</p>
+            <ul>
+                <li><strong>Auskunftsrecht</strong> (Art. 15 DSGVO) — Welche Daten über Sie gespeichert sind</li>
+                <li><strong>Berichtigungsrecht</strong> (Art. 16 DSGVO) — Korrektur unrichtiger Daten</li>
+                <li><strong>Löschungsrecht</strong> (Art. 17 DSGVO) — Löschung Ihrer Daten</li>
+                <li><strong>Einschränkungsrecht</strong> (Art. 18 DSGVO) — Einschränkung der Verarbeitung</li>
+                <li><strong>Widerspruchsrecht</strong> (Art. 21 DSGVO) — Widerspruch gegen die Verarbeitung</li>
+                <li><strong>Beschwerderecht</strong> — Bei der zuständigen Datenschutzaufsichtsbehörde</li>
+            </ul>
+            <p>Zur Geltendmachung Ihrer Rechte wenden Sie sich bitte an: <a href="mailto:kontakt@gastrohub.de">kontakt@gastrohub.de</a></p>
+        </div>
+
+        <div class="dsg-section">
+            <h2>7. Cookies und Tracking</h2>
+            <p>GastroHub verwendet keine Tracking-Cookies und keine Analyse-Tools von Drittanbietern. Es werden ausschließlich technisch notwendige Daten im <code>localStorage</code> des Browsers gespeichert (Sitzungsdaten für eingeloggte Mitarbeiter).</p>
+        </div>
+
+        <div class="dsg-section">
+            <h2>8. Kontakt Datenschutz</h2>
+            <p>Bei Fragen zum Datenschutz oder zur Geltendmachung Ihrer Rechte:</p>
+            <p><a href="mailto:kontakt@gastrohub.de">kontakt@gastrohub.de</a><br>
+            <span class="placeholder">[Vollständige Postanschrift folgt]</span></p>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-inner">
+            <span>© 2026 GastroHub</span>
+            <span>·</span>
+            <a href="impressum.html">Impressum</a>
+            <span>·</span>
+            <a href="datenschutz.html">Datenschutz</a>
+            <span>·</span>
+            <a href="mailto:kontakt@gastrohub.de">kontakt@gastrohub.de</a>
+        </div>
+    </footer>
+
+</body>
+</html>
