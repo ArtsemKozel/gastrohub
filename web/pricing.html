@@ -481,8 +481,6 @@
             <a href="#">Impressum</a>
             <span>·</span>
             <a href="#">Datenschutz</a>
-            <span>·</span>
-            <a href="mailto:kontakt@gastrohub.de">kontakt@gastrohub.de</a>
         </div>
     </footer>
 
@@ -542,7 +540,7 @@
                 (message ? '\n\nNachricht:\n' + message : '')
             );
             const subject = encodeURIComponent('GastroHub Paket-Anfrage von ' + name);
-            window.location.href = 'mailto:kontakt@gastrohub.de?subject=' + subject + '&body=' + body;
+            window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
             document.getElementById('anfragen-form-wrap').style.display = 'none';
             document.getElementById('anfragen-success').style.display   = 'block';
         }

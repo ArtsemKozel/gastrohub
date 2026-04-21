@@ -123,8 +123,6 @@
             <a href="impressum.html">Impressum</a>
             <span>·</span>
             <a href="datenschutz.html">Datenschutz</a>
-            <span>·</span>
-            <a href="mailto:kontakt@gastrohub.de">kontakt@gastrohub.de</a>
         </div>
     </footer>
 
@@ -137,7 +135,7 @@
             if (!name || !email || !message) { alert('Bitte Name, E-Mail und Nachricht ausfüllen.'); return; }
             const body = encodeURIComponent('Name: ' + name + '\nE-Mail: ' + email + '\n\n' + message);
             const sub  = encodeURIComponent(subject || 'Kontaktanfrage von ' + name);
-            window.location.href = 'mailto:kontakt@gastrohub.de?subject=' + sub + '&body=' + body;
+            window.location.href = 'mailto:?subject=' + sub + '&body=' + body;
             document.getElementById('contact-form').style.display    = 'none';
             document.getElementById('contact-success').style.display = 'block';
         }
