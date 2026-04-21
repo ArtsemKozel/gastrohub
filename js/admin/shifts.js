@@ -1024,7 +1024,7 @@ async function deleteShift() {
     if (error) { alert('Fehler beim Löschen: ' + error.message); return; }
 
     closeShiftModal();
-    await updateShiftCell(currentShiftEmployeeId, currentShiftDateStr);
+    await loadShifts();
     await refreshHoursOverview();
     await syncTipHoursForShift(currentShiftEmployeeId, currentShiftDateStr);
 }
