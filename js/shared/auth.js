@@ -90,7 +90,7 @@ async function loginEmployee() {
 async function requireAdminSession() {
     const { data: { session } } = await db.auth.getSession();
     if (!session) {
-        window.location.href = 'index.html';
+        window.location.href = 'login.html';
         return null;
     }
     return session;
@@ -99,7 +99,7 @@ async function requireAdminSession() {
 function requireEmployeeSession() {
     const employee = localStorage.getItem('planit_employee');
     if (!employee) {
-        window.location.href = 'index.html';
+        window.location.href = 'login.html';
         return null;
     }
     return JSON.parse(employee);
@@ -109,5 +109,5 @@ function requireEmployeeSession() {
 async function logout() {
     await db.auth.signOut();
     localStorage.removeItem('planit_employee');
-    window.location.href = 'index.html';
+    window.location.href = 'login.html';
 }
