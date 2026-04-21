@@ -945,6 +945,27 @@ async function saveShift(payload, repeat, weeks) {
 
     if (editShiftId) {
         ({ error } = await db.from('shifts').update(payload).eq('id', editShiftId));
+
+        if (!error && repeat && weeks > 1 && payload.employee_id) {
+            let delQ = db.from('shifts').delete()
+                .eq('user_id', adminSession.user.id)
+                .eq('employee_id', payload.employee_id)
+                .eq('start_time', payload.start_time)
+                .eq('end_time', payload.end_time)
+                .gt('shift_date', payload.shift_date);
+            if (payload.department) delQ = delQ.eq('department', payload.department);
+            else                    delQ = delQ.is('department', null);
+            await delQ;
+
+            const { actual_start_time, actual_end_time, actual_break_minutes, ...basePayload } = payload;
+            const repeatPayloads = [];
+            for (let i = 1; i < weeks; i++) {
+                const d = new Date(payload.shift_date + 'T12:00:00');
+                d.setDate(d.getDate() + i * 7);
+                repeatPayloads.push({ ...basePayload, shift_date: d.toISOString().split('T')[0] });
+            }
+            if (repeatPayloads.length > 0) await db.from('shifts').insert(repeatPayloads);
+        }
     } else if (repeat && weeks > 1) {
         const payloads = [];
         for (let i = 0; i < weeks; i++) {
@@ -976,7 +997,7 @@ async function saveShift(payload, repeat, weeks) {
     await refreshHoursOverview();
 
     if (payload.employee_id) {
-        if (!editShiftId && repeat && weeks > 1) {
+        if (repeat && weeks > 1) {
             for (let i = 0; i < weeks; i++) {
                 const d = new Date(payload.shift_date + 'T12:00:00');
                 d.setDate(d.getDate() + i * 7);
