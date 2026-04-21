@@ -1024,7 +1024,74 @@ async function deleteShift() {
     if (error) { alert('Fehler beim Löschen: ' + error.message); return; }
 
     closeShiftModal();
-    await loadWeekGrid();
+
+    const cells = document.querySelectorAll(`[data-cell="${currentShiftEmployeeId}_${currentShiftDateStr}"]`);
+    if (cells.length && currentShiftEmployeeId) {
+        const d         = new Date(currentShiftDateStr + 'T12:00:00');
+        const monthStr  = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+        const dayKey    = String(d.getDate());
+
+        const [{ data: availRow }, { data: vacation }, { data: sick }] = await Promise.all([
+            db.from('availability').select('available_days')
+                .eq('user_id', adminSession.user.id)
+                .eq('employee_id', currentShiftEmployeeId)
+                .eq('month', monthStr)
+                .maybeSingle(),
+            db.from('vacation_requests').select('id')
+                .eq('user_id', adminSession.user.id)
+                .eq('employee_id', currentShiftEmployeeId)
+                .eq('status', 'approved')
+                .lte('start_date', currentShiftDateStr)
+                .gte('end_date', currentShiftDateStr)
+                .maybeSingle(),
+            db.from('sick_leaves').select('id')
+                .eq('user_id', adminSession.user.id)
+                .eq('employee_id', currentShiftEmployeeId)
+                .lte('start_date', currentShiftDateStr)
+                .gte('end_date', currentShiftDateStr)
+                .maybeSingle(),
+        ]);
+
+        const avail = vacation
+            ? { status: 'vacation' }
+            : (availRow?.available_days?.[dayKey] || null);
+
+        cells.forEach(cell => {
+            const cellDept = cell.dataset.dept;
+            cell.className        = 'week-cell';
+            cell.style.whiteSpace = 'pre';
+            cell.style.position   = 'relative';
+            cell.style.background = '';
+            cell.style.color      = '';
+            cell.style.fontSize   = '';
+            cell.textContent      = '+';
+            delete cell.dataset.shiftId;
+            cell.dataset.origBg   = '';
+            cell.onclick = () => openShiftModal(currentShiftEmployeeId, currentShiftDateStr, null, cellDept);
+
+            if (sick) {
+                cell.style.background = '#FFE0CC';
+                cell.textContent      = 'Krank';
+                cell.style.color      = '#E07040';
+                cell.style.fontSize   = '0.7rem';
+            } else if (planningMode && avail) {
+                if      (avail.status === 'vacation') cell.style.background = '#D0E8FF';
+                else if (avail.status === 'school')   cell.style.background = '#E8D0FF';
+                else if (avail.status === 'full')     cell.style.background = '#D8F0D8';
+                else if (avail.status === 'partial') {
+                    cell.style.background = '#FFF3CC';
+                    if (avail.from && avail.to) {
+                        cell.textContent    = `${avail.from.slice(0,5)}\n${avail.to.slice(0,5)}`;
+                        cell.style.fontSize = '0.65rem';
+                    }
+                }
+                else if (avail.status === 'off') cell.style.background = '#FFD9D9';
+            }
+        });
+    } else {
+        await loadWeekGrid();
+    }
+
     await refreshHoursOverview();
     await syncTipHoursForShift(currentShiftEmployeeId, currentShiftDateStr);
 }
