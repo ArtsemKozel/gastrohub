@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GastroHub — Paket konfigurieren</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --color-bg:      #F5F0EB;
+            --color-primary: #B28A6E;
+            --color-dark:    #8B6F47;
+            --color-text:    #2C2C2C;
+            --color-light:   #7A7A7A;
+            --color-white:   #FFFFFF;
+            --radius:        14px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 240, 235, 0.92);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(178, 138, 110, 0.15);
+            padding: 0 1.5rem;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--color-primary);
+            text-decoration: none;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-link {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--color-primary);
+            text-decoration: none;
+            padding: 0.45rem 1.1rem;
+            border: 2px solid var(--color-primary);
+            border-radius: 999px;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .nav-link:hover {
+            background: var(--color-primary);
+            color: var(--color-white);
+        }
+
+        .section-sub {
+            text-align: center;
+            color: var(--color-light);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+
+        /* ── PAKET-KONFIGURATOR ──────────────────────────── */
+        .paket-section {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 4rem;
+        }
+
+        .paket-section h1 {
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.4rem;
+        }
+
+        .paket-group { margin-bottom: 1.25rem; }
+
+        .paket-group-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--color-primary);
+            margin-bottom: 0.5rem;
+            padding-left: 0.25rem;
+        }
+
+        .paket-card {
+            background: var(--color-white);
+            border-radius: var(--radius);
+            border: 1px solid rgba(178,138,110,0.12);
+            overflow: hidden;
+        }
+
+        .paket-item {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(178,138,110,0.08);
+            cursor: pointer;
+            transition: background 0.1s;
+            user-select: none;
+        }
+
+        .paket-item:last-child { border-bottom: none; }
+        .paket-item:hover { background: rgba(178,138,110,0.04); }
+        .paket-item.selected { background: rgba(178,138,110,0.07); }
+
+        .paket-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 2px solid rgba(178,138,110,0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .paket-item.selected .paket-checkbox {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+
+        .paket-checkbox svg { display: none; }
+        .paket-item.selected .paket-checkbox svg { display: block; }
+
+        .paket-item-label { flex: 1; font-size: 0.92rem; font-weight: 500; }
+
+        .paket-item-price {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--color-light);
+        }
+
+        .paket-item.selected .paket-item-price { color: var(--color-primary); }
+
+        .paket-setup {
+            background: var(--color-white);
+            border-radius: var(--radius);
+            border: 1px solid rgba(178,138,110,0.12);
+            padding: 0.85rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .paket-setup-info { flex: 1; }
+        .paket-setup-info strong { font-size: 0.92rem; display: block; }
+        .paket-setup-info span { font-size: 0.8rem; color: var(--color-light); }
+
+        .paket-total {
+            margin-top: 1.5rem;
+            background: var(--color-primary);
+            color: white;
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .paket-total-line { font-size: 0.85rem; opacity: 0.85; }
+        .paket-total-line strong { font-size: 1.05rem; font-weight: 700; opacity: 1; }
+        .paket-total-prices { text-align: right; }
+        .paket-total-monthly { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; }
+        .paket-total-setup { font-size: 0.82rem; opacity: 0.8; margin-top: 0.15rem; }
+        .paket-vat { font-size: 0.75rem; opacity: 0.7; margin-top: 0.25rem; }
+
+        .btn-anfragen {
+            display: block;
+            width: 100%;
+            margin-top: 1rem;
+            background: var(--color-dark);
+            color: white;
+            border: none;
+            border-radius: 999px;
+            padding: 0.9rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: background 0.15s;
+        }
+
+        .btn-anfragen:hover { background: #6B5435; }
+
+        /* ── MODAL ───────────────────────────────────────── */
+        .modal-bg {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-bg.open { display: flex; }
+
+        .modal-box {
+            background: var(--color-white);
+            border-radius: var(--radius);
+            padding: 2rem;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-box h3 { font-size: 1.15rem; font-weight: 800; margin-bottom: 1.25rem; }
+
+        .form-field { margin-bottom: 1rem; }
+
+        .form-field label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--color-light);
+            margin-bottom: 0.35rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .form-field input,
+        .form-field textarea {
+            width: 100%;
+            padding: 0.7rem 0.9rem;
+            border: 1.5px solid rgba(178,138,110,0.25);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .form-field input:focus,
+        .form-field textarea:focus { border-color: var(--color-primary); }
+        .form-field textarea { resize: vertical; min-height: 100px; }
+
+        .modal-actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; }
+
+        .btn-submit {
+            flex: 1;
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 999px;
+            padding: 0.8rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: background 0.15s;
+        }
+
+        .btn-submit:hover { background: var(--color-dark); }
+
+        .btn-cancel {
+            background: none;
+            border: 1.5px solid rgba(178,138,110,0.3);
+            border-radius: 999px;
+            padding: 0.8rem 1.2rem;
+            font-size: 0.95rem;
+            color: var(--color-light);
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .modal-success { text-align: center; padding: 1rem 0; display: none; }
+        .modal-success .success-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .modal-success p { color: var(--color-light); font-size: 0.95rem; }
+
+        footer {
+            border-top: 1px solid rgba(178, 138, 110, 0.15);
+            padding: 2rem 1.5rem;
+            text-align: center;
+            font-size: 0.83rem;
+            color: var(--color-light);
+        }
+
+        footer a { color: var(--color-primary); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        .footer-inner {
+            max-width: 700px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem 1.5rem;
+        }
+
+        @media (max-width: 480px) {
+            .paket-total { flex-direction: column; align-items: flex-start; }
+            .paket-total-prices { text-align: left; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="nav-logo">GastroHub</a>
+        <a href="../app/login.html" class="nav-link">Anmelden</a>
+    </nav>
+
+    <section class="paket-section">
+        <h1>Dein Paket</h1>
+        <p class="section-sub">Wähle die Module die du brauchst — wir bauen genau das für dich.</p>
+
+        <div class="paket-group">
+            <div class="paket-group-title">Kern-Features</div>
+            <div class="paket-card">
+                <div class="paket-item selected" data-price="10" onclick="toggleFeature(this)">
+                    <div class="paket-checkbox"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="paket-item-label">Schichtplanung</span>
+                    <span class="paket-item-price">10 € / Monat</span>
+                </div>
+                <div class="paket-item selected" data-price="8" onclick="toggleFeature(this)">
+                    <div class="paket-checkbox"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="paket-item-label">Mitarbeiter-Verwaltung</span>
+                    <span class="paket-item-price">8 € / Monat</span>
+                </div>
+                <div class="paket-item selected" data-price="8" onclick="toggleFeature(this)">
+                    <div class="paket-checkbox"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="paket-item-label">Urlaubsverwaltung</span>
+                    <span class="paket-item-price">8 € / Monat</span>
+                </div>
+                <div class="paket-item selected" data-price="12" onclick="toggleFeature(this)">
+                    <div class="paket-checkbox"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="paket-item-label">Zeiterfassung</span>
+                    <span class="paket-item-price">12 € / Monat</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="paket-group">
+            <div class="paket-group-title">Abrechnung</div>
+            <div class="paket-card">
+                <div class="paket-item" data-price="10" onclick="toggleFeature(this)">
+                    <div class="paket-checkbox"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="paket-item-label">Vorlohnabrechnung</span>
+                    <span class="paket-item-price">10 € / Monat</span>
+                </div>
+                <div class="paket-item" data-price="6" onclick="toggleFeature(this)">
+                    <div class="paket-checkbox"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="paket-item-label">Trinkgeld-Verwaltung</span>
+                    <span class="paket-item-price">6 € / Monat</span>
+                </div>
+                <div class="paket-item" data-price="5" onclick="toggleFeature(this)">
+                    <div class="paket-checkbox"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="paket-item-label">Stundenübersicht</span>
+                    <span class="paket-item-price">5 € / Monat</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="paket-group">
+            <div class="paket-group-title">Extras</div>
+            <div class="paket-card">
+                <div class="paket-item" data-price="6" onclick="toggleFeature(this)">
+                    <div class="paket-checkbox"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="paket-item-label">Inventur</span>
+                    <span class="paket-item-price">6 € / Monat</span>
+                </div>
+                <div class="paket-item" data-price="4" onclick="toggleFeature(this)">
+                    <div class="paket-checkbox"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="paket-item-label">Aufgaben &amp; Notizen</span>
+                    <span class="paket-item-price">4 € / Monat</span>
+                </div>
+                <div class="paket-item" data-price="4" onclick="toggleFeature(this)">
+                    <div class="paket-checkbox"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="paket-item-label">Hygiene-Protokoll</span>
+                    <span class="paket-item-price">4 € / Monat</span>
+                </div>
+                <div class="paket-item" data-price="5" onclick="toggleFeature(this)">
+                    <div class="paket-checkbox"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="paket-item-label">Abgänge &amp; Kündigungen</span>
+                    <span class="paket-item-price">5 € / Monat</span>
+                </div>
+                <div class="paket-item" data-price="5" onclick="toggleFeature(this)">
+                    <div class="paket-checkbox"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="paket-item-label">MarginCalc</span>
+                    <span class="paket-item-price">5 € / Monat</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="paket-group">
+            <div class="paket-group-title">Einrichtung</div>
+            <div class="paket-setup">
+                <div class="paket-checkbox" style="background:var(--color-primary); border-color:var(--color-primary);">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="paket-setup-info">
+                    <strong>Einmalige Setup-Gebühr</strong>
+                    <span>Einrichtung, Konfiguration und Einführung</span>
+                </div>
+                <span style="font-size:0.88rem; font-weight:600; color:var(--color-primary);">99 € einmalig</span>
+            </div>
+        </div>
+
+        <div class="paket-total">
+            <div class="paket-total-line">Dein Paket<br><strong id="paket-selected-count">4 Module</strong></div>
+            <div class="paket-total-prices">
+                <div class="paket-total-monthly"><span id="paket-monthly">38</span> € / Monat</div>
+                <div class="paket-total-setup">+ 99 € Einrichtung (einmalig)</div>
+                <div class="paket-vat">Alle Preise Netto zzgl. MwSt.</div>
+            </div>
+        </div>
+
+        <button class="btn-anfragen" onclick="openAnfragenModal()">Paket anfragen</button>
+    </section>
+
+    <!-- KONTAKT-MODAL -->
+    <div id="anfragen-modal" class="modal-bg" onclick="if(event.target===this)closeAnfragenModal()">
+        <div class="modal-box">
+            <div id="anfragen-form-wrap">
+                <h3>Paket anfragen</h3>
+                <div class="form-field">
+                    <label>Name</label>
+                    <input type="text" id="anfragen-name" placeholder="Dein Name">
+                </div>
+                <div class="form-field">
+                    <label>E-Mail</label>
+                    <input type="email" id="anfragen-email" placeholder="deine@email.de">
+                </div>
+                <div class="form-field">
+                    <label>Dein Paket</label>
+                    <textarea id="anfragen-summary" readonly></textarea>
+                </div>
+                <div class="form-field">
+                    <label>Nachricht (optional)</label>
+                    <textarea id="anfragen-message" placeholder="Weitere Wünsche oder Fragen…"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick="closeAnfragenModal()">Abbrechen</button>
+                    <button class="btn-submit" onclick="submitAnfrage()">Anfrage senden</button>
+                </div>
+            </div>
+            <div class="modal-success" id="anfragen-success">
+                <div class="success-icon">✅</div>
+                <h3>Anfrage gesendet!</h3>
+                <p style="margin-top:0.5rem;">Wir melden uns in Kürze bei dir.</p>
+                <button class="btn-submit" style="margin-top:1.25rem;" onclick="closeAnfragenModal()">Schließen</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-inner">
+            <span>© 2026 GastroHub</span>
+            <span>·</span>
+            <a href="#">Impressum</a>
+            <span>·</span>
+            <a href="#">Datenschutz</a>
+            <span>·</span>
+            <a href="mailto:kontakt@gastrohub.de">kontakt@gastrohub.de</a>
+        </div>
+    </footer>
+
+    <script>
+        function toggleFeature(el) {
+            el.classList.toggle('selected');
+            updatePaketTotal();
+        }
+
+        function updatePaketTotal() {
+            const items = document.querySelectorAll('.paket-item.selected');
+            let total = 0, names = [];
+            items.forEach(item => {
+                total += parseInt(item.dataset.price);
+                names.push(item.querySelector('.paket-item-label').textContent);
+            });
+            document.getElementById('paket-monthly').textContent       = total;
+            document.getElementById('paket-selected-count').textContent = names.length + ' Modul' + (names.length !== 1 ? 'e' : '');
+        }
+
+        function buildSummary() {
+            const items = document.querySelectorAll('.paket-item.selected');
+            let total = 0, lines = [];
+            items.forEach(item => {
+                const price = parseInt(item.dataset.price);
+                total += price;
+                lines.push('• ' + item.querySelector('.paket-item-label').textContent + ' (' + price + ' €/Monat)');
+            });
+            lines.push('');
+            lines.push('Monatlich: ' + total + ' € Netto zzgl. MwSt.');
+            lines.push('Einmalig:  99 € Setup-Gebühr Netto zzgl. MwSt.');
+            return lines.join('\n');
+        }
+
+        function openAnfragenModal() {
+            document.getElementById('anfragen-summary').value = buildSummary();
+            document.getElementById('anfragen-form-wrap').style.display = 'block';
+            document.getElementById('anfragen-success').style.display   = 'none';
+            document.getElementById('anfragen-name').value    = '';
+            document.getElementById('anfragen-email').value   = '';
+            document.getElementById('anfragen-message').value = '';
+            document.getElementById('anfragen-modal').classList.add('open');
+        }
+
+        function closeAnfragenModal() {
+            document.getElementById('anfragen-modal').classList.remove('open');
+        }
+
+        function submitAnfrage() {
+            const name  = document.getElementById('anfragen-name').value.trim();
+            const email = document.getElementById('anfragen-email').value.trim();
+            if (!name || !email) { alert('Bitte Name und E-Mail ausfüllen.'); return; }
+            const summary = document.getElementById('anfragen-summary').value;
+            const message = document.getElementById('anfragen-message').value.trim();
+            const body    = encodeURIComponent(
+                'Name: ' + name + '\n\nGewähltes Paket:\n' + summary +
+                (message ? '\n\nNachricht:\n' + message : '')
+            );
+            const subject = encodeURIComponent('GastroHub Paket-Anfrage von ' + name);
+            window.location.href = 'mailto:kontakt@gastrohub.de?subject=' + subject + '&body=' + body;
+            document.getElementById('anfragen-form-wrap').style.display = 'none';
+            document.getElementById('anfragen-success').style.display   = 'block';
+        }
+
+        updatePaketTotal();
+    </script>
+</body>
+</html>
