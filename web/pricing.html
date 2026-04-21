@@ -189,22 +189,18 @@
         .paket-vat { font-size: 0.75rem; opacity: 0.7; margin-top: 0.25rem; }
 
         .btn-anfragen {
-            display: block;
-            width: 100%;
-            margin-top: 1rem;
-            background: var(--color-dark);
-            color: white;
+            display: flex;
+            align-items: center; justify-content: center;
+            width: 3.2rem; height: 3.2rem;
+            margin: 1.25rem auto 0;
+            background: var(--color-primary);
             border: none;
             border-radius: 999px;
-            padding: 0.9rem 1.5rem;
-            font-size: 1rem;
-            font-weight: 700;
             cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            transition: background 0.15s;
+            transition: background 0.15s, transform 0.1s;
         }
 
-        .btn-anfragen:hover { background: #6B5435; }
+        .btn-anfragen:hover { background: var(--color-dark); transform: translateY(-1px); }
 
         /* ── MODAL ───────────────────────────────────────── */
         .modal-bg {
@@ -436,7 +432,9 @@
             </div>
         </div>
 
-        <button class="btn-anfragen" onclick="openAnfragenModal()">Paket anfragen</button>
+        <button class="btn-anfragen" onclick="openAnfragenModal()" title="Paket anfragen">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
     </section>
 
     <!-- KONTAKT-MODAL -->
