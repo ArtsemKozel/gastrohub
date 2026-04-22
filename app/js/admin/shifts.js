@@ -937,11 +937,21 @@ async function submitShift() {
     }
 
     await saveShift(payload, repeat, weeks);
+
+    if (!editShiftId && isOpen) {
+        fetch('https://gastrohub-notify.artsem86.workers.dev', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: 'Offene Schicht',
+                message: 'Eine neue offene Schicht ist verfügbar — schau in den Schichtplan!'
+            })
+        }).catch(e => console.error('[openShift notify]', e));
+    }
 }
 
 async function saveShift(payload, repeat, weeks) {
     const errorDiv = document.getElementById('shift-error');
-    const isNew = !editShiftId;
     let error;
 
     if (editShiftId) {
@@ -991,18 +1001,6 @@ async function saveShift(payload, repeat, weeks) {
         errorDiv.textContent   = 'Fehler beim Speichern.';
         errorDiv.style.display = 'block';
         return;
-    }
-
-    console.log('isNew:', isNew, 'employee_id:', payload.employee_id);
-    if (isNew && (!payload.employee_id || payload.employee_id === '')) {
-        fetch('https://gastrohub-notify.artsem86.workers.dev', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title: 'Offene Schicht',
-                message: 'Eine neue offene Schicht ist verfügbar — schau in den Schichtplan!'
-            })
-        }).catch(e => console.error('[openShift notify]', e));
     }
 
     closeShiftModal();
