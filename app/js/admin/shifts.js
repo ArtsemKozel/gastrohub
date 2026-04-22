@@ -1539,7 +1539,7 @@ function formatShiftDate(dateStr) {
     return new Date(dateStr + 'T00:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'numeric' });
 }
 
-async function publishSchedule() {
+window.publishSchedule = async function() {
     const btn = document.getElementById('publish-schedule-btn');
     if (btn) { btn.disabled = true; btn.textContent = '…'; }
     try {
