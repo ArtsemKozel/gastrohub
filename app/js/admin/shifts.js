@@ -1540,7 +1540,6 @@ function formatShiftDate(dateStr) {
 }
 
 window.publishSchedule = async function() {
-    console.log('publishSchedule called');
     const btn = document.getElementById('publish-schedule-btn');
     if (btn) { btn.disabled = true; btn.textContent = '…'; }
     try {
