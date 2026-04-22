@@ -1541,7 +1541,7 @@ function formatShiftDate(dateStr) {
 
 window.publishSchedule = async function() {
     const btn = document.getElementById('publish-schedule-btn');
-    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+    if (btn) { btn.disabled = true; }
     try {
         const res = await fetch('https://gastrohub-notify.artsem86.workers.dev', {
             method: 'POST',
@@ -1552,9 +1552,9 @@ window.publishSchedule = async function() {
             })
         });
         await res.text();
-        if (btn) { btn.textContent = 'Gesendet ✓'; setTimeout(() => { btn.disabled = false; btn.textContent = 'Veröffentlichen'; }, 2500); }
+        if (btn) { setTimeout(() => { btn.disabled = false; }, 2500); }
     } catch (e) {
-        if (btn) { btn.disabled = false; btn.textContent = 'Veröffentlichen'; }
+        if (btn) { btn.disabled = false; }
         alert('Fehler beim Senden der Benachrichtigung.');
     }
 }
