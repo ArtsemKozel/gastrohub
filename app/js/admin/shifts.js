@@ -939,6 +939,9 @@ async function submitShift() {
     }
 
     await saveShift(payload, repeat, weeks);
+    if (!editShiftId && isOpen) {
+        sendPushNotification('Offene Schicht', 'Eine neue offene Schicht ist verfügbar — schau in den Schichtplan!');
+    }
 }
 
 async function saveShift(payload, repeat, weeks) {
