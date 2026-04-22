@@ -7,7 +7,11 @@ window.sendPushNotification = function(title, message) {
 };
 
 document.addEventListener('click', function(e) {
-    if (e.target.closest('#shift-modal .btn-primary') && !window.editShiftId && document.getElementById('shift-is-open')?.checked) {
+    if (
+        e.target.closest('#shift-modal .btn-primary') &&
+        !window.editShiftId &&
+        (!document.getElementById('shift-employee')?.value || document.getElementById('shift-is-open')?.checked)
+    ) {
         sendPushNotification('Offene Schicht', 'Eine neue offene Schicht ist verfügbar — schau in den Schichtplan!');
     }
 });
