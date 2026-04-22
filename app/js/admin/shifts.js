@@ -938,7 +938,7 @@ async function submitShift() {
 
     await saveShift(payload, repeat, weeks);
 
-    if (!editShiftId && isOpen) {
+    if (!editShiftId && (isOpen || payload.is_open)) {
         fetch('https://gastrohub-notify.artsem86.workers.dev', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
