@@ -163,7 +163,7 @@ async function renderWeekGrid(days, shifts, availCache = {}, sickLeaves = []) {
             cell.className        = 'week-cell' + (shift ? ' open-shift' : '');
             cell.textContent      = shift ? `${shift.start_time.slice(0,5)}\n${shift.end_time.slice(0,5)}` : '+';
             cell.style.whiteSpace = 'pre';
-            cell.onclick = () => { window._forceOpenShift = true; openShiftModal(null, dateStr, shift || null, dept); };
+            cell.onclick = () => openOpenShiftModal(dateStr, dept, shift || null);
             grid.appendChild(cell);
         });
 
@@ -412,9 +412,8 @@ let pendingShiftWeeks    = 1;
 let shiftTemplates       = [];
 let _clockListEmployeeId = null;
 let _clockListDateStr    = null;
-window._forceOpenShift      = false;
 
-window.openShiftModal = async function(employeeId, dateStr, existingShift, defaultDept) {
+async function openShiftModal(employeeId, dateStr, existingShift, defaultDept) {
     _shiftModalScrollY      = window.scrollY;
     currentShiftEmployeeId  = employeeId;
     currentShiftDateStr     = dateStr;
@@ -436,15 +435,15 @@ window.openShiftModal = async function(employeeId, dateStr, existingShift, defau
     document.getElementById('shift-error').style.display = 'none';
 
     document.getElementById('shift-delete-btn').style.display = existingShift ? 'block' : 'none';
-    const isOpen     = window._forceOpenShift || existingShift?.is_open || false;
-    document.getElementById('shift-is-open').checked          = isOpen;
+    document.getElementById('shift-is-open').checked          = existingShift?.is_open || false;
     document.getElementById('shift-open-note').value          = existingShift?.open_note || '';
 
+    const isOpen     = existingShift?.is_open || false;
     const empGroup   = document.getElementById('shift-employee').closest('.form-group');
     const preselected = !!(employeeId && dateStr && defaultDept && !isOpen);
 
     document.getElementById('shift-employee').disabled                              = isOpen;
-    empGroup.style.display                                                           = isOpen ? 'none' : (preselected ? 'none' : 'block');
+    empGroup.style.display                                                           = preselected ? 'none' : 'block';
     empGroup.style.opacity                                                           = isOpen ? '0.4' : '1';
     document.getElementById('shift-date').closest('.form-group').style.display      = preselected ? 'none' : 'block';
     document.getElementById('shift-dept-group').style.display                       = preselected ? 'none' : 'block';
@@ -874,7 +873,7 @@ async function confirmShiftDespiteWarning() {
     await saveShift(pendingShiftPayload, pendingShiftIsRepeat, pendingShiftWeeks);
 }
 
-window.submitShift = async function() {
+async function submitShift() {
     const employeeId = document.getElementById('shift-employee').value;
     const date       = document.getElementById('shift-date').value;
     const start      = document.getElementById('shift-start').value;
@@ -938,18 +937,6 @@ window.submitShift = async function() {
     }
 
     await saveShift(payload, repeat, weeks);
-
-    if (!editShiftId && (isOpen || window._forceOpenShift)) {
-        fetch('https://gastrohub-notify.artsem86.workers.dev', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title: 'Offene Schicht',
-                message: 'Eine neue offene Schicht ist verfügbar — schau in den Schichtplan!'
-            })
-        }).catch(e => console.error('[openShift notify]', e));
-    }
-    window._forceOpenShift = false;
 }
 
 async function saveShift(payload, repeat, weeks) {
@@ -1006,11 +993,7 @@ async function saveShift(payload, repeat, weeks) {
     }
 
     closeShiftModal();
-    if (payload.is_open) {
-        await loadWeekGrid();
-    } else {
-        await updateShiftCell(currentShiftEmployeeId, currentShiftDateStr);
-    }
+    await updateShiftCell(currentShiftEmployeeId, currentShiftDateStr);
     await refreshHoursOverview();
 
     if (payload.employee_id) {
@@ -1550,15 +1533,6 @@ async function reviewSwap(id, status, shiftId, targetShiftId, fromEmpId, toEmpId
     await loadAdminSwaps();
     await loadWeekGrid();
 }
-
-window.toggleOpenShift = function() {
-    const isOpen    = document.getElementById('shift-is-open').checked;
-    const empGroup  = document.getElementById('shift-employee').closest('.form-group');
-    if (empGroup) empGroup.style.display = isOpen ? 'none' : '';
-    const openNoteGroup = document.getElementById('shift-open-note-group');
-    if (openNoteGroup) openNoteGroup.style.display = isOpen ? '' : 'none';
-    document.getElementById('shift-employee').disabled = isOpen;
-};
 
 function formatShiftDate(dateStr) {
     if (!dateStr) return '—';
