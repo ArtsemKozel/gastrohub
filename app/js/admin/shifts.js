@@ -1570,3 +1570,9 @@ window.publishSchedule = function() {
     if (btn) { btn.disabled = true; setTimeout(() => { btn.disabled = false; }, 2500); }
 }
 
+window.toggleOpenShift = function() {
+    const isOpen = document.getElementById('shift-is-open')?.checked;
+    const group  = document.getElementById('shift-employee-group');
+    if (group) group.style.display = isOpen ? 'none' : '';
+}
+
