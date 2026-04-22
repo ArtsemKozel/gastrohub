@@ -163,7 +163,7 @@ async function renderWeekGrid(days, shifts, availCache = {}, sickLeaves = []) {
             cell.className        = 'week-cell' + (shift ? ' open-shift' : '');
             cell.textContent      = shift ? `${shift.start_time.slice(0,5)}\n${shift.end_time.slice(0,5)}` : '+';
             cell.style.whiteSpace = 'pre';
-            cell.onclick = () => openShiftModal(null, dateStr, shift || null, dept, true);
+            cell.onclick = () => { window._forceOpenShift = true; openShiftModal(null, dateStr, shift || null, dept); };
             grid.appendChild(cell);
         });
 
@@ -414,9 +414,8 @@ let _clockListEmployeeId = null;
 let _clockListDateStr    = null;
 window._forceOpenShift      = false;
 
-window.openShiftModal = async function(employeeId, dateStr, existingShift, defaultDept, forceOpen = false) {
+window.openShiftModal = async function(employeeId, dateStr, existingShift, defaultDept) {
     _shiftModalScrollY      = window.scrollY;
-    window._forceOpenShift         = forceOpen;
     currentShiftEmployeeId  = employeeId;
     currentShiftDateStr     = dateStr;
     editShiftId             = existingShift ? existingShift.id : null;
@@ -437,7 +436,7 @@ window.openShiftModal = async function(employeeId, dateStr, existingShift, defau
     document.getElementById('shift-error').style.display = 'none';
 
     document.getElementById('shift-delete-btn').style.display = existingShift ? 'block' : 'none';
-    const isOpen     = forceOpen || existingShift?.is_open || false;
+    const isOpen     = window._forceOpenShift || existingShift?.is_open || false;
     document.getElementById('shift-is-open').checked          = isOpen;
     document.getElementById('shift-open-note').value          = existingShift?.open_note || '';
 
@@ -950,6 +949,7 @@ window.submitShift = async function() {
             })
         }).catch(e => console.error('[openShift notify]', e));
     }
+    window._forceOpenShift = false;
 }
 
 async function saveShift(payload, repeat, weeks) {
