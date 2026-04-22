@@ -1007,6 +1007,7 @@ async function saveShift(payload, repeat, weeks) {
             await syncTipHoursForShift(payload.employee_id, payload.shift_date);
         }
     } else if (!editShiftId) {
+        console.log('[openShift] !editShiftId:', !editShiftId, '| !payload.employee_id:', !payload.employee_id);
         fetch('https://gastrohub-notify.artsem86.workers.dev', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
