@@ -1551,8 +1551,7 @@ window.publishSchedule = async function() {
                 message: 'Dein Schichtplan für diese Woche wurde veröffentlicht.'
             })
         });
-        const body = await res.text();
-        console.log('[publishSchedule] status:', res.status, '| body:', body);
+        await res.text();
         if (btn) { btn.textContent = 'Gesendet ✓'; setTimeout(() => { btn.disabled = false; btn.textContent = 'Veröffentlichen'; }, 2500); }
     } catch (e) {
         if (btn) { btn.disabled = false; btn.textContent = 'Veröffentlichen'; }
