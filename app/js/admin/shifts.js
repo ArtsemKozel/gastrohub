@@ -1538,3 +1538,23 @@ function formatShiftDate(dateStr) {
     if (!dateStr) return '—';
     return new Date(dateStr + 'T00:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'numeric' });
 }
+
+async function publishSchedule() {
+    const btn = document.getElementById('publish-schedule-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+    try {
+        await fetch('https://gastrohub-notify.artsem86.workers.dev', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: 'Schichtplan',
+                message: 'Dein Schichtplan für diese Woche wurde veröffentlicht.'
+            })
+        });
+        if (btn) { btn.textContent = 'Gesendet ✓'; setTimeout(() => { btn.disabled = false; btn.textContent = 'Veröffentlichen'; }, 2500); }
+    } catch (e) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Veröffentlichen'; }
+        alert('Fehler beim Senden der Benachrichtigung.');
+    }
+}
+
