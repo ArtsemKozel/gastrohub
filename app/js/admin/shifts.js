@@ -412,9 +412,11 @@ let pendingShiftWeeks    = 1;
 let shiftTemplates       = [];
 let _clockListEmployeeId = null;
 let _clockListDateStr    = null;
+let _forceOpenShift      = false;
 
 async function openShiftModal(employeeId, dateStr, existingShift, defaultDept, forceOpen = false) {
     _shiftModalScrollY      = window.scrollY;
+    _forceOpenShift         = forceOpen;
     currentShiftEmployeeId  = employeeId;
     currentShiftDateStr     = dateStr;
     editShiftId             = existingShift ? existingShift.id : null;
@@ -938,7 +940,7 @@ async function submitShift() {
 
     await saveShift(payload, repeat, weeks);
 
-    if (!editShiftId && (isOpen || payload.is_open)) {
+    if (!editShiftId && (isOpen || _forceOpenShift)) {
         fetch('https://gastrohub-notify.artsem86.workers.dev', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
