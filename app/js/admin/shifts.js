@@ -163,6 +163,8 @@ async function renderWeekGrid(days, shifts, availCache = {}, sickLeaves = []) {
             cell.className        = 'week-cell' + (shift ? ' open-shift' : '');
             cell.textContent      = shift ? `${shift.start_time.slice(0,5)}\n${shift.end_time.slice(0,5)}` : '+';
             cell.style.whiteSpace = 'pre';
+            cell.dataset.cell     = `open_${dept}_${dateStr}`;
+            cell.dataset.dept     = dept;
             cell.onclick = () => openOpenShiftModal(dateStr, dept, shift || null);
             grid.appendChild(cell);
         });
@@ -1162,6 +1164,22 @@ async function updateShiftCell(employeeId, dateStr) {
     }
 }
 
+async function updateOpenShiftCell(dept, dateStr) {
+    const cell = document.querySelector(`[data-cell="open_${dept}_${dateStr}"]`);
+    if (!cell) { await loadWeekGrid(); return; }
+
+    const { data: shift } = await db.from('shifts').select('*')
+        .eq('user_id', adminSession.user.id)
+        .eq('shift_date', dateStr)
+        .eq('department', dept)
+        .eq('is_open', true)
+        .maybeSingle();
+
+    cell.className   = 'week-cell' + (shift ? ' open-shift' : '');
+    cell.textContent = shift ? `${shift.start_time.slice(0,5)}\n${shift.end_time.slice(0,5)}` : '+';
+    cell.onclick     = () => openOpenShiftModal(dateStr, dept, shift || null);
+}
+
 async function checkArbeitszeitWarnings(payload) {
     const warnings = [];
     const [sh, sm] = payload.start_time.split(':').map(Number);
@@ -1250,8 +1268,10 @@ async function submitOpenShift() {
     }
 
     if (error) { errorDiv.textContent = 'Fehler beim Speichern.'; errorDiv.style.display = 'block'; return; }
+    const _dept    = openShiftData.dept;
+    const _dateStr = openShiftData.dateStr;
     closeOpenShiftModal();
-    await loadWeekGrid();
+    await updateOpenShiftCell(_dept, _dateStr);
 }
 
 async function deleteOpenShift() {
@@ -1260,8 +1280,10 @@ async function deleteOpenShift() {
     await db.from('open_shift_requests').delete().eq('shift_id', openShiftData.existingShift.id);
     const { error } = await db.from('shifts').delete().eq('id', openShiftData.existingShift.id);
     if (error) { alert('Fehler beim Löschen!'); return; }
+    const _dept    = openShiftData.dept;
+    const _dateStr = openShiftData.dateStr;
     closeOpenShiftModal();
-    await loadWeekGrid();
+    await updateOpenShiftCell(_dept, _dateStr);
 }
 
 // ── ADMIN-VERFÜGBARKEITSANSICHT ───────────────────────────
