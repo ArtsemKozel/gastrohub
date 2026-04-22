@@ -6,15 +6,8 @@ window.sendPushNotification = function(title, message) {
     }).catch(() => {});
 };
 
-setTimeout(function() {
-    const _original = window.submitShift;
-    if (!_original) return;
-    window.submitShift = async function() {
-        const isNew  = !window.editShiftId;
-        const isOpen = document.getElementById('shift-is-open')?.checked;
-        await _original.apply(this, arguments);
-        if (isNew && isOpen) {
-            sendPushNotification('Offene Schicht', 'Eine neue offene Schicht ist verfügbar — schau in den Schichtplan!');
-        }
-    };
-}, 500);
+document.addEventListener('click', function(e) {
+    if (e.target.closest('#shift-modal .btn-primary') && !window.editShiftId && document.getElementById('shift-is-open')?.checked) {
+        sendPushNotification('Offene Schicht', 'Eine neue offene Schicht ist verfügbar — schau in den Schichtplan!');
+    }
+});
