@@ -5,3 +5,7 @@ window.sendPushNotification = function(title, message) {
         body: JSON.stringify({ title, message }),
     }).catch(() => {});
 };
+
+document.addEventListener('openShiftCreated', function() {
+    sendPushNotification('Offene Schicht', 'Eine neue offene Schicht ist verfügbar — schau in den Schichtplan!');
+});
