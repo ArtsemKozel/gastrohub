@@ -414,7 +414,7 @@ let _clockListEmployeeId = null;
 let _clockListDateStr    = null;
 window._forceOpenShift      = false;
 
-async function openShiftModal(employeeId, dateStr, existingShift, defaultDept, forceOpen = false) {
+window.openShiftModal = async function(employeeId, dateStr, existingShift, defaultDept, forceOpen = false) {
     _shiftModalScrollY      = window.scrollY;
     window._forceOpenShift         = forceOpen;
     currentShiftEmployeeId  = employeeId;
@@ -875,7 +875,7 @@ async function confirmShiftDespiteWarning() {
     await saveShift(pendingShiftPayload, pendingShiftIsRepeat, pendingShiftWeeks);
 }
 
-async function submitShift() {
+window.submitShift = async function() {
     const employeeId = document.getElementById('shift-employee').value;
     const date       = document.getElementById('shift-date').value;
     const start      = document.getElementById('shift-start').value;
