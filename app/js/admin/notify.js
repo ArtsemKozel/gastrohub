@@ -6,6 +6,15 @@ window.sendPushNotification = function(title, message) {
     }).catch(() => {});
 };
 
-document.addEventListener('openShiftCreated', function() {
-    sendPushNotification('Offene Schicht', 'Eine neue offene Schicht ist verfügbar — schau in den Schichtplan!');
+document.addEventListener('DOMContentLoaded', function() {
+    const _original = window.submitShift;
+    if (!_original) return;
+    window.submitShift = async function() {
+        const isNew  = !window.editShiftId;
+        const isOpen = document.getElementById('shift-is-open')?.checked;
+        await _original.apply(this, arguments);
+        if (isNew && isOpen) {
+            sendPushNotification('Offene Schicht', 'Eine neue offene Schicht ist verfügbar — schau in den Schichtplan!');
+        }
+    };
 });
