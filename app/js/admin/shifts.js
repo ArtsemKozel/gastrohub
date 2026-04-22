@@ -163,7 +163,7 @@ async function renderWeekGrid(days, shifts, availCache = {}, sickLeaves = []) {
             cell.className        = 'week-cell' + (shift ? ' open-shift' : '');
             cell.textContent      = shift ? `${shift.start_time.slice(0,5)}\n${shift.end_time.slice(0,5)}` : '+';
             cell.style.whiteSpace = 'pre';
-            cell.onclick = () => openOpenShiftModal(dateStr, dept, shift || null);
+            cell.onclick = () => openShiftModal(null, dateStr, shift || null, dept, true);
             grid.appendChild(cell);
         });
 
@@ -413,7 +413,7 @@ let shiftTemplates       = [];
 let _clockListEmployeeId = null;
 let _clockListDateStr    = null;
 
-async function openShiftModal(employeeId, dateStr, existingShift, defaultDept) {
+async function openShiftModal(employeeId, dateStr, existingShift, defaultDept, forceOpen = false) {
     _shiftModalScrollY      = window.scrollY;
     currentShiftEmployeeId  = employeeId;
     currentShiftDateStr     = dateStr;
@@ -435,15 +435,15 @@ async function openShiftModal(employeeId, dateStr, existingShift, defaultDept) {
     document.getElementById('shift-error').style.display = 'none';
 
     document.getElementById('shift-delete-btn').style.display = existingShift ? 'block' : 'none';
-    document.getElementById('shift-is-open').checked          = existingShift?.is_open || false;
+    const isOpen     = forceOpen || existingShift?.is_open || false;
+    document.getElementById('shift-is-open').checked          = isOpen;
     document.getElementById('shift-open-note').value          = existingShift?.open_note || '';
 
-    const isOpen     = existingShift?.is_open || false;
     const empGroup   = document.getElementById('shift-employee').closest('.form-group');
     const preselected = !!(employeeId && dateStr && defaultDept && !isOpen);
 
     document.getElementById('shift-employee').disabled                              = isOpen;
-    empGroup.style.display                                                           = preselected ? 'none' : 'block';
+    empGroup.style.display                                                           = isOpen ? 'none' : (preselected ? 'none' : 'block');
     empGroup.style.opacity                                                           = isOpen ? '0.4' : '1';
     document.getElementById('shift-date').closest('.form-group').style.display      = preselected ? 'none' : 'block';
     document.getElementById('shift-dept-group').style.display                       = preselected ? 'none' : 'block';
