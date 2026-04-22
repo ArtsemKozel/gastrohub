@@ -993,7 +993,7 @@ async function saveShift(payload, repeat, weeks) {
         return;
     }
 
-    if (isNew && !payload.employee_id) {
+    if (isNew && (!payload.employee_id || payload.employee_id === '')) {
         fetch('https://gastrohub-notify.artsem86.workers.dev', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
