@@ -1006,6 +1006,15 @@ async function saveShift(payload, repeat, weeks) {
         } else {
             await syncTipHoursForShift(payload.employee_id, payload.shift_date);
         }
+    } else if (!editShiftId) {
+        fetch('https://gastrohub-notify.artsem86.workers.dev', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: 'Offene Schicht',
+                message: 'Eine neue offene Schicht ist verfügbar — schau in den Schichtplan!'
+            })
+        }).catch(e => console.error('[openShift notify]', e));
     }
 }
 
