@@ -1543,7 +1543,7 @@ async function publishSchedule() {
     const btn = document.getElementById('publish-schedule-btn');
     if (btn) { btn.disabled = true; btn.textContent = '…'; }
     try {
-        await fetch('https://gastrohub-notify.artsem86.workers.dev', {
+        const res = await fetch('https://gastrohub-notify.artsem86.workers.dev', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1551,6 +1551,8 @@ async function publishSchedule() {
                 message: 'Dein Schichtplan für diese Woche wurde veröffentlicht.'
             })
         });
+        const body = await res.text();
+        console.log('[publishSchedule] status:', res.status, '| body:', body);
         if (btn) { btn.textContent = 'Gesendet ✓'; setTimeout(() => { btn.disabled = false; btn.textContent = 'Veröffentlichen'; }, 2500); }
     } catch (e) {
         if (btn) { btn.disabled = false; btn.textContent = 'Veröffentlichen'; }
