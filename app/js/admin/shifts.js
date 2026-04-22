@@ -1004,7 +1004,11 @@ async function saveShift(payload, repeat, weeks) {
     }
 
     closeShiftModal();
-    await updateShiftCell(currentShiftEmployeeId, currentShiftDateStr);
+    if (payload.is_open) {
+        await loadWeekGrid();
+    } else {
+        await updateShiftCell(currentShiftEmployeeId, currentShiftDateStr);
+    }
     await refreshHoursOverview();
 
     if (payload.employee_id) {
@@ -1544,6 +1548,15 @@ async function reviewSwap(id, status, shiftId, targetShiftId, fromEmpId, toEmpId
     await loadAdminSwaps();
     await loadWeekGrid();
 }
+
+window.toggleOpenShift = function() {
+    const isOpen    = document.getElementById('shift-is-open').checked;
+    const empGroup  = document.getElementById('shift-employee').closest('.form-group');
+    if (empGroup) empGroup.style.display = isOpen ? 'none' : '';
+    const openNoteGroup = document.getElementById('shift-open-note-group');
+    if (openNoteGroup) openNoteGroup.style.display = isOpen ? '' : 'none';
+    document.getElementById('shift-employee').disabled = isOpen;
+};
 
 function formatShiftDate(dateStr) {
     if (!dateStr) return '—';
