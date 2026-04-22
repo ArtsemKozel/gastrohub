@@ -6,7 +6,7 @@ window.sendPushNotification = function(title, message) {
     }).catch(() => {});
 };
 
-document.addEventListener('DOMContentLoaded', function() {
+setTimeout(function() {
     const _original = window.submitShift;
     if (!_original) return;
     window.submitShift = async function() {
@@ -17,4 +17,4 @@ document.addEventListener('DOMContentLoaded', function() {
             sendPushNotification('Offene Schicht', 'Eine neue offene Schicht ist verfügbar — schau in den Schichtplan!');
         }
     };
-});
+}, 500);
