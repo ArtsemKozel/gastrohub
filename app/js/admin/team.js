@@ -619,6 +619,7 @@ async function submitSickLeave() {
                 department:  shift.department || emp?.department || 'Allgemein',
             }).eq('id', shift.id);
         }
+        document.dispatchEvent(new CustomEvent('openShiftCreated'));
     }
 
     closeSickLeaveModal();
