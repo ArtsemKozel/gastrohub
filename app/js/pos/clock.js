@@ -88,21 +88,30 @@ function startPosClock() {
         const el = document.getElementById('pos-time');
         if (el) el.textContent = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-        const elapsedEl = document.getElementById('pos-elapsed');
-        if (elapsedEl && posState.entry?.clock_in) {
-            let diffS;
-            if (posState.activeBreak) {
-                diffS = Math.floor((Date.now() - new Date(posState.activeBreak.break_start)) / 1000);
-            } else {
-                const completedBreakS = (posState.breaks || [])
-                    .filter(b => b.break_end)
-                    .reduce((sum, b) => sum + Math.floor((new Date(b.break_end) - new Date(b.break_start)) / 1000), 0);
-                diffS = Math.floor((Date.now() - new Date(posState.entry.clock_in)) / 1000) - completedBreakS;
+        const workEl  = document.getElementById('pos-work-elapsed');
+        const breakEl = document.getElementById('pos-break-elapsed');
+        if (posState.entry?.clock_in) {
+            const completedBreakS = (posState.breaks || [])
+                .filter(b => b.break_end)
+                .reduce((sum, b) => sum + Math.floor((new Date(b.break_end) - new Date(b.break_start)) / 1000), 0);
+
+            if (workEl) {
+                let s = posState.activeBreak
+                    ? Math.max(0, Math.floor((new Date(posState.activeBreak.break_start) - new Date(posState.entry.clock_in)) / 1000) - completedBreakS)
+                    : Math.max(0, Math.floor((Date.now() - new Date(posState.entry.clock_in)) / 1000) - completedBreakS);
+                const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+                workEl.textContent = (h > 0 ? h + 'h ' : '') + m + 'min ' + sec + 's';
             }
-            const h = Math.floor(diffS / 3600);
-            const m = Math.floor((diffS % 3600) / 60);
-            const s = diffS % 60;
-            elapsedEl.textContent = (h > 0 ? h + 'h ' : '') + m + 'min ' + s + 's';
+
+            if (breakEl) {
+                let s = completedBreakS + (posState.activeBreak
+                    ? Math.floor((Date.now() - new Date(posState.activeBreak.break_start)) / 1000)
+                    : 0);
+                const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+                breakEl.textContent = posState.activeBreak
+                    ? (h > 0 ? h + 'h ' : '') + m + 'min ' + sec + 's'
+                    : (h > 0 ? h + 'h ' : '') + m + 'min';
+            }
         }
     }, 1000);
 }
@@ -165,27 +174,19 @@ function renderEmployeeScreen() {
     const isClockedIn = !!(entry?.clock_in && !entry?.clock_out);
     const time        = new Date().toLocaleTimeString('de-DE');
 
-    let clockSub = '';
-    if (isClockedIn && !onBreak && entry) {
-        const since  = new Date(entry.clock_in).toLocaleTimeString('de-DE');
-        const diffM  = Math.floor((Date.now() - new Date(entry.clock_in)) / 60000);
-        const h = Math.floor(diffM / 60), m = diffM % 60;
-        clockSub = `
-            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:160px; min-height:160px; margin:0.75rem auto 0; background:rgba(255,255,255,0.15); border-radius:16px; padding:1.5rem;">
-                <div style="font-size:0.8rem; opacity:0.85; margin-bottom:0.5rem; letter-spacing:0.05em; text-transform:uppercase;">Arbeitszeit</div>
-                <div id="pos-elapsed" style="font-size:3rem; font-weight:800; line-height:1;">${h > 0 ? h + 'h ' : ''}${m}min</div>
-                <div style="font-size:0.8rem; opacity:0.75; margin-top:0.5rem;">seit ${since}</div>
-            </div>`;
-    } else if (onBreak) {
-        const since = new Date(posState.activeBreak.break_start).toLocaleTimeString('de-DE');
-        const diffM = Math.floor((Date.now() - new Date(posState.activeBreak.break_start)) / 60000);
-        const h = Math.floor(diffM / 60), m = diffM % 60;
-        clockSub = `
-            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:160px; min-height:160px; margin:0.75rem auto 0; background:rgba(255,255,255,0.15); border-radius:16px; padding:1.5rem;">
-                <div style="font-size:0.8rem; opacity:0.85; margin-bottom:0.5rem; letter-spacing:0.05em; text-transform:uppercase;">🍽️ Pause</div>
-                <div id="pos-elapsed" style="font-size:3rem; font-weight:800; line-height:1;">${h > 0 ? h + 'h ' : ''}${m}min</div>
-                <div style="font-size:0.8rem; opacity:0.75; margin-top:0.5rem;">seit ${since}</div>
-            </div>`;
+    let workTimeStr = '–', breakTimeStr = '–';
+    if (isClockedIn && entry) {
+        const completedBreakS = (posState.breaks || [])
+            .filter(b => b.break_end)
+            .reduce((sum, b) => sum + Math.floor((new Date(b.break_end) - new Date(b.break_start)) / 1000), 0);
+        let workS = onBreak
+            ? Math.max(0, Math.floor((new Date(posState.activeBreak.break_start) - new Date(entry.clock_in)) / 1000) - completedBreakS)
+            : Math.max(0, Math.floor((Date.now() - new Date(entry.clock_in)) / 1000) - completedBreakS);
+        const wh = Math.floor(workS / 3600), wm = Math.floor((workS % 3600) / 60);
+        workTimeStr = (wh > 0 ? wh + 'h ' : '') + wm + 'min';
+        let breakS = completedBreakS + (onBreak ? Math.floor((Date.now() - new Date(posState.activeBreak.break_start)) / 1000) : 0);
+        const bh = Math.floor(breakS / 3600), bm = Math.floor((breakS % 3600) / 60);
+        breakTimeStr = (bh > 0 ? bh + 'h ' : '') + bm + 'min';
     }
 
     return `
@@ -199,8 +200,17 @@ function renderEmployeeScreen() {
             <h2 style="color: #2C3E50; font-weight: 700; margin-bottom: 1.5rem; text-align: center;">Hey, ${emp.name.split(' ')[0]}!</h2>
 
             <div style="background: ${onBreak ? '#F59E0B' : '#B28A6E'}; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; color: white;">
-                <div id="pos-time" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">${time}</div>
-                ${clockSub}
+                <div id="pos-time" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.75rem;">${time}</div>
+                <div style="display:flex; gap:0.75rem;">
+                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:130px; background:rgba(255,255,255,${onBreak ? '0.1' : '0.2'}); border-radius:14px; padding:1rem;">
+                        <div style="font-size:0.7rem; opacity:0.85; margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.06em;">Arbeit</div>
+                        <div id="pos-work-elapsed" style="font-size:2rem; font-weight:800; line-height:1; opacity:${onBreak ? '0.5' : '1'};">${workTimeStr}</div>
+                    </div>
+                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:130px; background:rgba(255,255,255,${onBreak ? '0.2' : '0.1'}); border-radius:14px; padding:1rem;">
+                        <div style="font-size:0.7rem; opacity:0.85; margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.06em;">🍽️ Pause</div>
+                        <div id="pos-break-elapsed" style="font-size:2rem; font-weight:800; line-height:1; opacity:${onBreak ? '1' : '0.5'};">${breakTimeStr}</div>
+                    </div>
+                </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
