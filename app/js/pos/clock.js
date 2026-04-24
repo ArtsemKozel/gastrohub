@@ -168,7 +168,8 @@ function renderPinScreen() {
 function renderEmployeeScreen() {
     const emp     = posState.employee;
     const entry   = posState.entry;
-    const onBreak = !!posState.activeBreak;
+    const onBreak   = !!posState.activeBreak;
+    const hasBreaks = onBreak || (posState.breaks || []).length > 0;
     if (!emp) return '';
 
     const isClockedIn = !!(entry?.clock_in && !entry?.clock_out);
@@ -206,8 +207,8 @@ function renderEmployeeScreen() {
                         <div style="font-size:0.7rem; opacity:0.85; margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.06em;">Arbeitszeit</div>
                         <div id="pos-work-elapsed" style="font-size:2.5rem; font-weight:800; line-height:1;">${workTimeStr}</div>
                     </div>
-                    ${onBreak ? `
-                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:130px; background:rgba(255,255,255,0.2); border-radius:14px; padding:1rem;">
+                    ${hasBreaks ? `
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:130px; background:rgba(107,142,111,0.5); border-radius:14px; padding:1rem;">
                         <div style="font-size:0.7rem; opacity:0.85; margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.06em;">🍽️ Pause</div>
                         <div id="pos-break-elapsed" style="font-size:2.5rem; font-weight:800; line-height:1;">${breakTimeStr}</div>
                     </div>` : ''}
