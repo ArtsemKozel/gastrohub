@@ -339,6 +339,17 @@ async function checkInventurVisibility() {
     menuItem.style.display = data?.can_do_inventory ? 'flex' : 'none';
 }
 
+async function checkTemperatureVisibility() {
+    const menuItem = document.getElementById('temperature-emp-menu-item');
+    if (!menuItem) return;
+    const { data } = await db
+        .from('employees_planit')
+        .select('can_do_temperature')
+        .eq('id', currentEmployee.id)
+        .maybeSingle();
+    menuItem.style.display = data?.can_do_temperature ? 'flex' : 'none';
+}
+
 // ── KÜNDIGUNG (eigene zurückziehen) ───────────────────────
 async function deleteOwnTermination(id) {
     if (!confirm('Kündigungsantrag wirklich zurückziehen?')) return;

@@ -21,12 +21,15 @@ function switchTab(tab) {
     if (tab === 'profil')       loadProfil();
     if (tab === 'stunden')      loadMeineStunden();
     if (tab === 'trinkgeld')    loadEmpTrinkgeld();
-    if (tab === 'inventur-emp') loadEmpInventur();
+    if (tab === 'inventur-emp')    loadEmpInventur();
+    if (tab === 'temperature-emp') loadEmployeeTemperature();
     if (tab === 'mehr') {
         document.getElementById('trinkgeld-menu-item').style.display = 'none';
-        const invItem = document.getElementById('inventur-emp-menu-item');
-        if (invItem) invItem.style.display = 'none';
-        Promise.all([checkTrinkgeldVisibility(), checkInventurVisibility()]);
+        const invItem  = document.getElementById('inventur-emp-menu-item');
+        const tempItem = document.getElementById('temperature-emp-menu-item');
+        if (invItem)  invItem.style.display  = 'none';
+        if (tempItem) tempItem.style.display = 'none';
+        Promise.all([checkTrinkgeldVisibility(), checkInventurVisibility(), checkTemperatureVisibility()]);
     }
 
     localStorage.setItem('planit_emp_tab', tab);
@@ -52,5 +55,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadVacationCalendar(),
         checkTrinkgeldVisibility(),
         checkInventurVisibility(),
+        checkTemperatureVisibility(),
     ]);
 });
