@@ -217,6 +217,7 @@ async function loadTemperatureConfig() {
         .order('name');
 
     renderTemperatureDevices(devices || []);
+    loadTemperatureDelegation();
 }
 
 function renderTemperatureDevices(devices) {
@@ -280,4 +281,38 @@ async function updateTemperatureDevice(id, field, value) {
     await db.from('temperature_devices').update({
         [field]: value !== '' ? parseFloat(value) : null,
     }).eq('id', id);
+}
+
+// ── DELEGATION ────────────────────────────────────────────
+
+async function loadTemperatureDelegation() {
+    const { data: employees } = await db
+        .from('employees_planit')
+        .select('id, name, can_do_temperature')
+        .eq('user_id', adminSession.user.id)
+        .eq('is_active', true)
+        .order('name', { ascending: true });
+
+    const container = document.getElementById('temperature-delegation-list');
+    if (!employees || employees.length === 0) {
+        container.innerHTML = '<div style="font-size:0.85rem; color:var(--color-text-light);">Keine Mitarbeiter vorhanden.</div>';
+        return;
+    }
+
+    container.innerHTML = employees.map(e => `
+        <label style="display:flex; align-items:center; gap:0.75rem; padding:0.4rem 0; border-bottom:1px solid var(--color-border); cursor:pointer;">
+            <input type="checkbox" data-emp-id="${e.id}" ${e.can_do_temperature ? 'checked' : ''} style="width:1.1rem; height:1.1rem; accent-color:var(--color-primary); cursor:pointer;">
+            <span style="font-size:0.9rem;">${e.name}</span>
+        </label>
+    `).join('');
+}
+
+async function saveTemperatureDelegation() {
+    const checkboxes = document.querySelectorAll('#temperature-delegation-list input[data-emp-id]');
+    for (const cb of checkboxes) {
+        await db.from('employees_planit')
+            .update({ can_do_temperature: cb.checked })
+            .eq('id', cb.dataset.empId);
+    }
+    alert('Gespeichert!');
 }
