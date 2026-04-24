@@ -7,11 +7,11 @@ window.sendPushNotification = function(title, message) {
 };
 
 document.addEventListener('click', function(e) {
-    if (
-        e.target.closest('#shift-modal .btn-primary') &&
-        !window.editShiftId &&
-        (!document.getElementById('shift-employee')?.value || document.getElementById('shift-is-open')?.checked)
-    ) {
+    const isOpenShiftBtn  = !!e.target.closest('[onclick*="submitOpenShift"]');
+    const isShiftModalBtn = !!e.target.closest('#shift-modal .btn-primary') &&
+        (!document.getElementById('shift-employee')?.value || document.getElementById('shift-is-open')?.checked);
+
+    if ((isOpenShiftBtn || isShiftModalBtn) && !window.editShiftId) {
         sendPushNotification('Offene Schicht', 'Eine neue offene Schicht ist verfügbar — schau in den Schichtplan!');
     }
 });
