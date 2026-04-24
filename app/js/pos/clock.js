@@ -171,16 +171,21 @@ function renderEmployeeScreen() {
         const diffM  = Math.floor((Date.now() - new Date(entry.clock_in)) / 60000);
         const h = Math.floor(diffM / 60), m = diffM % 60;
         clockSub = `
-            <div style="font-size: 0.875rem; opacity: 0.9;">Eingestempelt seit: ${since}</div>
-            <div id="pos-elapsed" style="font-size: 1.5rem; margin-top: 0.5rem; font-weight: 600;">${h > 0 ? h + 'h ' : ''}${m}min</div>`;
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:160px; min-height:160px; margin:0.75rem auto 0; background:rgba(255,255,255,0.15); border-radius:16px; padding:1.5rem;">
+                <div style="font-size:0.8rem; opacity:0.85; margin-bottom:0.5rem; letter-spacing:0.05em; text-transform:uppercase;">Arbeitszeit</div>
+                <div id="pos-elapsed" style="font-size:3rem; font-weight:800; line-height:1;">${h > 0 ? h + 'h ' : ''}${m}min</div>
+                <div style="font-size:0.8rem; opacity:0.75; margin-top:0.5rem;">seit ${since}</div>
+            </div>`;
     } else if (onBreak) {
         const since = new Date(posState.activeBreak.break_start).toLocaleTimeString('de-DE');
         const diffM = Math.floor((Date.now() - new Date(posState.activeBreak.break_start)) / 60000);
         const h = Math.floor(diffM / 60), m = diffM % 60;
         clockSub = `
-            <div style="font-size: 1.5rem; font-weight: 600;">🍽️ PAUSE</div>
-            <div style="font-size: 0.875rem; opacity: 0.9; margin-top: 0.25rem;">Seit: ${since}</div>
-            <div style="font-size: 1.5rem; margin-top: 0.5rem; font-weight: 600;">${h > 0 ? h + 'h ' : ''}${m}min</div>`;
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:160px; min-height:160px; margin:0.75rem auto 0; background:rgba(255,255,255,0.15); border-radius:16px; padding:1.5rem;">
+                <div style="font-size:0.8rem; opacity:0.85; margin-bottom:0.5rem; letter-spacing:0.05em; text-transform:uppercase;">🍽️ Pause</div>
+                <div id="pos-elapsed" style="font-size:3rem; font-weight:800; line-height:1;">${h > 0 ? h + 'h ' : ''}${m}min</div>
+                <div style="font-size:0.8rem; opacity:0.75; margin-top:0.5rem;">seit ${since}</div>
+            </div>`;
     }
 
     return `
