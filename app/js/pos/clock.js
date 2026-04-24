@@ -90,7 +90,7 @@ function startPosClock() {
 
         const workEl  = document.getElementById('pos-work-elapsed');
         const breakEl = document.getElementById('pos-break-elapsed');
-        if (posState.entry?.clock_in) {
+        if (posState.entry?.clock_in && !posState.entry?.clock_out) {
             const completedBreakS = (posState.breaks || [])
                 .filter(b => b.break_end)
                 .reduce((sum, b) => sum + Math.floor((new Date(b.break_end) - new Date(b.break_start)) / 1000), 0);
