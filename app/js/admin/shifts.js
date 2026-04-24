@@ -978,8 +978,28 @@ async function saveShift(payload, repeat, weeks) {
             d.setDate(d.getDate() + i * 7);
             payloads.push({ ...payload, shift_date: d.toISOString().split('T')[0] });
         }
+        if (payload.employee_id) {
+            let delQ = db.from('shifts').delete()
+                .eq('user_id', adminSession.user.id)
+                .eq('employee_id', payload.employee_id)
+                .in('shift_date', payloads.map(p => p.shift_date))
+                .eq('is_open', false);
+            if (payload.department) delQ = delQ.eq('department', payload.department);
+            else                    delQ = delQ.is('department', null);
+            await delQ;
+        }
         ({ error } = await db.from('shifts').insert(payloads));
     } else {
+        if (payload.employee_id) {
+            let delQ = db.from('shifts').delete()
+                .eq('user_id', adminSession.user.id)
+                .eq('employee_id', payload.employee_id)
+                .eq('shift_date', payload.shift_date)
+                .eq('is_open', false);
+            if (payload.department) delQ = delQ.eq('department', payload.department);
+            else                    delQ = delQ.is('department', null);
+            await delQ;
+        }
         ({ error } = await db.from('shifts').insert(payload));
     }
 
