@@ -1239,7 +1239,7 @@
             </button>
             <div style="font-size:1.1rem; font-weight:700; color:var(--color-text);">Temperaturkontrolle</div>
             <div style="display:flex; gap:0.5rem;">
-                <button class="btn-small btn-pdf-view btn-icon" onclick="downloadTemperaturePdf()" title="PDF herunterladen">
+                <button class="btn-small btn-pdf-view btn-icon" onclick="openTemperaturePdfModal()" title="PDF herunterladen">
                     <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 </button>
                 <button class="btn-small btn-pdf-view btn-icon" onclick="switchTab('temperature-config')" title="Geräte konfigurieren">
@@ -2181,6 +2181,25 @@
     </div>
 </div>
 
+<!-- MODAL: TEMPERATUR PDF EXPORT -->
+<div id="temperature-pdf-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">PDF-Bericht erstellen</div>
+            <button class="modal-close" onclick="closeTemperaturePdfModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Von</label>
+            <input type="date" id="temperature-pdf-from">
+        </div>
+        <div class="form-group">
+            <label>Bis</label>
+            <input type="date" id="temperature-pdf-to">
+        </div>
+        <button class="btn-primary" onclick="downloadTemperaturePdf()">PDF herunterladen</button>
+    </div>
+</div>
+
 <!-- DEPT SELECTION BAR -->
 <div id="dept-selection-bar" style="display:none; position:fixed; bottom:80px; right:1rem; z-index:999; background:#2C3E50; color:white; border-radius:12px; padding:0.65rem 1rem; gap:0.75rem; align-items:center; box-shadow:0 4px 16px rgba(0,0,0,0.25); font-size:0.9rem; white-space:nowrap;">
     <span id="dept-selection-label">0 Schichten ausgewählt</span>
@@ -2190,24 +2209,24 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/shared/db.js?v=20260424142110"></script>
-<script src="js/shared/auth.js?v=20260424142110"></script>
-<script src="js/shared/utils.js?v=20260424142110"></script>
-<script src="js/admin/init.js?v=20260424142110"></script>
-<script src="js/admin/shifts.js?v=20260424142110"></script>
-<script src="js/admin/notify.js?v=20260424142110"></script>
-<script src="js/admin/team.js?v=20260424142110"></script>
-<script src="js/admin/vacation.js?v=20260424142110"></script>
-<script src="js/admin/hours.js?v=20260424142110"></script>
-<script src="js/admin/payroll.js?v=20260424142110"></script>
-<script src="js/admin/tips.js?v=20260424142110"></script>
-<script src="js/admin/inventory.js?v=20260424142110"></script>
-<script src="js/admin/hygiene.js?v=20260424142110"></script>
-<script src="js/admin/temperature.js?v=20260424142110"></script>
-<script src="js/admin/tasks.js?v=20260424142110"></script>
-<script src="js/admin/terminations.js?v=20260424142110"></script>
-<script src="js/admin/margincalc.js?v=20260424142110"></script>
-<script src="js/admin/restaurant.js?v=20260424142110"></script>
+<script src="js/shared/db.js?v=20260424143330"></script>
+<script src="js/shared/auth.js?v=20260424143330"></script>
+<script src="js/shared/utils.js?v=20260424143330"></script>
+<script src="js/admin/init.js?v=20260424143330"></script>
+<script src="js/admin/shifts.js?v=20260424143330"></script>
+<script src="js/admin/notify.js?v=20260424143330"></script>
+<script src="js/admin/team.js?v=20260424143330"></script>
+<script src="js/admin/vacation.js?v=20260424143330"></script>
+<script src="js/admin/hours.js?v=20260424143330"></script>
+<script src="js/admin/payroll.js?v=20260424143330"></script>
+<script src="js/admin/tips.js?v=20260424143330"></script>
+<script src="js/admin/inventory.js?v=20260424143330"></script>
+<script src="js/admin/hygiene.js?v=20260424143330"></script>
+<script src="js/admin/temperature.js?v=20260424143330"></script>
+<script src="js/admin/tasks.js?v=20260424143330"></script>
+<script src="js/admin/terminations.js?v=20260424143330"></script>
+<script src="js/admin/margincalc.js?v=20260424143330"></script>
+<script src="js/admin/restaurant.js?v=20260424143330"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </body>

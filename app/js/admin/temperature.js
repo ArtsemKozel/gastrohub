@@ -146,13 +146,28 @@ async function saveTemperatureLog(deviceId, dateStr, tempValue, noteValue, logId
 
 // ── PDF EXPORT ────────────────────────────────────────────
 
+function openTemperaturePdfModal() {
+    const year     = temperatureDate.getFullYear();
+    const month    = temperatureDate.getMonth();
+    const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+    const lastDay  = new Date(year, month + 1, 0).toISOString().split('T')[0];
+    const fromEl   = document.getElementById('temperature-pdf-from');
+    const toEl     = document.getElementById('temperature-pdf-to');
+    if (fromEl) fromEl.value = `${monthStr}-01`;
+    if (toEl)   toEl.value   = lastDay;
+    document.getElementById('temperature-pdf-modal').classList.add('open');
+}
+
+function closeTemperaturePdfModal() {
+    document.getElementById('temperature-pdf-modal').classList.remove('open');
+}
+
 async function downloadTemperaturePdf() {
-    const year      = temperatureDate.getFullYear();
-    const month     = temperatureDate.getMonth();
-    const monthStr  = `${year}-${String(month + 1).padStart(2, '0')}`;
-    const firstDay  = `${monthStr}-01`;
-    const lastDay   = new Date(year, month + 1, 0).toISOString().split('T')[0];
-    const monthLabel = temperatureDate.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+    const firstDay  = document.getElementById('temperature-pdf-from')?.value;
+    const lastDay   = document.getElementById('temperature-pdf-to')?.value;
+    if (!firstDay || !lastDay || firstDay > lastDay) { alert('Bitte gültigen Zeitraum auswählen.'); return; }
+
+    const rangeLabel = `${new Date(firstDay + 'T12:00:00').toLocaleDateString('de-DE')} – ${new Date(lastDay + 'T12:00:00').toLocaleDateString('de-DE')}`;
 
     const [{ data: devices }, { data: logs }] = await Promise.all([
         db.from('temperature_devices').select('*').eq('user_id', adminSession.user.id).order('name'),
@@ -160,6 +175,12 @@ async function downloadTemperaturePdf() {
     ]);
 
     if (!devices || devices.length === 0) { alert('Keine Geräte konfiguriert.'); return; }
+
+    // Build list of all dates in range
+    const allDates = [];
+    for (let d = new Date(firstDay + 'T12:00:00'); d.toISOString().split('T')[0] <= lastDay; d.setDate(d.getDate() + 1)) {
+        allDates.push(d.toISOString().split('T')[0]);
+    }
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -169,10 +190,9 @@ async function downloadTemperaturePdf() {
     doc.text('Temperaturkontrolle', 15, 20);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text(monthLabel, 190, 20, { align: 'right' });
+    doc.text(rangeLabel, 190, 20, { align: 'right' });
 
     let y = 35;
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     for (const dev of devices) {
         if (y > 260) { doc.addPage(); y = 20; }
@@ -185,8 +205,7 @@ async function downloadTemperaturePdf() {
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        for (let d = 1; d <= daysInMonth; d++) {
-            const dateStr = `${monthStr}-${String(d).padStart(2, '0')}`;
+        for (const dateStr of allDates) {
             const dateLabel = new Date(dateStr + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'numeric' });
             const log = (logs || []).find(l => l.device_id === dev.id && l.log_date === dateStr);
             const tempStr = log?.temperature !== null && log?.temperature !== undefined ? `${log.temperature}°C` : '–';
@@ -204,7 +223,8 @@ async function downloadTemperaturePdf() {
         y += 5;
     }
 
-    doc.save(`Temperaturkontrolle_${monthStr}.pdf`);
+    doc.save(`Temperaturkontrolle_${firstDay}_${lastDay}.pdf`);
+    closeTemperaturePdfModal();
 }
 
 // ── KONFIGURATION ─────────────────────────────────────────
