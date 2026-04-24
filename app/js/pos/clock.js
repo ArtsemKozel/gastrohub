@@ -90,7 +90,15 @@ function startPosClock() {
 
         const elapsedEl = document.getElementById('pos-elapsed');
         if (elapsedEl && posState.entry?.clock_in) {
-            const diffS = Math.floor((Date.now() - new Date(posState.entry.clock_in)) / 1000);
+            let diffS;
+            if (posState.activeBreak) {
+                diffS = Math.floor((Date.now() - new Date(posState.activeBreak.break_start)) / 1000);
+            } else {
+                const completedBreakS = (posState.breaks || [])
+                    .filter(b => b.break_end)
+                    .reduce((sum, b) => sum + Math.floor((new Date(b.break_end) - new Date(b.break_start)) / 1000), 0);
+                diffS = Math.floor((Date.now() - new Date(posState.entry.clock_in)) / 1000) - completedBreakS;
+            }
             const h = Math.floor(diffS / 3600);
             const m = Math.floor((diffS % 3600) / 60);
             const s = diffS % 60;
