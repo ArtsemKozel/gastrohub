@@ -285,6 +285,14 @@ async function updateTemperatureDevice(id, field, value) {
 
 // ── DELEGATION ────────────────────────────────────────────
 
+function toggleTemperatureDelegation() {
+    const body   = document.getElementById('temperature-delegation-body');
+    const toggle = document.getElementById('temperature-delegation-toggle');
+    const isOpen = body.style.display === 'block';
+    body.style.display = isOpen ? 'none' : 'block';
+    toggle.textContent = isOpen ? '▶' : '▼';
+}
+
 async function loadTemperatureDelegation() {
     const { data: employees } = await db
         .from('employees_planit')
