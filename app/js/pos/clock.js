@@ -168,11 +168,11 @@ function renderPinScreen() {
 function renderEmployeeScreen() {
     const emp     = posState.employee;
     const entry   = posState.entry;
-    const onBreak   = !!posState.activeBreak;
-    const hasBreaks = onBreak || (posState.breaks || []).length > 0;
+    const onBreak     = !!posState.activeBreak;
     if (!emp) return '';
 
     const isClockedIn = !!(entry?.clock_in && !entry?.clock_out);
+    const hasBreaks   = isClockedIn;
     const time        = new Date().toLocaleTimeString('de-DE');
 
     let workTimeStr = '–', breakTimeStr = '–';
