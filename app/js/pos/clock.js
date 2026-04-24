@@ -200,7 +200,7 @@ function renderEmployeeScreen() {
 
             <h2 style="color: #2C3E50; font-weight: 700; margin-bottom: 1.5rem; text-align: center;">Hey, ${emp.name.split(' ')[0]}!</h2>
 
-            <div style="background: ${onBreak ? '#F59E0B' : '#B28A6E'}; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; color: white;">
+            <div style="background: #B28A6E; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; color: white;">
                 <div id="pos-time" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.75rem;">${time}</div>
                 <div style="display:flex; flex-direction:column; gap:0.75rem;">
                     <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:130px; background:rgba(255,255,255,0.2); border-radius:14px; padding:1rem;">
