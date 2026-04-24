@@ -194,7 +194,7 @@ async function loadOverview() {
         filteredOpenShifts.forEach(s => {
             const d = new Date(s.shift_date + 'T12:00:00');
             const row = document.createElement('div');
-            row.style.cssText = `display:flex; align-items:center; gap:1rem; padding:0.75rem; border-radius:12px; margin-bottom:0.5rem; background:#FFF0F0;`;
+            row.style.cssText = `display:flex; align-items:center; gap:1rem; padding:0.75rem; border-radius:12px; margin-bottom:0.5rem; background:#FFF0F0; cursor:pointer;`;
             row.innerHTML = `
                 <div style="min-width:2.5rem; text-align:center;">
                     <div style="font-size:1.3rem; font-weight:700; line-height:1; color:#C97E7E;">${d.getDate()}</div>
@@ -203,6 +203,7 @@ async function loadOverview() {
                 <div style="flex:1; background:white; border-radius:10px; padding:0.6rem 0.75rem;">
                     <div style="font-weight:700; font-size:0.95rem; color:#C97E7E;">${s.start_time.slice(0,5)} – ${s.end_time.slice(0,5)}</div>
                 </div>`;
+            row.onclick = () => openRequestModal(s);
             openEl.appendChild(row);
         });
     }
