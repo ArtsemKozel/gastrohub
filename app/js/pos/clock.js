@@ -201,15 +201,16 @@ function renderEmployeeScreen() {
 
             <div style="background: ${onBreak ? '#F59E0B' : '#B28A6E'}; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; color: white;">
                 <div id="pos-time" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.75rem;">${time}</div>
-                <div style="display:flex; gap:0.75rem;">
-                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:130px; background:rgba(255,255,255,${onBreak ? '0.1' : '0.2'}); border-radius:14px; padding:1rem;">
-                        <div style="font-size:0.7rem; opacity:0.85; margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.06em;">Arbeit</div>
-                        <div id="pos-work-elapsed" style="font-size:2rem; font-weight:800; line-height:1; opacity:${onBreak ? '0.5' : '1'};">${workTimeStr}</div>
+                <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:130px; background:rgba(255,255,255,0.2); border-radius:14px; padding:1rem;">
+                        <div style="font-size:0.7rem; opacity:0.85; margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.06em;">Arbeitszeit</div>
+                        <div id="pos-work-elapsed" style="font-size:2.5rem; font-weight:800; line-height:1;">${workTimeStr}</div>
                     </div>
-                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:130px; background:rgba(255,255,255,${onBreak ? '0.2' : '0.1'}); border-radius:14px; padding:1rem;">
+                    ${onBreak ? `
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:130px; background:rgba(255,255,255,0.2); border-radius:14px; padding:1rem;">
                         <div style="font-size:0.7rem; opacity:0.85; margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.06em;">🍽️ Pause</div>
-                        <div id="pos-break-elapsed" style="font-size:2rem; font-weight:800; line-height:1; opacity:${onBreak ? '1' : '0.5'};">${breakTimeStr}</div>
-                    </div>
+                        <div id="pos-break-elapsed" style="font-size:2.5rem; font-weight:800; line-height:1;">${breakTimeStr}</div>
+                    </div>` : ''}
                 </div>
             </div>
 
