@@ -46,6 +46,8 @@ function switchTab(tab) {
     if (tab === 'restaurant-info')   loadRestaurantInfo();
     if (tab === 'terminations')      loadTerminations();
     if (tab === 'hygiene')           loadHygiene();
+    if (tab === 'temperature')       loadTemperature();
+    if (tab === 'temperature-config') loadTemperatureConfig();
     if (tab === 'margincalc')        MarginCalcApp.init();
     if (tab === 'payroll')           loadPayroll();
 

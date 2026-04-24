@@ -795,6 +795,10 @@
                 <span>Hygieneschutzbelehrung <span id="hygiene-badge" style="background:var(--color-primary); color:white; border-radius:10px; padding:0.1rem 0.5rem; font-size:0.75rem; display:none;"></span></span>
                 <span>›</span>
             </div>
+            <div class="mehr-item" onclick="switchTab('temperature')">
+                <span>Temperaturkontrolle</span>
+                <span>›</span>
+            </div>
         </div>
         <div style="font-size:0.75rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.08em; text-align:center; margin:1.5rem 0 0.5rem;">FINANZEN</div>
         <div class="mehr-list">
@@ -1224,6 +1228,63 @@
         <div id="hygiene-list">
             <div class="empty-state"><p>Lädt…</p></div>
         </div>
+    </div>
+</div>
+
+<!-- TAB: TEMPERATURKONTROLLE -->
+<div id="tab-temperature" class="tab-content" style="display:none;">
+    <div class="tab-header">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            <button class="btn-back" onclick="switchTab('mehr')">‹</button>
+            <h2>Temperaturkontrolle</h2>
+        </div>
+        <div style="display:flex;gap:0.5rem;">
+            <button class="btn-small btn-pdf-view btn-icon" onclick="switchTab('temperature-config')" title="Geräte konfigurieren">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <button class="btn-small btn-pdf-view btn-icon" onclick="downloadTemperaturePdf()" title="PDF herunterladen">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+        </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <button class="btn-small btn-pdf-view" onclick="changeTemperatureMonth(-1)">‹</button>
+        <span id="temperature-month-label" style="font-weight:600;"></span>
+        <button class="btn-small btn-pdf-view" onclick="changeTemperatureMonth(1)">›</button>
+    </div>
+    <div id="temperature-days-list">
+        <div class="empty-state"><p>Lädt…</p></div>
+    </div>
+</div>
+
+<!-- TAB: TEMPERATURKONTROLLE KONFIGURATION -->
+<div id="tab-temperature-config" class="tab-content" style="display:none;">
+    <div class="tab-header">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            <button class="btn-back" onclick="switchTab('temperature')">‹</button>
+            <h2>Geräte konfigurieren</h2>
+        </div>
+    </div>
+    <div class="card" style="margin-bottom:1rem;">
+        <h3 style="margin-bottom:0.75rem;">Neues Gerät anlegen</h3>
+        <div class="form-group">
+            <label>Gerätename</label>
+            <input type="text" id="new-device-name" placeholder="z.B. Kühlschrank 1">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
+            <div class="form-group" style="margin-bottom:0;">
+                <label>Soll Min °C</label>
+                <input type="number" step="0.1" id="new-device-min" placeholder="z.B. 2">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label>Soll Max °C</label>
+                <input type="number" step="0.1" id="new-device-max" placeholder="z.B. 7">
+            </div>
+        </div>
+        <button class="btn-primary" onclick="addTemperatureDevice()">Gerät anlegen</button>
+    </div>
+    <div id="temperature-devices-list">
+        <div class="empty-state"><p>Lädt…</p></div>
     </div>
 </div>
 
@@ -2106,23 +2167,24 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/shared/db.js?v=20260424123658"></script>
-<script src="js/shared/auth.js?v=20260424123658"></script>
-<script src="js/shared/utils.js?v=20260424123658"></script>
-<script src="js/admin/init.js?v=20260424123658"></script>
-<script src="js/admin/shifts.js?v=20260424123658"></script>
-<script src="js/admin/notify.js?v=20260424123658"></script>
-<script src="js/admin/team.js?v=20260424123658"></script>
-<script src="js/admin/vacation.js?v=20260424123658"></script>
-<script src="js/admin/hours.js?v=20260424123658"></script>
-<script src="js/admin/payroll.js?v=20260424123658"></script>
-<script src="js/admin/tips.js?v=20260424123658"></script>
-<script src="js/admin/inventory.js?v=20260424123658"></script>
-<script src="js/admin/hygiene.js?v=20260424123658"></script>
-<script src="js/admin/tasks.js?v=20260424123658"></script>
-<script src="js/admin/terminations.js?v=20260424123658"></script>
-<script src="js/admin/margincalc.js?v=20260424123658"></script>
-<script src="js/admin/restaurant.js?v=20260424123658"></script>
+<script src="js/shared/db.js?v=20260424131021"></script>
+<script src="js/shared/auth.js?v=20260424131021"></script>
+<script src="js/shared/utils.js?v=20260424131021"></script>
+<script src="js/admin/init.js?v=20260424131021"></script>
+<script src="js/admin/shifts.js?v=20260424131021"></script>
+<script src="js/admin/notify.js?v=20260424131021"></script>
+<script src="js/admin/team.js?v=20260424131021"></script>
+<script src="js/admin/vacation.js?v=20260424131021"></script>
+<script src="js/admin/hours.js?v=20260424131021"></script>
+<script src="js/admin/payroll.js?v=20260424131021"></script>
+<script src="js/admin/tips.js?v=20260424131021"></script>
+<script src="js/admin/inventory.js?v=20260424131021"></script>
+<script src="js/admin/hygiene.js?v=20260424131021"></script>
+<script src="js/admin/temperature.js?v=20260424131021"></script>
+<script src="js/admin/tasks.js?v=20260424131021"></script>
+<script src="js/admin/terminations.js?v=20260424131021"></script>
+<script src="js/admin/margincalc.js?v=20260424131021"></script>
+<script src="js/admin/restaurant.js?v=20260424131021"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </body>
