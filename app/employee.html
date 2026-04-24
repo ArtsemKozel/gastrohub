@@ -1186,28 +1186,34 @@
         <div id="request-modal-status" style="margin-bottom:1rem; font-size:0.9rem;"></div>
         <input type="hidden" id="request-shift-id">
         <div id="request-modal-buttons">
-            <button class="btn-primary" style="background:#4CAF50;" onclick="submitShiftRequest('yes')">✅ Ja, ich kann einspringen</button>
-            <button class="btn-primary" style="background:#E57373; margin-top:0.75rem;" onclick="submitShiftRequest('no')">❌ Nein, ich kann nicht</button>
-            <button class="btn-secondary" style="margin-top:0.75rem;" onclick="closeRequestModal()">Abbrechen</button>
+            <div style="font-size:0.95rem; font-weight:600; text-align:center; margin-bottom:1rem; color:var(--color-text);">Kannst du einspringen?</div>
+            <div style="display:flex; justify-content:center; gap:1.25rem;">
+                <button onclick="submitShiftRequest('yes')" title="Ja" style="width:3rem; height:3rem; border-radius:999px; background:#6B8E6F; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </button>
+                <button onclick="submitShiftRequest('no')" title="Nein" style="width:3rem; height:3rem; border-radius:999px; background:#8B6F47; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/shared/db.js?v=20260424115738"></script>
-<script src="js/shared/auth.js?v=20260424115738"></script>
-<script src="js/shared/utils.js?v=20260424115738"></script>
-<script src="js/employee/init.js?v=20260424115738"></script>
-<script src="js/employee/schichtplan.js?v=20260424115738"></script>
-<script src="js/employee/overview.js?v=20260424115738"></script>
-<script src="js/employee/vacation.js?v=20260424115738"></script>
-<script src="js/employee/availability.js?v=20260424115738"></script>
-<script src="js/employee/swaps.js?v=20260424115738"></script>
-<script src="js/employee/stunden.js?v=20260424115738"></script>
-<script src="js/employee/trinkgeld.js?v=20260424115738"></script>
-<script src="js/employee/payroll.js?v=20260424115738"></script>
-<script src="js/employee/inventory.js?v=20260424115738"></script>
-<script src="js/employee/profil.js?v=20260424115738"></script>
+<script src="js/shared/db.js?v=20260424120912"></script>
+<script src="js/shared/auth.js?v=20260424120912"></script>
+<script src="js/shared/utils.js?v=20260424120912"></script>
+<script src="js/employee/init.js?v=20260424120912"></script>
+<script src="js/employee/schichtplan.js?v=20260424120912"></script>
+<script src="js/employee/overview.js?v=20260424120912"></script>
+<script src="js/employee/vacation.js?v=20260424120912"></script>
+<script src="js/employee/availability.js?v=20260424120912"></script>
+<script src="js/employee/swaps.js?v=20260424120912"></script>
+<script src="js/employee/stunden.js?v=20260424120912"></script>
+<script src="js/employee/trinkgeld.js?v=20260424120912"></script>
+<script src="js/employee/payroll.js?v=20260424120912"></script>
+<script src="js/employee/inventory.js?v=20260424120912"></script>
+<script src="js/employee/profil.js?v=20260424120912"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </body>
