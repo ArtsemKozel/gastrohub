@@ -910,10 +910,22 @@ async function loadRequests() {
 }
 
 async function approveRequest(requestId, shiftId, employeeId) {
+    const [{ data: shift }, { data: otherRequests }] = await Promise.all([
+        db.from('shifts').select('shift_date').eq('id', shiftId).maybeSingle(),
+        db.from('open_shift_requests').select('employee_id').eq('shift_id', shiftId).neq('id', requestId).eq('status', 'yes'),
+    ]);
+
     const { error: shiftError } = await db.from('shifts').update({ employee_id: employeeId, is_open: false }).eq('id', shiftId);
     if (shiftError) { alert('Fehler!'); return; }
     await db.from('open_shift_requests').update({ status: 'approved' }).eq('id', requestId);
     await db.from('open_shift_requests').update({ status: 'rejected' }).eq('shift_id', shiftId).neq('id', requestId);
+
+    const dateLabel = shift?.shift_date ? formatDate(shift.shift_date) : '';
+    sendPushNotification('Schicht zugewiesen', `Schicht am ${dateLabel} — du bist eingeteilt! ✅`, employeeId);
+    for (const req of (otherRequests || [])) {
+        sendPushNotification('Offene Schicht', `Schicht am ${dateLabel} ist bereits besetzt.`, req.employee_id);
+    }
+
     await loadRequests();
     await loadWeekGrid();
     alert('Schicht wurde zugewiesen!');
