@@ -128,7 +128,7 @@ async function renderWeekGrid(days, shifts, availCache = {}, sickLeaves = []) {
             <div class="week-corner-menu" style="display:none; position:absolute; top:100%; left:0; background:white; border:1px solid var(--color-border); border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.12); z-index:200; min-width:180px; padding:0.25rem 0;">
                 <div onclick="_openExtraShiftModal()" style="${itemStyle}" ${hov}>Extra Schicht</div>
                 <div onclick="deptStartSelection('${dept}'); _closeAllCornerMenus()" style="${itemStyle}" ${hov}>Selektiv löschen</div>
-                <div onclick="deptDeleteAll('${dept}'); _closeAllCornerMenus()" style="${itemStyle} color:var(--color-danger);" ${hov}>Alle löschen</div>
+                <div onclick="deptDeleteAll('${dept}'); _closeAllCornerMenus()" style="${itemStyle}" ${hov}>Alle löschen</div>
             </div>`;
         grid.appendChild(corner);
         days.forEach((d, i) => {
