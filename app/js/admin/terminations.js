@@ -148,6 +148,7 @@ async function approveTermination(id) {
             .eq('employee_id', t.employee_id)
             .is('end_date', null);
     }
+    if (t?.employee_id) sendPushNotification('Kündigung', 'Deine Kündigung wurde bestätigt.', t.employee_id);
     await loadTerminations();
     await loadTerminationBadge();
     await loadMehrBadge();
@@ -155,7 +156,9 @@ async function approveTermination(id) {
 
 async function rejectTermination(id) {
     if (!confirm('Kündigung ablehnen?')) return;
+    const { data: t } = await db.from('planit_terminations').select('employee_id').eq('id', id).maybeSingle();
     await db.from('planit_terminations').update({ status: 'rejected' }).eq('id', id);
+    if (t?.employee_id) sendPushNotification('Kündigung', 'Deine Kündigung wurde abgelehnt.', t.employee_id);
     await loadTerminations();
     await loadTerminationBadge();
     await loadMehrBadge();
