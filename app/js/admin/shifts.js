@@ -181,10 +181,11 @@ async function renderWeekGrid(days, shifts, availCache = {}, sickLeaves = []) {
 
             days.forEach(d => {
                 const dateStr = d.toISOString().split('T')[0];
-                const shift   = shifts.find(s =>
+                const dayShifts = shifts.filter(s =>
                     s.employee_id === emp.id && s.shift_date === dateStr && !s.is_open &&
                     (s.department === dept || (!s.department && (emp.department || 'Allgemein') === dept))
                 );
+                const shift = dayShifts[0] || null;
                 const cell = document.createElement('div');
                 cell.className        = 'week-cell' + (shift ? ' has-shift' : '');
                 cell.style.whiteSpace = 'pre';
@@ -193,6 +194,12 @@ async function renderWeekGrid(days, shifts, availCache = {}, sickLeaves = []) {
                 if (shift) {
                     cell.textContent = `${shift.start_time.slice(0,5)}\n${shift.end_time.slice(0,5)}`;
                     if (shift.actual_start_time) cell.style.background = '#E8D4A0';
+                    if (dayShifts.length > 1) {
+                        const badge = document.createElement('span');
+                        badge.textContent = dayShifts.length;
+                        badge.style.cssText = 'position:absolute;top:2px;right:3px;background:#B28A6E;color:white;font-size:0.55rem;font-weight:700;border-radius:999px;width:1rem;height:1rem;display:flex;align-items:center;justify-content:center;line-height:1;';
+                        cell.appendChild(badge);
+                    }
                 } else {
                     cell.textContent = '+';
                 }
