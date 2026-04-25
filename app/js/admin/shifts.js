@@ -124,7 +124,7 @@ async function renderWeekGrid(days, shifts, availCache = {}, sickLeaves = []) {
         const corner = document.createElement('div');
         corner.className = 'week-header';
         corner.style.cssText = 'position:relative; cursor:pointer; display:flex; align-items:center; justify-content:center;';
-        corner.innerHTML = `<span style="font-size:1.1rem; color:var(--color-text-light); user-select:none;" onclick="event.stopPropagation(); _toggleWeekCornerMenu(this)">⋮</span>
+        corner.innerHTML = `<span style="font-size:1.1rem; color:var(--color-text-light); user-select:none; padding:8px 12px; display:inline-flex; align-items:center; justify-content:center;" onclick="event.stopPropagation(); _toggleWeekCornerMenu(this)">⋮</span>
             <div class="week-corner-menu" style="display:none; position:absolute; top:100%; left:0; background:white; border:1px solid var(--color-border); border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.12); z-index:200; min-width:180px; padding:0.25rem 0;">
                 <div onclick="_openExtraShiftModal()" style="${itemStyle}" ${hov}>Extra Schicht erstellen</div>
                 <div onclick="deptStartSelection('${dept}'); _closeAllCornerMenus()" style="${itemStyle}" ${hov}>Auswählen</div>
