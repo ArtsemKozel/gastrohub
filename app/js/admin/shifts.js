@@ -547,33 +547,39 @@ async function loadAndRenderClockList(employeeId, dateStr) {
             netto = h > 0 ? `${h}h ${m}min` : `${m}min`;
         }
 
+        const entryHeader = (label || te.is_manual) ? `
+            <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.35rem;">
+                ${label ? `<span style="font-size:0.75rem; font-weight:600; color:var(--color-text-light);">${label}</span>` : ''}
+                ${te.is_manual ? '<span style="font-size:0.65rem; font-weight:600; background:#E8E3DE; color:#8B6F47; border-radius:5px; padding:0.1rem 0.35rem;">manuell</span>' : ''}
+            </div>` : '';
+
         return `
-        <div style="display:flex; align-items:center; gap:0.5rem;">
-            <div style="flex:1; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0.5rem;">
-                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
-                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">${label ? label + ' · ' : ''}Ein</div>
-                    <div style="display:flex; align-items:center; gap:0.35rem;">
-                        <span style="font-size:0.95rem; font-weight:600; color:var(--color-text);">${cin}</span>
-                        ${te.is_manual ? '<span style="font-size:0.65rem; font-weight:600; background:#E8E3DE; color:#8B6F47; border-radius:5px; padding:0.1rem 0.35rem;">manuell</span>' : ''}
+        <div style="margin-bottom:0.5rem;">
+            ${entryHeader}
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+                <div style="flex:1; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0.5rem;">
+                    <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
+                        <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Ein</div>
+                        <div style="font-size:0.95rem; font-weight:600; color:var(--color-text);">${cin}</div>
+                    </div>
+                    <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
+                        <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Aus</div>
+                        <div style="font-size:0.95rem; font-weight:600; color:${te.clock_out ? 'var(--color-text)' : 'var(--color-text-light)'};">${cout}</div>
+                    </div>
+                    <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
+                        <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Pause</div>
+                        <div style="font-size:0.95rem; font-weight:600; color:${pauseMin > 0 ? 'var(--color-text)' : 'var(--color-text-light)'};">${pause}</div>
+                    </div>
+                    <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
+                        <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Netto</div>
+                        <div style="font-size:0.95rem; font-weight:600; color:var(--color-text);">${netto}</div>
                     </div>
                 </div>
-                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
-                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Aus</div>
-                    <div style="font-size:0.95rem; font-weight:600; color:${te.clock_out ? 'var(--color-text)' : 'var(--color-text-light)'};">${cout}</div>
-                </div>
-                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
-                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Pause</div>
-                    <div style="font-size:0.95rem; font-weight:600; color:${pauseMin > 0 ? 'var(--color-text)' : 'var(--color-text-light)'};">${pause}</div>
-                </div>
-                <div style="background:var(--color-gray); border-radius:8px; padding:0.5rem 0.75rem;">
-                    <div style="font-size:0.7rem; color:var(--color-text-light); margin-bottom:0.15rem;">Netto</div>
-                    <div style="font-size:0.95rem; font-weight:600; color:var(--color-text);">${netto}</div>
-                </div>
+                <button onclick="deleteTimeEntry('${te.id}','${employeeId}','${dateStr}')"
+                    style="flex-shrink:0; background:none; border:none; cursor:pointer; color:#B28A6E; font-size:1.1rem; padding:0.25rem;" title="Eintrag löschen">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
             </div>
-            <button onclick="deleteTimeEntry('${te.id}','${employeeId}','${dateStr}')"
-                style="flex-shrink:0; background:none; border:none; cursor:pointer; color:#B28A6E; font-size:1.1rem; padding:0.25rem;" title="Eintrag löschen">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-            </button>
         </div>`;
     });
 
