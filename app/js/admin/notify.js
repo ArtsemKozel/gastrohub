@@ -1,8 +1,8 @@
-window.sendPushNotification = function(title, message) {
+window.sendPushNotification = function(title, message, external_id) {
     fetch('https://gastrohub-notify.artsem86.workers.dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, message }),
+        body: JSON.stringify({ title, message, ...(external_id ? { external_id: String(external_id) } : {}) }),
     }).catch(() => {});
 };
 

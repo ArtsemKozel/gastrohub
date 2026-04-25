@@ -133,12 +133,14 @@ function closeRejectModal() {
 async function submitReject() {
     const reason = document.getElementById('reject-reason').value.trim();
     if (!reason) { alert('Bitte Grund eingeben.'); return; }
+    const { data: vac } = await db.from('vacation_requests').select('employee_id').eq('id', rejectVacationId).maybeSingle();
     await db.from('vacation_requests').update({
         status: 'rejected',
         rejection_reason: reason,
         reviewed_at: new Date().toISOString(),
         reviewed_by: adminSession.user.id
     }).eq('id', rejectVacationId);
+    if (vac?.employee_id) sendPushNotification('Urlaubsantrag', 'Dein Urlaubsantrag wurde leider abgelehnt.', vac.employee_id);
     closeRejectModal();
     await loadAdminVacations();
 }
@@ -153,6 +155,7 @@ async function reviewVacation(id, status) {
         reviewed_at: new Date().toISOString(),
         reviewed_by: adminSession.user.id
     }).eq('id', id);
+    if (vac.employee_id) sendPushNotification('Urlaubsantrag', 'Dein Urlaubsantrag wurde genehmigt! 🎉', vac.employee_id);
     await loadAdminVacations();
 }
 
@@ -198,7 +201,7 @@ async function submitEditVacation() {
 
     const { data: vac } = await db
         .from('vacation_requests')
-        .select('type, employees_planit(hours_per_vacation_day)')
+        .select('type, employee_id, employees_planit(hours_per_vacation_day)')
         .eq('id', editVacationId)
         .maybeSingle();
 
@@ -217,7 +220,8 @@ async function submitEditVacation() {
         ...(isPayout && payoutMonth ? { payout_month: payoutMonth } : {})
     };
 
-    if (editVacationApproveAfter) {
+    const approving = editVacationApproveAfter;
+    if (approving) {
         updateData.status      = 'approved';
         updateData.reviewed_at = new Date().toISOString();
         updateData.reviewed_by = adminSession.user.id;
@@ -225,7 +229,11 @@ async function submitEditVacation() {
     }
 
     const { error } = await db.from('vacation_requests').update(updateData).eq('id', editVacationId);
-    if (!error) { closeEditVacationModal(); await loadAdminVacations(); }
+    if (!error) {
+        if (approving && vac?.employee_id) sendPushNotification('Urlaubsantrag', 'Dein Urlaubsantrag wurde genehmigt! 🎉', vac.employee_id);
+        closeEditVacationModal();
+        await loadAdminVacations();
+    }
 }
 
 // ── ALLE URLAUBSANTRÄGE EXPORTIEREN ───────────────────────
