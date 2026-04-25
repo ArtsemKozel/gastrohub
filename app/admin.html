@@ -2181,6 +2181,36 @@
     </div>
 </div>
 
+<!-- MODAL: TEMPERATURGERÄT BEARBEITEN -->
+<div id="temperature-device-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Gerät bearbeiten</div>
+            <button class="modal-close" onclick="closeEditTemperatureDeviceModal()">✕</button>
+        </div>
+        <input type="hidden" id="edit-device-id">
+        <div class="form-group">
+            <label>Gerätename</label>
+            <input type="text" id="edit-device-name">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+            <div class="form-group" style="margin-bottom:0;">
+                <label>Soll Min °C</label>
+                <input type="number" step="0.1" id="edit-device-min" placeholder="z.B. 2">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label>Soll Max °C</label>
+                <input type="number" step="0.1" id="edit-device-max" placeholder="z.B. 7">
+            </div>
+        </div>
+        <div style="display:flex;justify-content:center;">
+            <button onclick="saveEditTemperatureDevice()" title="Speichern" style="width:3rem;height:3rem;border-radius:999px;background:#B28A6E;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL: TEMPERATUR PDF EXPORT -->
 <div id="temperature-pdf-modal" class="modal-overlay">
     <div class="modal">
@@ -2213,24 +2243,24 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/shared/db.js?v=20260425074926"></script>
-<script src="js/shared/auth.js?v=20260425074926"></script>
-<script src="js/shared/utils.js?v=20260425074926"></script>
-<script src="js/admin/init.js?v=20260425074926"></script>
-<script src="js/admin/shifts.js?v=20260425074926"></script>
-<script src="js/admin/notify.js?v=20260425074926"></script>
-<script src="js/admin/team.js?v=20260425074926"></script>
-<script src="js/admin/vacation.js?v=20260425074926"></script>
-<script src="js/admin/hours.js?v=20260425074926"></script>
-<script src="js/admin/payroll.js?v=20260425074926"></script>
-<script src="js/admin/tips.js?v=20260425074926"></script>
-<script src="js/admin/inventory.js?v=20260425074926"></script>
-<script src="js/admin/hygiene.js?v=20260425074926"></script>
-<script src="js/admin/temperature.js?v=20260425074926"></script>
-<script src="js/admin/tasks.js?v=20260425074926"></script>
-<script src="js/admin/terminations.js?v=20260425074926"></script>
-<script src="js/admin/margincalc.js?v=20260425074926"></script>
-<script src="js/admin/restaurant.js?v=20260425074926"></script>
+<script src="js/shared/db.js?v=20260425080803"></script>
+<script src="js/shared/auth.js?v=20260425080803"></script>
+<script src="js/shared/utils.js?v=20260425080803"></script>
+<script src="js/admin/init.js?v=20260425080803"></script>
+<script src="js/admin/shifts.js?v=20260425080803"></script>
+<script src="js/admin/notify.js?v=20260425080803"></script>
+<script src="js/admin/team.js?v=20260425080803"></script>
+<script src="js/admin/vacation.js?v=20260425080803"></script>
+<script src="js/admin/hours.js?v=20260425080803"></script>
+<script src="js/admin/payroll.js?v=20260425080803"></script>
+<script src="js/admin/tips.js?v=20260425080803"></script>
+<script src="js/admin/inventory.js?v=20260425080803"></script>
+<script src="js/admin/hygiene.js?v=20260425080803"></script>
+<script src="js/admin/temperature.js?v=20260425080803"></script>
+<script src="js/admin/tasks.js?v=20260425080803"></script>
+<script src="js/admin/terminations.js?v=20260425080803"></script>
+<script src="js/admin/margincalc.js?v=20260425080803"></script>
+<script src="js/admin/restaurant.js?v=20260425080803"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </body>

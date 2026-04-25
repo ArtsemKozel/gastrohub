@@ -246,29 +246,55 @@ function renderTemperatureDevices(devices) {
         container.innerHTML = '<div class="empty-state"><p>Keine Geräte vorhanden.</p></div>';
         return;
     }
-    container.innerHTML = devices.map(d => `
+    container.innerHTML = devices.map(d => {
+        const rangeStr = (d.temp_min !== null || d.temp_max !== null)
+            ? `${d.temp_min ?? '–'}°C – ${d.temp_max ?? '–'}°C`
+            : '—';
+        return `
         <div class="card" style="margin-bottom:0.75rem;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
-                <div style="font-weight:600;">${d.name}</div>
-                <button class="btn-small btn-pdf-view btn-icon" onclick="deleteTemperatureDevice('${d.id}')">
-                    <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                </button>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
                 <div>
-                    <div style="font-size:0.75rem;color:var(--color-text-light);margin-bottom:0.25rem;">SOLL MIN °C</div>
-                    <input type="number" step="0.1" value="${d.temp_min ?? ''}" placeholder="z.B. 2"
-                        onchange="updateTemperatureDevice('${d.id}','temp_min',this.value)"
-                        style="padding:0.4rem;font-size:0.85rem;">
+                    <div style="font-weight:600;">${d.name}</div>
+                    <div style="font-size:0.8rem;color:var(--color-text-light);margin-top:0.2rem;">Soll: ${rangeStr}</div>
                 </div>
-                <div>
-                    <div style="font-size:0.75rem;color:var(--color-text-light);margin-bottom:0.25rem;">SOLL MAX °C</div>
-                    <input type="number" step="0.1" value="${d.temp_max ?? ''}" placeholder="z.B. 7"
-                        onchange="updateTemperatureDevice('${d.id}','temp_max',this.value)"
-                        style="padding:0.4rem;font-size:0.85rem;">
+                <div style="display:flex;gap:0.4rem;">
+                    <button class="btn-small btn-pdf-view btn-icon" onclick="openEditTemperatureDeviceModal('${d.id}','${d.name.replace(/'/g,"\\'")}',${d.temp_min ?? ''},${d.temp_max ?? ''})" title="Bearbeiten">
+                        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="btn-small btn-pdf-view btn-icon" onclick="deleteTemperatureDevice('${d.id}')" title="Löschen">
+                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    </button>
                 </div>
             </div>
-        </div>`).join('');
+        </div>`;
+    }).join('');
+}
+
+function openEditTemperatureDeviceModal(id, name, min, max) {
+    document.getElementById('edit-device-id').value   = id;
+    document.getElementById('edit-device-name').value = name;
+    document.getElementById('edit-device-min').value  = min !== undefined && min !== '' ? min : '';
+    document.getElementById('edit-device-max').value  = max !== undefined && max !== '' ? max : '';
+    document.getElementById('temperature-device-modal').classList.add('open');
+}
+
+function closeEditTemperatureDeviceModal() {
+    document.getElementById('temperature-device-modal').classList.remove('open');
+}
+
+async function saveEditTemperatureDevice() {
+    const id   = document.getElementById('edit-device-id').value;
+    const name = document.getElementById('edit-device-name').value.trim();
+    if (!name) { alert('Bitte Gerätename eingeben.'); return; }
+    const minVal = document.getElementById('edit-device-min').value;
+    const maxVal = document.getElementById('edit-device-max').value;
+    await db.from('temperature_devices').update({
+        name,
+        temp_min: minVal !== '' ? parseFloat(minVal) : null,
+        temp_max: maxVal !== '' ? parseFloat(maxVal) : null,
+    }).eq('id', id);
+    closeEditTemperatureDeviceModal();
+    loadTemperatureConfig();
 }
 
 async function addTemperatureDevice() {
