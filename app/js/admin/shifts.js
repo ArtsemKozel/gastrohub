@@ -1628,23 +1628,34 @@ window.toggleOpenShift = function() {
 
 // ── EXTRA SCHICHT MODAL ───────────────────────────────────
 
+let _cornerMenuCloseListener = null;
+
 function _toggleWeekCornerMenu(el) {
     const menu = document.getElementById('week-corner-menu');
     if (!menu) return;
     const isOpen = menu.style.display === 'block';
+    if (_cornerMenuCloseListener) {
+        document.removeEventListener('click', _cornerMenuCloseListener);
+        _cornerMenuCloseListener = null;
+    }
     menu.style.display = isOpen ? 'none' : 'block';
     if (!isOpen) {
-        const close = (e) => {
+        _cornerMenuCloseListener = (e) => {
             if (!menu.contains(e.target) && e.target !== el) {
                 menu.style.display = 'none';
-                document.removeEventListener('click', close);
+                document.removeEventListener('click', _cornerMenuCloseListener);
+                _cornerMenuCloseListener = null;
             }
         };
-        setTimeout(() => document.addEventListener('click', close), 0);
+        setTimeout(() => document.addEventListener('click', _cornerMenuCloseListener), 0);
     }
 }
 
 function _openExtraShiftModal() {
+    if (_cornerMenuCloseListener) {
+        document.removeEventListener('click', _cornerMenuCloseListener);
+        _cornerMenuCloseListener = null;
+    }
     document.getElementById('week-corner-menu').style.display = 'none';
     const monday = getMonday(weekDate).toISOString().split('T')[0];
     document.getElementById('extra-shift-date').value = monday;
