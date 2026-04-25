@@ -122,6 +122,11 @@ async function renderWeekGrid(days, shifts, availCache = {}, sickLeaves = []) {
 
         const corner = document.createElement('div');
         corner.className = 'week-header';
+        corner.style.cssText = 'position:relative; cursor:pointer; display:flex; align-items:center; justify-content:center;';
+        corner.innerHTML = `<span style="font-size:1.1rem; color:var(--color-text-light); user-select:none;" onclick="event.stopPropagation(); _toggleWeekCornerMenu(this)">⋮</span>
+            <div id="week-corner-menu" style="display:none; position:absolute; top:100%; left:0; background:white; border:1px solid var(--color-border); border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.12); z-index:200; min-width:180px; padding:0.25rem 0;">
+                <div onclick="_openExtraShiftModal()" style="padding:0.6rem 1rem; font-size:0.875rem; cursor:pointer; white-space:nowrap;" onmouseover="this.style.background='var(--color-gray)'" onmouseout="this.style.background=''">Extra Schicht erstellen</div>
+            </div>`;
         grid.appendChild(corner);
         days.forEach((d, i) => {
             const dateStr   = d.toISOString().split('T')[0];
@@ -1619,5 +1624,45 @@ window.toggleOpenShift = function() {
     const isOpen = document.getElementById('shift-is-open')?.checked;
     const group  = document.getElementById('shift-employee-group');
     if (group) group.style.display = isOpen ? 'none' : '';
+}
+
+// ── EXTRA SCHICHT MODAL ───────────────────────────────────
+
+function _toggleWeekCornerMenu(el) {
+    const menu = document.getElementById('week-corner-menu');
+    if (!menu) return;
+    const isOpen = menu.style.display === 'block';
+    menu.style.display = isOpen ? 'none' : 'block';
+    if (!isOpen) {
+        const close = (e) => {
+            if (!menu.contains(e.target) && e.target !== el) {
+                menu.style.display = 'none';
+                document.removeEventListener('click', close);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', close), 0);
+    }
+}
+
+function _openExtraShiftModal() {
+    document.getElementById('week-corner-menu').style.display = 'none';
+    const monday = getMonday(weekDate).toISOString().split('T')[0];
+    document.getElementById('extra-shift-date').value = monday;
+    const sel = document.getElementById('extra-shift-employee');
+    sel.innerHTML = '<option value="">— Mitarbeiter wählen —</option>' +
+        (employees || []).map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+    document.getElementById('extra-shift-modal').classList.add('open');
+}
+
+function _closeExtraShiftModal() {
+    document.getElementById('extra-shift-modal').classList.remove('open');
+}
+
+function _confirmExtraShift() {
+    const empId  = document.getElementById('extra-shift-employee').value;
+    const date   = document.getElementById('extra-shift-date').value;
+    if (!empId || !date) { alert('Bitte Mitarbeiter und Datum auswählen.'); return; }
+    _closeExtraShiftModal();
+    openShiftModal(empId, date, null, null);
 }
 
