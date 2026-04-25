@@ -116,16 +116,19 @@ async function renderWeekGrid(days, shifts, availCache = {}, sickLeaves = []) {
     const addDayHeaders = (labelText, dept) => {
         const deptLabel = document.createElement('div');
         deptLabel.style.cssText = 'grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:0.5rem; font-weight:600; font-size:0.8rem; color:var(--color-primary); padding:0.75rem 0 0.25rem; border-top:2px solid var(--color-primary);';
-        const trashSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
-        deptLabel.innerHTML = `<span>${labelText}</span><button class="btn-small" onclick="event.stopPropagation(); _openDeptActionMenu(this, '${dept}')" style="padding:0.2rem 0.4rem; min-width:unset; height:1.6rem; display:flex; align-items:center; outline:none; background:#C9A24D; color:white;">${trashSvg}</button>`;
+        deptLabel.innerHTML = `<span>${labelText}</span>`;
         grid.appendChild(deptLabel);
 
+        const itemStyle = 'padding:0.6rem 1rem; font-size:0.875rem; cursor:pointer; white-space:nowrap;';
+        const hov = `onmouseover="this.style.background='var(--color-gray)'" onmouseout="this.style.background=''"`;
         const corner = document.createElement('div');
         corner.className = 'week-header';
         corner.style.cssText = 'position:relative; cursor:pointer; display:flex; align-items:center; justify-content:center;';
         corner.innerHTML = `<span style="font-size:1.1rem; color:var(--color-text-light); user-select:none;" onclick="event.stopPropagation(); _toggleWeekCornerMenu(this)">⋮</span>
-            <div id="week-corner-menu" style="display:none; position:absolute; top:100%; left:0; background:white; border:1px solid var(--color-border); border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.12); z-index:200; min-width:180px; padding:0.25rem 0;">
-                <div onclick="_openExtraShiftModal()" style="padding:0.6rem 1rem; font-size:0.875rem; cursor:pointer; white-space:nowrap;" onmouseover="this.style.background='var(--color-gray)'" onmouseout="this.style.background=''">Extra Schicht erstellen</div>
+            <div class="week-corner-menu" style="display:none; position:absolute; top:100%; left:0; background:white; border:1px solid var(--color-border); border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.12); z-index:200; min-width:180px; padding:0.25rem 0;">
+                <div onclick="_openExtraShiftModal()" style="${itemStyle}" ${hov}>Extra Schicht erstellen</div>
+                <div onclick="deptStartSelection('${dept}'); _closeAllCornerMenus()" style="${itemStyle}" ${hov}>Auswählen</div>
+                <div onclick="deptDeleteAll('${dept}'); _closeAllCornerMenus()" style="${itemStyle} color:var(--color-danger);" ${hov}>Alle löschen</div>
             </div>`;
         grid.appendChild(corner);
         days.forEach((d, i) => {
@@ -1630,21 +1633,24 @@ window.toggleOpenShift = function() {
 
 let _cornerMenuCloseListener = null;
 
-function _toggleWeekCornerMenu(el) {
-    const menu = document.getElementById('week-corner-menu');
-    if (!menu) return;
-    const isOpen = menu.style.display === 'block';
+function _closeAllCornerMenus() {
     if (_cornerMenuCloseListener) {
         document.removeEventListener('click', _cornerMenuCloseListener);
         _cornerMenuCloseListener = null;
     }
-    menu.style.display = isOpen ? 'none' : 'block';
+    document.querySelectorAll('.week-corner-menu').forEach(m => m.style.display = 'none');
+}
+
+function _toggleWeekCornerMenu(el) {
+    const menu = el.nextElementSibling;
+    if (!menu) return;
+    const isOpen = menu.style.display === 'block';
+    _closeAllCornerMenus();
     if (!isOpen) {
+        menu.style.display = 'block';
         _cornerMenuCloseListener = (e) => {
             if (!menu.contains(e.target) && e.target !== el) {
-                menu.style.display = 'none';
-                document.removeEventListener('click', _cornerMenuCloseListener);
-                _cornerMenuCloseListener = null;
+                _closeAllCornerMenus();
             }
         };
         setTimeout(() => document.addEventListener('click', _cornerMenuCloseListener), 0);
@@ -1652,11 +1658,7 @@ function _toggleWeekCornerMenu(el) {
 }
 
 function _openExtraShiftModal() {
-    if (_cornerMenuCloseListener) {
-        document.removeEventListener('click', _cornerMenuCloseListener);
-        _cornerMenuCloseListener = null;
-    }
-    document.getElementById('week-corner-menu').style.display = 'none';
+    _closeAllCornerMenus();
     const monday = getMonday(weekDate).toISOString().split('T')[0];
     document.getElementById('extra-shift-date').value = monday;
     const sel = document.getElementById('extra-shift-employee');
