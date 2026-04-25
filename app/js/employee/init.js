@@ -42,6 +42,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('employee-name').textContent = currentEmployee.name;
 
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.login(String(currentEmployee.id));
+    });
+
     const savedTab = localStorage.getItem('planit_emp_tab');
     if (savedTab) switchTab(savedTab);
 
