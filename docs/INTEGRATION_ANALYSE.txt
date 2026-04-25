@@ -1,6 +1,6 @@
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                     GASTROHUB — INTEGRATIONS-ANALYSE                       ║
-║                              Stand: 17.04.2026                             ║
+║                              Stand: 25.04.2026                             ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 Dokumentiert die Abhängigkeiten zwischen Modulen, bekannte technische
@@ -45,6 +45,17 @@ adminSession.user.id als user_id-Filter. Wenn adminSession noch nicht gesetzt
 ist, schlagen die Queries stillschweigend fehl. Daher muss shifts.js immer
 nach requireAdminSession() ausgeführt werden.
 
+js/admin/notify.js muss vor allen Modulen geladen sein die
+sendPushNotification() aufrufen (shifts.js, vacation.js, terminations.js).
+Die Funktion ist als window.sendPushNotification registriert und somit
+global verfügbar — kein ES-Modul-Import notwendig.
+
+js/employee/temperature.js benötigt currentEmployee aus js/employee/init.js
+(localStorage-Objekt). Die user_id-Eigenschaft des currentEmployee-Objekts
+ist die Supabase Auth User ID des Admin-Kontos, nicht die ID des Mitarbeiters.
+Alle temperature_logs- und temperature_devices-Queries filtern auf diese
+Admin-user_id. Damit sieht der Mitarbeiter genau die Geräte seines Arbeitgebers.
+
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  MANDANTEN-TRENNUNG
@@ -57,6 +68,8 @@ nutzen. Jede Query filtert zwingend auf .eq('user_id', ...).
 Im Admin-Bereich: user_id = adminSession.user.id (aus Supabase Auth Session).
 Im POS-Kiosk: user_id = posState.userId (aus URL-Parameter ?uid=, Fallback
 hardcoded auf 7bb9b579-edd9-449a-840c-21fb33bde772).
+Im Mitarbeiter-Bereich: user_id = currentEmployee.user_id (aus localStorage,
+dort beim Login gespeichert).
 
 Der POS-Kiosk hat kein eigenes Login — der Admin gibt dem Kiosk die URL mit
 dem eigenen ?uid=-Parameter. Das ist bewusst so designt, damit Mitarbeiter
@@ -67,8 +80,11 @@ keinen Admin-Zugang brauchen.
  GH_TIME_ENTRIES — DATENFLUSS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Schreiben: Nur der POS-Kiosk (clock.js) schreibt in gh_time_entries.
-Lesen: Der Admin (shifts.js) liest gh_time_entries lesend im Schicht-Modal.
+Schreiben: Der POS-Kiosk (clock.js) schreibt automatische Einträge.
+           Der Admin (shifts.js) kann Einträge manuell nachtragen
+           (is_manual=true). Manuell nachgetragene Einträge erhalten
+           im Stempelzeiten-Block ein "manuell"-Badge.
+Lesen: Der Admin (shifts.js) liest gh_time_entries im Schicht-Modal.
 Löschen: Nur der Admin (deleteTimeEntry in shifts.js) kann Einträge löschen.
 Beim Löschen werden zuerst alle gh_breaks mit time_entry_id = id entfernt,
 danach erst der gh_time_entries-Eintrag — sonst entstehen verwaiste Pausen.
@@ -76,6 +92,10 @@ danach erst der gh_time_entries-Eintrag — sonst entstehen verwaiste Pausen.
 Das note-Feld in gh_time_entries wird vom Mitarbeiter am POS via
 posSubmitNote() in clock.js befüllt und vom Admin im Stempelzeiten-Block
 des Schicht-Modals angezeigt (#shift-clock-note-text).
+
+Das is_manual-Feld unterscheidet automatische POS-Stempelungen (false)
+von manuell nachgetragenen Einträgen (true). Es hat keine funktionalen
+Auswirkungen auf die Zeitberechnung — es ist rein informativer Natur.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -91,12 +111,126 @@ Löschen: Nur indirekt via deleteTimeEntry() in shifts.js (kaskadiert).
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ TEMPERATURE — DATENFLUSS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+temperature_devices:
+  Schreiben/Löschen: Nur Admin (temperature.js). Sortierung immer nach
+  created_at ascending — nicht alphabetisch, damit die vom Admin gewählte
+  Reihenfolge (Anlage-Reihenfolge) erhalten bleibt.
+  Lesen: Admin (temperature.js) und Mitarbeiter (employee/temperature.js).
+
+temperature_logs:
+  Schreiben: Mitarbeiter (employee/temperature.js) via UPSERT.
+             Admin sieht die Einträge in der Tagesansicht (temperature.js).
+  Lesen: Beide.
+  Löschen: Nur Admin.
+
+Delegation:
+  Der Admin setzt can_do_temperature=true in employees_planit.
+  checkTemperatureVisibility() im Mitarbeiter-Bereich liest dieses Flag und
+  blendet den "Temperaturkontrolle"-Menüpunkt im Mehr-Tab ein oder aus.
+  Das Muster ist identisch zum can_do_inventory-Flag für die Inventur.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ PUSH-BENACHRICHTIGUNGEN — INFRASTRUKTUR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Architektur:
+  Admin-HTML → sendPushNotification() → Cloudflare Worker
+                                       → OneSignal REST API → Mitarbeiter-App
+
+Cloudflare Worker: gastrohub-notify.artsem86.workers.dev
+OneSignal: Mitarbeiter registrieren sich beim App-Start via
+           OneSignal.login(String(employee.id)). Die employee.id aus
+           employees_planit wird als external_id in OneSignal hinterlegt.
+
+Gezielte Zustellung (an einzelnen Mitarbeiter):
+  sendPushNotification(title, message, employeeId) — Aufruf mit 3 Argumenten.
+  Der Worker leitet external_id im Request-Body an OneSignal weiter.
+
+Broadcast (an alle Mitarbeiter des Restaurants):
+  sendPushNotification(title, message) — Aufruf ohne external_id.
+  Verwendung: "Schichtplan veröffentlicht".
+
+Fehlerbehandlung:
+  Alle sendPushNotification()-Aufrufe sind fire-and-forget. Fehler werden
+  via .catch(()=>{}) unterdrückt. Eine fehlgeschlagene Benachrichtigung
+  blockiert keine Datenbankoperation und zeigt dem Admin keine Fehlermeldung.
+
+OneSignal-SDK-Initialisierung im Mitarbeiter-Bereich:
+  Das SDK wird über window.OneSignalDeferred.push(fn) aufgerufen um sicher-
+  zustellen dass der SDK-Code vollständig geladen ist bevor login() aufgerufen
+  wird. Der .catch(()=>{}) auf login() verhindert dass ein SDK-Ladefehler
+  die gesamte App blockiert.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SCHICHTPLAN ⋮-ZELLE — DESIGN-ENTSCHEIDUNGEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Die obere linke Ecke des Wochengitters (pro Abteilung) enthält ein ⋮-Icon
+das die gesamte Zelle als Tap-Fläche belegt. Das Dropdown-Menü hat drei
+Optionen: "Extra Schicht", "Selektiv löschen" und "Alle löschen".
+
+Technische Fallstricke:
+
+1. class statt id für das Dropdown-Menü:
+   addDayHeaders() wird pro Abteilung aufgerufen. Würde das Menü id="week-
+   corner-menu" verwenden, entstünden mehrere Elemente mit derselben ID —
+   document.getElementById() würde immer nur das erste finden. Lösung:
+   class="week-corner-menu" und el.nextElementSibling in
+   _toggleWeekCornerMenu(el) um das korrekte Menü per DOM-Navigation zu
+   finden (el = ⋮-Span, Menü = direkt folgendes Geschwisterelement).
+
+2. Document-click-Listener für Schließen:
+   Beim Öffnen eines Menüs wird ein document-click-Listener registriert der
+   das Menü beim nächsten Klick außerhalb schließt. Die Referenz wird in
+   _cornerMenuCloseListener gespeichert und beim Schließen via
+   removeEventListener entfernt. Ohne dieses Muster würden sich Listener
+   stapeln und das Menü beim nächsten Öffnen sofort wieder schließen.
+
+3. _closeAllCornerMenus() vor modalöffnenden Aktionen:
+   _openExtraShiftModal() ruft zuerst _closeAllCornerMenus() auf. Damit wird
+   der document-click-Listener entfernt bevor das Modal geöffnet wird.
+   Anderenfalls würde der Listener beim ersten Klick im Modal das Menü
+   auf display:none setzen und beim nächsten Öffnen des Menüs als
+   verwaister Listener wieder feuern.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SCHICHTPLAN-ÜBERSCHNEIDUNGS-PRÜFUNG
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+saveShift() prüft vor dem Speichern (nur bei Einzelschichten, nicht bei
+Wiederholung) ob der Mitarbeiter am selben Tag bereits eine überlappende
+Schicht hat. Das Intervall-Overlap-Kriterium:
+
+  newStart < existingEnd && newEnd > existingStart
+
+ist das Standard-Intervall-Schnittkriterium. Genau dann ist false wenn
+newEnd <= existingStart (neue Schicht endet bevor die andere beginnt) oder
+newStart >= existingEnd (neue Schicht beginnt erst nachdem die andere endet).
+
+Bei einem Overlap erscheint ein confirm()-Dialog. Der Admin kann trotzdem
+speichern (z. B. Doppelschicht bewusst geplant). Das frühere Muster
+(DELETE-before-INSERT) wurde durch diese Prüfung ersetzt um versehentlichen
+Datenverlust zu vermeiden.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  PLANIT_PAYROLLS — DATENFLUSS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Schreiben und Lesen ausschließlich durch js/admin/payroll.js. Kein POS-
 und kein Mitarbeiter-Zugriff. Die Tabelle speichert Lohnzettel-Entwürfe
 als JSONB — das erlaubt flexible Felder ohne Schema-Migration.
+
+Die Spalten employment_type, hourly_rate und wage_type in employees_planit
+werden in payroll.js beim Erstellen des Lohnzettel-Entwurfs als Vorausfüllung
+verwendet. Änderungen an diesen Werten im Team-Tab wirken sich beim nächsten
+Erstellen eines Lohnzettels aus.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -117,6 +251,13 @@ Das Kommentarfeld (note) erscheint nur wenn isClockedIn=true und
 noteSaved=false. Nach einmaligem Speichern via posSubmitNote() wird
 noteSaved=true gesetzt und das Feld verschwindet. Es kann innerhalb
 einer Session nur einmal gespeichert werden.
+
+Zeitanzeige (neu):
+  Im Employee-Screen werden unterhalb der Uhrzeit zwei zusätzliche Zeilen
+  angezeigt: die laufende Arbeitszeit (HH:MM:SS, abzüglich Pausen) und die
+  Gesamtpausenzeit (HH:MM:SS). Beide werden von startPosClock() jede Sekunde
+  neu berechnet. Bei aktiver Pause wechselt die Hintergrundfarbe der
+  Zeitanzeige-Box auf Amber — dieselbe Farbe wie der Pause-Button.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -139,6 +280,34 @@ Beide Blöcke starten zugeklappt (shift-clock-body und shift-actual-body
 haben display:none). Das Toggle-Symbol beginnt bei ▶ (geschlossen) und
 wechselt zu ▼ (offen).
 
+Eintrags-Darstellung (neu):
+  Jeder Eintrag in #shift-clock-list beginnt mit einer Kopfzeile:
+  "Eintrag N" als Label (linksbündig) und optional ein "manuell"-Badge
+  (rechtsbündig, braune Pill) wenn is_manual=true. Darunter folgt die
+  4-spaltige Eintragszeile (Eingestempelt, Ausgestempelt, Netto, Löschen).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ TEMPERATURE-TAB — CSS-FALLSTRICK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Symptom: Temperaturkontrolle-Tab bleibt leer/unsichtbar obwohl switchTab()
+          korrekt aufgerufen wird.
+
+Ursache: Inline style="display:none" auf dem Tab-Div überschreibt die CSS-
+          Regel .tab-content.active { display:block } wegen höherer Spezifität.
+          Inline-Styles haben immer Priorität gegenüber Klassen-Selektoren,
+          unabhängig von der Reihenfolge im Stylesheet.
+
+Lösung: Kein inline style="display:none" auf Tab-Divs verwenden. Die Initiali-
+         isierung des ausgeblendeten Zustands erfolgt ausschließlich über
+         CSS (.tab-content { display:none }) und die .active-Klasse.
+
+Zweites Problem: Beide Temperature-Tabs lagen ursprünglich außerhalb des
+<div class="main-content">-Wrappers und wurden damit über die volle Viewport-
+breite gerendert statt auf max-width:900px begrenzt. Lösung: beide Divs
+innerhalb des .main-content-Wrappers platzieren.
+
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  MARGINCALC — INTEGRATION
@@ -151,18 +320,39 @@ kann er unabhängig von anderen Modulen entwickelt und getestet werden.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ PRE-COMMIT-HOOK — CACHE-BUSTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Der Pre-Commit-Hook (.git/hooks/pre-commit) aktualisiert automatisch alle
+?v=-Parameter in <script src="...?v=...">-Tags der HTML-Dateien. Dadurch wird
+der Browser-Cache bei jedem Commit invalidiert ohne manuellen Eingriff.
+
+Relevante Dateien: app/admin.html, app/employee.html, app/pos.html.
+
+Da Cloudflare Pages den main-Branch automatisch deployt, ist sichergestellt
+dass jeder Push auf gastro-hub.org mit aktuellen JS-Dateien ausgeliefert wird
+ohne dass Nutzer Hard-Refresh durchführen müssen.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  MIGRATIONS-STATUS VON PLANIT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 PlanIt hatte alle Admin-Logik in einer einzigen Datei admin.js (~7100 Zeilen).
-GastroHub teilt diese Logik auf 12 Admin-Module auf. Stand 17.04.2026 sind
-shifts.js, margincalc.js und payroll.js implementiert. Die restlichen neun
-Module (init, team, vacation, hours, tips, inventory, hygiene, tasks,
-terminations) enthalten noch keine Logik.
+GastroHub teilt diese Logik auf 17 Admin-Module auf. Stand 25.04.2026 sind
+alle Module implementiert: shifts.js, team.js, vacation.js, hours.js, tips.js,
+inventory.js, hygiene.js, tasks.js, terminations.js, margincalc.js, payroll.js,
+restaurant.js, time_entries.js, temperature.js, notify.js.
 
 PlanIt hatte keine POS-Funktionalität. Die gesamte POS-Logik (pos.html,
 clock.js, breaks.js, gh_time_entries, gh_breaks) ist eine Neuentwicklung
 ohne PlanIt-Vorbild, orientiert sich UI-seitig an ShiftIn (externes Projekt).
+
+PlanIt hatte keine Push-Benachrichtigungen. OneSignal + Cloudflare Worker
+sind eine GastroHub-Neuentwicklung.
+
+PlanIt hatte keine Temperaturkontrolle. Das gesamte temperature-Modul
+(Admin + Mitarbeiter, temperature_devices, temperature_logs) ist neu.
 
 Die CSS-Dateien (css/) sind noch leer. Alle bisherigen Styles sind inline
 in den HTML-Dateien oder in <style>-Blöcken. Die CSS-Auslagerung ist für

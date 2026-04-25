@@ -1,6 +1,6 @@
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                         GASTROHUB — ZUSAMMENFASSUNG                        ║
-║                              Stand: 17.04.2026                             ║
+║                              Stand: 25.04.2026                             ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -19,14 +19,55 @@ Ziel-Repository:   /Users/artchiebald/Documents/gastrohub-new/
 Datenbank:         Supabase (identischer Account und URL wie PlanIt)
                    URL: https://ulazvcrpasnhufzlywxf.supabase.co
 
+Deployment:        Cloudflare Pages
+                   Domain: gastro-hub.org
+                   Branch: main → automatischer Deploy bei Push
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ ORDNERSTRUKTUR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  gastrohub-new/
+  ├── app/                    ← App-Code (admin, employee, pos)
+  │   ├── admin.html
+  │   ├── employee.html
+  │   ├── pos.html
+  │   ├── index.html
+  │   ├── register.html
+  │   ├── js/
+  │   │   ├── shared/         db.js, auth.js, utils.js
+  │   │   ├── admin/          init.js, shifts.js, team.js, vacation.js,
+  │   │   │                   hours.js, tips.js, inventory.js, hygiene.js,
+  │   │   │                   tasks.js, terminations.js, margincalc.js,
+  │   │   │                   payroll.js, restaurant.js, time_entries.js,
+  │   │   │                   temperature.js, notify.js
+  │   │   ├── employee/       init.js, overview.js, vacation.js,
+  │   │   │                   availability.js, swaps.js, inventory.js,
+  │   │   │                   profil.js, schichtplan.js, stunden.js,
+  │   │   │                   trinkgeld.js, payroll.js, temperature.js
+  │   │   └── pos/            clock.js, breaks.js
+  │   └── css/                (noch leer — Styles inline in HTML)
+  ├── web/                    ← Marketing-/Landingpage
+  └── docs/                   ← Diese Dokumentation
+
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  DATENBANK-TABELLEN
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Von PlanIt übernommen (unverändert):
-    employees_planit      Mitarbeiterstammdaten (id, name, department,
-                          password_hash, login_code, user_id, is_active)
+  Von PlanIt übernommen (teils erweitert):
+    employees_planit      Mitarbeiterstammdaten
+                          Original: id, name, department, password_hash,
+                          login_code, user_id, is_active
+                          Neu hinzugefügt:
+                            can_do_inventory    boolean — Inventur-Delegation
+                            can_do_temperature  boolean — Temperaturkontrolle-
+                                                Delegation (wie can_do_inventory)
+                            employment_type     text — Beschäftigungsart
+                            hourly_rate         numeric — Stundenlohn
+                            wage_type           text — Lohnart (Stunden/Monat)
+
     planit_restaurants    Restaurant-Konten (id, name, owner_id)
     shifts                Schichtplanung
     shift_templates       Schichtvorlagen
@@ -41,7 +82,9 @@ Datenbank:         Supabase (identischer Account und URL wie PlanIt)
     gh_time_entries       Stempelzeiten der Mitarbeiter
                           Spalten: id, user_id, employee_id,
                           clock_in (timestamptz), clock_out (timestamptz),
-                          note (text)
+                          note (text),
+                          is_manual (boolean) — true wenn manuell vom Admin
+                          nachgetragen (zeigt "manuell"-Badge im Clock-Block)
                           Hinweis: RLS auf anon key blockiert chained
                           .insert().select() — nach INSERT immer separates
                           SELECT durchführen
@@ -58,22 +101,64 @@ Datenbank:         Supabase (identischer Account und URL wie PlanIt)
                           data (jsonb mit Stunden, Zuschlägen, Abzügen),
                           created_at
 
+    planit_terminations   Kündigungsanträge und Arbeitgeber-Kündigungen
+                          Spalten: id, user_id, employee_id, requested_date,
+                          approved_date, reason, status (pending/approved/
+                          rejected), initiated_by (employer/employee), pdf_url
+
+    employment_phases     Beschäftigungsphasen eines Mitarbeiters
+                          Spalten: id, employee_id, start_date, end_date
+                          end_date = null → aktuell aktive Phase
+
+    temperature_devices   Temperaturkontrolle-Geräte/Messpunkte
+                          Spalten: id, user_id, name, min_temp (numeric),
+                          max_temp (numeric), created_at
+                          Sortierung: immer nach created_at ascending
+
+    temperature_logs      Temperaturmesswerte
+                          Spalten: id, user_id, employee_id, device_id
+                          (FK → temperature_devices.id), temperature (numeric),
+                          note (text), log_date (date), created_at
+
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  DREI NUTZERGRUPPEN
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  1. ADMIN       → admin.html     Login via Supabase Auth (Email + Passwort)
-                                  Zugriff auf alle Verwaltungsfunktionen
-                                  Session: Supabase JWT
+  1. ADMIN       → app/admin.html   Login via Supabase Auth (Email + Passwort)
+                                    Zugriff auf alle Verwaltungsfunktionen
+                                    Session: Supabase JWT
 
-  2. MITARBEITER → employee.html  Login via Kürzel + PIN (localStorage)
-                                  Zugriff auf persönliche Schichten, Urlaub etc.
-                                  Session: localStorage-Key "planit_employee"
+  2. MITARBEITER → app/employee.html  Login via Kürzel + PIN (localStorage)
+                                    Zugriff auf persönliche Schichten, Urlaub etc.
+                                    Session: localStorage-Key "planit_employee"
+                                    OneSignal: login(String(employee.id)) beim
+                                    App-Start für Push-Benachrichtigungen
 
-  3. POS         → pos.html       Kiosk-Stempeluhr für Mitarbeiter
-                                  Kein Login — user_id aus URL-Parameter ?uid=
-                                  Fallback: 7bb9b579-edd9-449a-840c-21fb33bde772
+  3. POS         → app/pos.html    Kiosk-Stempeluhr für Mitarbeiter
+                                    Kein Login — user_id aus URL-Parameter ?uid=
+                                    Fallback: 7bb9b579-edd9-449a-840c-21fb33bde772
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ PUSH-BENACHRICHTIGUNGEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Infrastruktur: OneSignal SDK (Mitarbeiter-App) + Cloudflare Worker als
+  Relay (gastrohub-notify.artsem86.workers.dev)
+
+  Funktion sendPushNotification(title, message, external_id?) in notify.js
+  sendet einen POST an den Worker. external_id ist die employee.id als String
+  (OneSignal external_id) — bei Aufruf ohne external_id wird an alle gesendet.
+
+  Ausgelöste Benachrichtigungen:
+    Schichtplan veröffentlicht   → an alle Mitarbeiter (kein external_id)
+    Offene Schicht zugewiesen    → an den zugewiesenen Mitarbeiter
+    Andere Bewerber abgelehnt    → an alle anderen Bewerber derselben Schicht
+    Urlaubsantrag genehmigt      → an den Mitarbeiter
+    Urlaubsantrag abgelehnt      → an den Mitarbeiter
+    Kündigung genehmigt          → an den Mitarbeiter
+    Kündigung abgelehnt          → an den Mitarbeiter
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -94,7 +179,7 @@ Datenbank:         Supabase (identischer Account und URL wie PlanIt)
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- AKTUELLER STAND (17.04.2026)
+ AKTUELLER STAND (25.04.2026)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   FERTIG ✓
@@ -119,14 +204,26 @@ Datenbank:         Supabase (identischer Account und URL wie PlanIt)
                             mit Netto-Dauer, Pausen abgezogen, Gesamt-Netto
                           — Kommentar (note) aus gh_time_entries im Block
                           — Eintrag löschen (zuerst gh_breaks, dann Eintrag)
+                          — Stempelzeiten manuell nachtragen (is_manual-Flag,
+                            "manuell"-Badge über der Eintragszeile)
+                          — Überschneidungs-Prüfung beim Schicht-Speichern
+                            (Intervall-Overlap-Check, Bestätigung via confirm())
+                          — ⋮-Zelle im Wochengitter: Extra Schicht,
+                            Selektiv löschen, Alle löschen
+                          — Multi-Schicht-Badge (Anzahl-Bubble oben rechts
+                            wenn > 1 Schicht am selben Tag)
+                          — Schichtplan veröffentlichen (Push-Benachrichtigung)
   js/admin/team.js        Team-Verwaltung
   js/admin/vacation.js    Urlaubsverwaltung
+                          — Push-Benachrichtigungen bei Genehmigung/Ablehnung
+                          — Offene Schicht zuweisen mit Benachrichtigung
   js/admin/hours.js       Stundenübersicht
   js/admin/tips.js        Trinkgeldverteilung
   js/admin/inventory.js   Inventur
   js/admin/hygiene.js     Hygieneprotokoll
   js/admin/tasks.js       Aufgaben & Notizen
   js/admin/terminations.js  Abgänge
+                          — Push-Benachrichtigungen bei Genehmigung/Ablehnung
   js/admin/margincalc.js  Deckungsbeitragsrechnung (MarginCalc):
                           Umsatz, Wareneinsatz, Personalkosten, DB I / DB II
   js/admin/payroll.js     Vorlohnabrechnung:
@@ -134,9 +231,20 @@ Datenbank:         Supabase (identischer Account und URL wie PlanIt)
                           Speichern in planit_payrolls, PDF-Export via jsPDF
   js/admin/restaurant.js  Restaurant-Einstellungen
   js/admin/time_entries.js  Stempelzeiten-Übersicht (alle Mitarbeiter)
+  js/admin/temperature.js Temperaturkontrolle:
+                          — Tagesansicht mit klappbaren Tageskarten
+                          — Geräteverwaltung (Anlegen, Bearbeiten, Löschen)
+                          — Delegation an Mitarbeiter (can_do_temperature)
+                          — PDF-Export mit Von/Bis-Datumsbereich
+  js/admin/notify.js      Push-Benachrichtigungen:
+                          sendPushNotification(title, message, external_id?)
+                          POST an Cloudflare Worker
 
   js/employee/init.js     requireEmployeeSession(), DOMContentLoaded, switchTab()
+                          OneSignal.login(String(currentEmployee.id)) beim Start
   js/employee/overview.js Übersicht (Schichtplan der Woche)
+                          checkTemperatureVisibility() — zeigt/versteckt
+                          Temperaturkontrolle-Menüpunkt je nach Flag
   js/employee/vacation.js Urlaubsantrag & Kalender
   js/employee/availability.js  Verfügbarkeitsangaben
   js/employee/swaps.js    Schichttausch
@@ -146,9 +254,14 @@ Datenbank:         Supabase (identischer Account und URL wie PlanIt)
   js/employee/stunden.js  Stundenübersicht (Mitarbeiter)
   js/employee/trinkgeld.js     Trinkgeld-Ansicht (Mitarbeiter)
   js/employee/payroll.js  Lohnzettel-Ansicht (Mitarbeiter)
+  js/employee/temperature.js   Temperaturkontrolle (Mitarbeiter):
+                          — Tagesansicht mit Eingabefeld pro Gerät
+                          — Nur sichtbar wenn can_do_temperature = true
 
   pos.html                POS-Kiosk vollständig (Shell + Styles)
   js/pos/clock.js         PIN-Login, Ein-/Ausstempeln, Kommentar, Logout
+                          — Zeitanzeige: laufende Arbeitszeit und Pausenzeit
+                            im Employee-Screen (wird sekündlich aktualisiert)
   js/pos/breaks.js        Pause starten / beenden (gh_breaks)
 
   OFFEN ✗
@@ -184,6 +297,16 @@ Nach jedem abgeschlossenen Feature oder jeder Änderung wird der Stand sofort
 committed und zu GitHub gepusht. Es wird nicht auf mehrere fertige Aufgaben
 gewartet — jede Änderung erhält ihren eigenen Commit mit aussagekräftigem
 Commit-Text auf Deutsch.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ PRE-COMMIT-HOOK (Cache-Busting)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Ein Pre-Commit-Hook aktualisiert automatisch die ?v=-Query-Parameter aller
+<script src="...?v=...">-Tags in den HTML-Dateien (admin.html, employee.html,
+pos.html). Dadurch werden Browser-Caches bei jedem Deploy zuverlässig
+invalidiert ohne manuellen Eingriff.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

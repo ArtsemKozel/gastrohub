@@ -1,6 +1,6 @@
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                      GASTROHUB — CODE-DOKUMENTATION                        ║
-║                              Stand: 17.04.2026                             ║
+║                              Stand: 25.04.2026                             ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 Dokumentiert alle bereits befüllten Dateien mit Funktionslisten und Hinweisen
@@ -88,6 +88,32 @@ zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ js/admin/notify.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Sendet Push-Benachrichtigungen über einen Cloudflare Worker.
+            Registriert sendPushNotification als globale Fensterfunktion,
+            damit alle Admin-Module sie ohne Import-Overhead aufrufen können.
+
+  Abhängig von:  Cloudflare Worker (gastrohub-notify.artsem86.workers.dev)
+  Eingebunden in: admin.html
+
+  Funktionen:
+  ┌──────────────────────────────────┬─────────────────────────────────────────┐
+  │ sendPushNotification(            │ POST an Cloudflare Worker mit           │
+  │   title, message, external_id?) │ { title, message, external_id? }.       │
+  │                                  │ external_id = employee.id als String.   │
+  │                                  │ Fehler werden via .catch(()=>{})        │
+  │                                  │ unterdrückt — kein blockierendes        │
+  │                                  │ await nötig, kein Fehler-UI.            │
+  └──────────────────────────────────┴─────────────────────────────────────────┘
+
+  Hinweis: OneSignal nutzt external_id zur Zustellung. Mitarbeiter registrieren
+  sich beim App-Start via OneSignal.login(String(employee.id)) in
+  js/employee/init.js. Fehlt external_id, wird an alle Abonnenten gesendet.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  js/admin/shifts.js
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -95,19 +121,50 @@ zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
             aus requireAdminSession() und nutzt user_id als Mandanten-Filter
             bei allen Supabase-Queries.
 
-  Abhängig von:  js/shared/db.js, js/shared/utils.js, js/shared/auth.js
+  Abhängig von:  js/shared/db.js, js/shared/utils.js, js/shared/auth.js,
+                 js/admin/notify.js (für Schichtplan veröffentlichen)
   Eingebunden in: admin.html
 
   Globale Variablen:
-    adminSession      Supabase-Session (gesetzt in DOMContentLoaded)
-    employees         Array aller aktiven Mitarbeiter (employees_planit)
-    editShiftId       ID des aktuell bearbeiteten Shifts (null = neu)
-    shiftTemplates    Array der geladenen Schichtvorlagen
+    adminSession            Supabase-Session (gesetzt in DOMContentLoaded)
+    employees               Array aller aktiven Mitarbeiter (employees_planit)
+    editShiftId             ID des aktuell bearbeiteten Shifts (null = neu)
+    shiftTemplates          Array der geladenen Schichtvorlagen
+    _cornerMenuCloseListener  Referenz auf den aktiven document-click-Listener
+                              zum Schließen des ⋮-Menüs (null wenn inaktiv)
 
   Funktionen:
   ┌────────────────────────────────┬─────────────────────────────────────────┐
   │ loadShifts()             async │ Lädt Schichten + Mitarbeiter für die    │
   │                                │ aktuelle Woche und rendert die Tabelle  │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ addDayHeaders(dept)            │ Rendert die Kopfzeile eines Abteilungs- │
+  │                                │ blocks. Obere linke Ecke enthält die    │
+  │                                │ ⋮-Zelle (füllt die gesamte Zelle aus). │
+  │                                │ Benutzt class="week-corner-menu" statt  │
+  │                                │ id= da die Funktion pro Abteilung       │
+  │                                │ aufgerufen wird (kein Duplikat-ID-Bug)  │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ _toggleWeekCornerMenu(el)      │ Öffnet/schließt das ⋮-Dropdown. el ist  │
+  │                                │ der ⋮-Span, el.nextElementSibling ist   │
+  │                                │ das Menü (class="week-corner-menu").    │
+  │                                │ Registriert einen document-click-       │
+  │                                │ Listener (_cornerMenuCloseListener) der │
+  │                                │ das Menü beim nächsten Klick außerhalb  │
+  │                                │ schließt                                │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ _closeAllCornerMenus()         │ Setzt alle .week-corner-menu auf        │
+  │                                │ display:none und entfernt den document- │
+  │                                │ click-Listener                          │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ _openExtraShiftModal()         │ Schließt alle ⋮-Menüs und öffnet das   │
+  │                                │ #extra-shift-modal                      │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ _closeExtraShiftModal()        │ Schließt #extra-shift-modal             │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ _confirmExtraShift()     async │ Liest Mitarbeiter/Datum/Abt. aus dem    │
+  │                                │ Extra-Schicht-Modal und speichert eine  │
+  │                                │ neue Schicht                            │
   ├────────────────────────────────┼─────────────────────────────────────────┤
   │ openShiftModal(          async │ Öffnet das Modal zum Erstellen oder     │
   │   empId, dateStr,              │ Bearbeiten einer Schicht. Befüllt alle  │
@@ -115,21 +172,33 @@ zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
   │                                │ via loadAndRenderClockList() und ruft   │
   │                                │ loadTemplates() auf                     │
   ├────────────────────────────────┼─────────────────────────────────────────┤
-  │ saveShift()              async │ Erstellt oder aktualisiert einen Shift  │
-  │                                │ in der shifts-Tabelle. Bei Wiederholung │
-  │                                │ werden N weitere Wochen geschrieben     │
+  │ saveShift()              async │ Erstellt oder aktualisiert einen Shift. │
+  │                                │ Prüft vor dem Speichern auf Überschnei- │
+  │                                │ dungen mit bestehenden Schichten desselb-│
+  │                                │ en Mitarbeiters am selben Tag            │
+  │                                │ (Intervall-Check: newStart < e.end_time │
+  │                                │ && newEnd > e.start_time). Bei Overlap  │
+  │                                │ confirm() — Abbruch möglich. Bei        │
+  │                                │ Wiederholung werden N weitere Wochen    │
+  │                                │ geschrieben                             │
   ├────────────────────────────────┼─────────────────────────────────────────┤
   │ deleteShift(id)          async │ Löscht einen Shift nach Bestätigung     │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ publishShifts()          async │ Sendet Push-Benachrichtigung            │
+  │                                │ "Schichtplan veröffentlicht" an alle    │
+  │                                │ Mitarbeiter (kein external_id)          │
   ├────────────────────────────────┼─────────────────────────────────────────┤
   │ loadAndRenderClockList(  async │ Lädt alle gh_time_entries des           │
   │   employeeId, dateStr)         │ Mitarbeiters für den Tag sowie alle     │
   │                                │ zugehörigen gh_breaks. Berechnet Netto- │
   │                                │ Dauer pro Eintrag (clock_out − clock_in │
   │                                │ minus Pausen) und eine Gesamt-Netto-    │
-  │                                │ Zeile. Rendert alles in #shift-clock-   │
-  │                                │ list. Befüllt #shift-clock-note mit dem │
-  │                                │ note-Feld. Zeigt #shift-clock-group nur │
-  │                                │ wenn Einträge vorhanden                 │
+  │                                │ Zeile. Rendert "Eintrag N"-Label und    │
+  │                                │ optionales "manuell"-Badge oberhalb     │
+  │                                │ jeder Eintragszeile (is_manual=true).   │
+  │                                │ Befüllt #shift-clock-note mit note-Feld.│
+  │                                │ Zeigt #shift-clock-group nur wenn       │
+  │                                │ Einträge vorhanden                      │
   ├────────────────────────────────┼─────────────────────────────────────────┤
   │ deleteTimeEntry(         async │ Löscht zuerst alle gh_breaks mit        │
   │   id, empId, dateStr)          │ time_entry_id = id, dann den            │
@@ -155,6 +224,12 @@ zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
   ├────────────────────────────────┼─────────────────────────────────────────┤
   │ checkAvailabilityWarning async │ Prüft Verfügbarkeit und gibt Warntext   │
   │   (empId, date, start, end)    │ zurück oder null                        │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ deptStartSelection(dept)       │ Startet die Mehrfachauswahl zum         │
+  │                                │ selektiven Löschen für eine Abteilung   │
+  ├────────────────────────────────┼─────────────────────────────────────────┤
+  │ deptDeleteAll(dept)      async │ Löscht alle Schichten der Abteilung     │
+  │                                │ in der aktuellen Woche nach Bestätigung │
   └────────────────────────────────┴─────────────────────────────────────────┘
 
   HTML-IDs im Schicht-Modal (admin.html):
@@ -165,6 +240,145 @@ zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
     #shift-clock-list       — Container für die Eintrags-Zeilen
     #shift-clock-note       — Wrapper des Kommentar-Felds (display:none wenn leer)
     #shift-clock-note-text  — Text des Kommentars
+
+  Multi-Schicht-Badge:
+    Wenn ein Mitarbeiter > 1 Schicht an einem Tag hat, wird in der Wochengitter-
+    Zelle eine braune Bubble (Position: oben rechts) mit der Anzahl eingeblendet.
+    shifts.filter() statt shifts.find() wird verwendet um alle Schichten zu zählen.
+
+  ⋮-Menü-Struktur (corner-Zelle):
+    <div style="position:relative">         ← Wrapper (gesamte Zelle)
+      <span onclick="_toggleWeekCornerMenu(this)">⋮</span>
+      <div class="week-corner-menu">        ← Dropdown (display:none initial)
+        <div onclick="_openExtraShiftModal()">Extra Schicht</div>
+        <div onclick="deptStartSelection(dept)">Selektiv löschen</div>
+        <div onclick="deptDeleteAll(dept)">Alle löschen</div>
+      </div>
+    </div>
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ js/admin/vacation.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Urlaubsverwaltung und Bearbeitung offener Schichten im Admin-Bereich.
+
+  Abhängig von:  js/shared/db.js, js/shared/auth.js, js/admin/notify.js
+  Eingebunden in: admin.html
+
+  Push-Benachrichtigungen:
+  ┌──────────────────────────────┬───────────────────────────────────────────┐
+  │ reviewVacation(id, action)   │ Bei action='approve': sendet              │
+  │                              │ "Urlaubsantrag genehmigt" an employee_id  │
+  │                              │ Bei action='reject': sendet               │
+  │                              │ "Urlaubsantrag abgelehnt" an employee_id  │
+  ├──────────────────────────────┼───────────────────────────────────────────┤
+  │ approveRequest(              │ Nach Zuweisung: sendet "Schicht           │
+  │   requestId, shiftId,        │ zugewiesen" an den genehmigten Mitarbeiter│
+  │   employeeId)                │ und "Schicht bereits besetzt" an alle     │
+  │                              │ anderen Bewerber derselben Schicht.       │
+  │                              │ Datum-Label aus shifts.shift_date         │
+  └──────────────────────────────┴───────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ js/admin/terminations.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Verwaltung von Kündigungsanträgen (Mitarbeiter-initiiert und
+            Arbeitgeber-initiiert). Archivierung von Mitarbeitern.
+
+  Abhängig von:  js/shared/db.js, js/shared/auth.js, js/admin/notify.js
+  Eingebunden in: admin.html
+
+  Tabellen: planit_terminations, employment_phases, employees_planit
+
+  Wichtige Funktionen:
+  ┌──────────────────────────────┬───────────────────────────────────────────┐
+  │ approveTermination(id) async │ Setzt status='approved', schreibt         │
+  │                              │ approved_date, schließt employment_phases.│
+  │                              │ Sendet "Kündigung bestätigt" an           │
+  │                              │ employee_id via Push                      │
+  ├──────────────────────────────┼───────────────────────────────────────────┤
+  │ rejectTermination(id)  async │ Setzt status='rejected'. Sendet           │
+  │                              │ "Kündigung abgelehnt" an employee_id      │
+  ├──────────────────────────────┼───────────────────────────────────────────┤
+  │ submitEmployerTermination()  │ Admin-seitige Kündigung: INSERT mit       │
+  │                              │ initiated_by='employer', status='approved'│
+  │                              │ Schließt employment_phases automatisch    │
+  ├──────────────────────────────┼───────────────────────────────────────────┤
+  │ deleteTermination(id)  async │ Löscht Antrag. Öffnet letzte              │
+  │                              │ employment_phase wieder (end_date=null).  │
+  │                              │ Wechselt danach zu Team-Tab mit Hinweis   │
+  │                              │ "Beschäftigungsphasen prüfen"             │
+  └──────────────────────────────┴───────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ js/admin/temperature.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Temperaturkontrolle im Admin-Bereich. Tages-/Monatsübersicht
+            der Messwerte, Geräteverwaltung, Mitarbeiter-Delegation,
+            PDF-Export mit frei wählbarem Datumsbereich.
+
+  Abhängig von:  js/shared/db.js, js/shared/auth.js, jsPDF CDN
+  Eingebunden in: admin.html (Tabs: #tab-temperature, #tab-temperature-config)
+
+  Tabellen: temperature_devices, temperature_logs, employees_planit
+
+  Funktionen:
+  ┌────────────────────────────────────┬─────────────────────────────────────┐
+  │ loadTemperature()            async │ Lädt Geräte und Logs für den        │
+  │                                    │ aktuellen Monat. Rendert klappbare  │
+  │                                    │ Tageskarten mit Messwerten pro      │
+  │                                    │ Gerät. Monat-Navigation via         │
+  │                                    │ class="month-selector" (◀/▶)        │
+  ├────────────────────────────────────┼─────────────────────────────────────┤
+  │ loadTemperatureConfig()      async │ Lädt Geräteliste via               │
+  │                                    │ renderTemperatureDevices() und      │
+  │                                    │ Delegationsliste via                │
+  │                                    │ loadTemperatureDelegation()         │
+  ├────────────────────────────────────┼─────────────────────────────────────┤
+  │ renderTemperatureDevices(devices)  │ Statische Geräteliste mit           │
+  │                                    │ Bearbeiten- und Löschen-Button.     │
+  │                                    │ Sortierung: created_at ascending    │
+  ├────────────────────────────────────┼─────────────────────────────────────┤
+  │ openEditTemperatureDeviceModal(    │ Öffnet #temperature-device-modal    │
+  │   id, name, min, max)              │ mit bestehenden Werten              │
+  ├────────────────────────────────────┼─────────────────────────────────────┤
+  │ saveEditTemperatureDevice()  async │ UPDATE temperature_devices          │
+  ├────────────────────────────────────┼─────────────────────────────────────┤
+  │ loadTemperatureDelegation()  async │ Lädt Mitarbeiter mit               │
+  │                                    │ can_do_temperature-Flag. Rendert    │
+  │                                    │ klappbare Liste mit Toggle pro      │
+  │                                    │ Mitarbeiter                         │
+  ├────────────────────────────────────┼─────────────────────────────────────┤
+  │ saveTemperatureDelegation()  async │ UPDATE employees_planit SET         │
+  │                                    │ can_do_temperature für alle         │
+  │                                    │ Checkboxen                          │
+  ├────────────────────────────────────┼─────────────────────────────────────┤
+  │ toggleTemperatureDelegation()      │ Klappt die Delegationsliste auf/zu  │
+  ├────────────────────────────────────┼─────────────────────────────────────┤
+  │ openTemperaturePdfModal()          │ Öffnet #temperature-pdf-modal.      │
+  │                                    │ Befüllt Von-Feld mit 1. des Monats, │
+  │                                    │ Bis-Feld mit letztem Tag des Monats │
+  ├────────────────────────────────────┼─────────────────────────────────────┤
+  │ downloadTemperaturePdf()     async │ Liest Von/Bis aus Modal-Inputs.     │
+  │                                    │ Iteriert alle Tage im Bereich und   │
+  │                                    │ erstellt PDF via jsPDF              │
+  └────────────────────────────────────┴─────────────────────────────────────┘
+
+  HTML-IDs (admin.html):
+    #tab-temperature            — Hauptansicht (muss INNERHALB .main-content sein)
+    #tab-temperature-config     — Konfiguration (muss INNERHALB .main-content sein)
+    #temperature-device-modal   — Bearbeiten-Modal für Geräte
+    #temperature-pdf-modal      — Datumsbereich-Modal für PDF-Export
+
+  Wichtige CSS-Regel: Beide Tab-Divs dürfen KEIN inline style="display:none"
+  haben — das überschreibt .tab-content.active { display:block } und macht
+  den Tab unsichtbar. Die Sichtbarkeit wird ausschließlich über die Klasse
+  .active gesteuert.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -200,6 +414,82 @@ zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
   Logik:    Stunden, Zuschläge und Abzüge werden im data-JSON-Feld gespeichert.
             Für den PDF-Export wird jsPDF direkt im Browser genutzt —
             kein Server-seitiges Rendering.
+
+  Mitarbeiterstammdaten:
+    employment_type, hourly_rate und wage_type aus employees_planit werden
+    im Lohnzettel-Entwurf vorausgefüllt.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ js/employee/init.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Session-Check, DOMContentLoaded-Handler, Tab-Router und
+            OneSignal-Registrierung für den Mitarbeiter-Bereich.
+
+  Abhängig von:  js/shared/db.js, js/shared/auth.js, OneSignal SDK
+  Eingebunden in: employee.html
+
+  OneSignal-Login:
+    Nach dem Session-Check wird OneSignal.login(String(currentEmployee.id))
+    via window.OneSignalDeferred.push() aufgerufen. Der Aufruf ist mit
+    .catch(()=>{}) abgesichert damit ein fehlgeschlagener SDK-Load die App
+    nicht blockiert. Die employee.id wird als external_id in OneSignal
+    registriert und ermöglicht gezielte Push-Zustellung via notify.js.
+
+  Tab-Handler:
+    switchTab('temperature-emp') → loadEmployeeTemperature()
+    Mehr-Tab-Init: ruft checkTemperatureVisibility() auf
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ js/employee/overview.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Schichtplan-Übersicht der aktuellen Woche für den Mitarbeiter.
+
+  Enthält zusätzlich:
+  ┌──────────────────────────────────┬─────────────────────────────────────────┐
+  │ checkTemperatureVisibility async │ Liest can_do_temperature aus            │
+  │                                  │ employees_planit. Setzt                 │
+  │                                  │ #temperature-emp-menu-item auf          │
+  │                                  │ display:flex wenn true, sonst           │
+  │                                  │ display:none. Gleiches Muster wie       │
+  │                                  │ can_do_inventory / Inventur             │
+  └──────────────────────────────────┴─────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ js/employee/temperature.js
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Zweck:    Temperaturkontrolle-Eingabe für Mitarbeiter. Nur sichtbar wenn
+            can_do_temperature = true (gesteuert durch checkTemperatureVisibility).
+
+  Abhängig von:  js/shared/db.js, js/employee/init.js (currentEmployee)
+  Eingebunden in: employee.html
+
+  Tabellen: temperature_devices, temperature_logs (lesen + schreiben)
+
+  Wichtig: Queries filtern auf .eq('user_id', currentEmployee.user_id) —
+  das ist die user_id des Admin-Kontos, nicht die ID des Mitarbeiters.
+
+  Funktionen:
+  ┌──────────────────────────────────┬─────────────────────────────────────────┐
+  │ loadEmployeeTemperature()  async │ Lädt temperature_devices (des Admins)  │
+  │                                  │ und temperature_logs für das gewählte  │
+  │                                  │ Datum. Rendert pro Gerät eine           │
+  │                                  │ Eingabekarte mit Temperatur-Input       │
+  │                                  │ und optionalem Notiz-Feld              │
+  ├──────────────────────────────────┼─────────────────────────────────────────┤
+  │ saveEmpTemperatureLog(           │ UPSERT in temperature_logs. Falls       │
+  │   deviceId, dateStr,             │ logId vorhanden → UPDATE, sonst INSERT  │
+  │   tempValue, noteValue, logId)   │                                         │
+  ├──────────────────────────────────┼─────────────────────────────────────────┤
+  │ onEmpTemperatureDateChange()     │ oninput/onchange-Handler des            │
+  │                                  │ Datums-Inputs → ruft                    │
+  │                                  │ loadEmployeeTemperature() auf           │
+  └──────────────────────────────────┴─────────────────────────────────────────┘
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -241,17 +531,17 @@ zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
 
   Globales Objekt:
     posState = {
-      view:       'loading' | 'pin' | 'employee'
-      userId:     string   (aus URL ?uid=, Fallback hardcoded)
-      employees:  array    (employees_planit, is_active=true)
-      entries:    array    (heutige gh_time_entries)
-      employee:   object   (eingeloggter Mitarbeiter)
-      entry:      object   (letzter time_entry des Mitarbeiters)
-      breaks:     array    (gh_breaks des aktiven Eintrags)
-      activeBreak: object  (offene Pause, break_end=null, sonst null)
-      pin:        string
-      error:      string
-      noteSaved:  boolean  (Kommentar-Block nach erstem Speichern ausblenden)
+      view:        'loading' | 'pin' | 'employee'
+      userId:      string   (aus URL ?uid=, Fallback hardcoded)
+      employees:   array    (employees_planit, is_active=true)
+      entries:     array    (heutige gh_time_entries)
+      employee:    object   (eingeloggter Mitarbeiter)
+      entry:       object   (letzter time_entry des Mitarbeiters)
+      breaks:      array    (gh_breaks des aktiven Eintrags)
+      activeBreak: object   (offene Pause, break_end=null, sonst null)
+      pin:         string
+      error:       string
+      noteSaved:   boolean  (Kommentar-Block nach erstem Speichern ausblenden)
     }
 
   Funktionen:
@@ -261,7 +551,10 @@ zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
   │                          │ und nach Aktionen nicht erneut aufgerufen —   │
   │                          │ State wird direkt mutiert                     │
   ├──────────────────────────┼───────────────────────────────────────────────┤
-  │ startPosClock()          │ setInterval 1s → schreibt Uhrzeit in #pos-time│
+  │ startPosClock()          │ setInterval 1s → schreibt Uhrzeit in #pos-   │
+  │                          │ time sowie laufende Arbeitszeit (clock_in bis │
+  │                          │ jetzt minus Pausenzeit) und Pausenzeit        │
+  │                          │ (Summe abgeschlossener + laufender Pause)     │
   ├──────────────────────────┼───────────────────────────────────────────────┤
   │ renderPOS()              │ Liest posState.view und setzt #pos-root.      │
   │                          │ Schaltet body.employee-view um                │
@@ -272,6 +565,7 @@ zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
   ├──────────────────────────┼───────────────────────────────────────────────┤
   │ renderEmployeeScreen()   │ Gibt HTML-String für den Mitarbeiter-Screen   │
   │                          │ zurück. Zeigt Uhrzeit-Box (amber bei Pause),  │
+  │                          │ laufende Arbeitszeit, Pausenzeit,             │
   │                          │ 4 Aktions-Buttons, optionales Kommentarfeld   │
   │                          │ (solange noteSaved=false)                     │
   ├──────────────────────────┼───────────────────────────────────────────────┤
@@ -303,6 +597,14 @@ zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
     läuft durch, aber die zurückgegebenen Rows sind leer. Lösung: INSERT
     nur auf Fehler prüfen, dann separates SELECT mit .maybeSingle() ausführen.
     Gleiches Muster in posBreakStart() (breaks.js).
+
+  Zeitanzeige im Employee-Screen:
+    startPosClock() berechnet sekündlich:
+    • Arbeitszeit = (jetzt − clock_in) − Gesamtpausenzeit
+    • Pausenzeit  = Summe aller abgeschlossenen Pausen + laufende Pause
+    Beide Werte werden als HH:MM:SS formatiert und in der Zeitanzeige-Box
+    unterhalb der Uhrzeit angezeigt. Bei aktiver Pause wechselt die
+    Hintergrundfarbe der Box auf Amber.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -382,10 +684,24 @@ zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
     #shift-actual-body      Klappbarer Inhalt
     #shift-actual-toggle    Pfeil-Symbol
 
+  Temperatur-Tabs:
+    #tab-temperature        MUSS innerhalb von <div class="main-content"> liegen
+    #tab-temperature-config MUSS innerhalb von <div class="main-content"> liegen
+    Beide dürfen kein inline style="display:none" haben (s. temperature.js)
+
+  Modals für Schichtplan:
+    #extra-shift-modal      Für Extra-Schicht via ⋮-Menü
+
   Scripts (aktuelle Ladereihenfolge):
-    Supabase CDN → js/shared/db.js → js/shared/utils.js → js/shared/auth.js
-    → js/admin/shifts.js → js/admin/margincalc.js → js/admin/payroll.js
-    → (weitere Module sobald befüllt)
+    Supabase CDN → OneSignal SDK
+    → js/shared/db.js → js/shared/utils.js → js/shared/auth.js
+    → js/admin/init.js → js/admin/shifts.js → js/admin/team.js
+    → js/admin/vacation.js → js/admin/hours.js → js/admin/tips.js
+    → js/admin/inventory.js → js/admin/hygiene.js → js/admin/tasks.js
+    → js/admin/terminations.js → js/admin/margincalc.js → js/admin/payroll.js
+    → js/admin/restaurant.js → js/admin/time_entries.js
+    → js/admin/temperature.js → js/admin/notify.js
+    → jsPDF CDN
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -398,21 +714,45 @@ zu Abhängigkeiten. Leere Dateien (noch nicht migriert) sind nicht aufgeführt.
     3. js/pos/breaks.js    ← vor clock.js, da posState aus clock.js stammt
     4. js/pos/clock.js
 
-  admin.html (Zielzustand):
+  admin.html:
     1. Supabase CDN
-    2. js/shared/db.js
-    3. js/shared/utils.js
-    4. js/shared/auth.js
-    5. js/admin/init.js    (noch leer)
-    6. js/admin/shifts.js
-    7. js/admin/team.js    (noch leer)
-    8. js/admin/vacation.js
-    9. js/admin/hours.js
-   10. js/admin/payroll.js
+    2. OneSignal SDK
+    3. js/shared/db.js
+    4. js/shared/utils.js
+    5. js/shared/auth.js
+    6. js/admin/init.js
+    7. js/admin/shifts.js
+    8. js/admin/team.js
+    9. js/admin/vacation.js
+   10. js/admin/hours.js
    11. js/admin/tips.js
    12. js/admin/inventory.js
    13. js/admin/hygiene.js
    14. js/admin/tasks.js
    15. js/admin/terminations.js
    16. js/admin/margincalc.js
-   17. jsPDF CDN (für Lohnzettel-PDF)
+   17. js/admin/payroll.js
+   18. js/admin/restaurant.js
+   19. js/admin/time_entries.js
+   20. js/admin/temperature.js
+   21. js/admin/notify.js
+   22. jsPDF CDN
+
+  employee.html:
+    1. Supabase CDN
+    2. OneSignal SDK
+    3. js/shared/db.js
+    4. js/shared/utils.js
+    5. js/shared/auth.js
+    6. js/employee/init.js
+    7. js/employee/overview.js
+    8. js/employee/vacation.js
+    9. js/employee/availability.js
+   10. js/employee/swaps.js
+   11. js/employee/inventory.js
+   12. js/employee/profil.js
+   13. js/employee/schichtplan.js
+   14. js/employee/stunden.js
+   15. js/employee/trinkgeld.js
+   16. js/employee/payroll.js
+   17. js/employee/temperature.js
