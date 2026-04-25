@@ -1004,14 +1004,26 @@ async function saveShift(payload, repeat, weeks) {
         ({ error } = await db.from('shifts').insert(payloads));
     } else {
         if (payload.employee_id) {
-            let delQ = db.from('shifts').delete()
+            const { data: existing } = await db.from('shifts')
+                .select('id, start_time, end_time, department')
                 .eq('user_id', adminSession.user.id)
                 .eq('employee_id', payload.employee_id)
                 .eq('shift_date', payload.shift_date)
                 .eq('is_open', false);
-            if (payload.department) delQ = delQ.eq('department', payload.department);
-            else                    delQ = delQ.is('department', null);
-            await delQ;
+            const newStart = payload.start_time.slice(0, 5);
+            const newEnd   = payload.end_time.slice(0, 5);
+            const overlaps = (existing || []).filter(s => {
+                const s1 = s.start_time.slice(0, 5);
+                const e1 = s.end_time.slice(0, 5);
+                return newStart < e1 && newEnd > s1;
+            });
+            if (overlaps.length > 0) {
+                const dept = overlaps[0].department || 'Allgemein';
+                const s1   = overlaps[0].start_time.slice(0, 5);
+                const e1   = overlaps[0].end_time.slice(0, 5);
+                const ok   = confirm(`Überschneidung mit bestehender Schicht (${dept}: ${s1}–${e1}). Trotzdem speichern?`);
+                if (!ok) return;
+            }
         }
         ({ error } = await db.from('shifts').insert(payload));
     }
