@@ -19,7 +19,7 @@ async function loadTemperature() {
     document.getElementById('temperature-month-label').textContent = label;
 
     const [{ data: devices }, { data: logs }] = await Promise.all([
-        db.from('temperature_devices').select('*').eq('user_id', adminSession.user.id).order('name'),
+        db.from('temperature_devices').select('*').eq('user_id', adminSession.user.id).order('created_at', { ascending: true }),
         db.from('temperature_logs').select('*').eq('user_id', adminSession.user.id).gte('log_date', firstDay).lte('log_date', lastDay),
     ]);
 
@@ -170,7 +170,7 @@ async function downloadTemperaturePdf() {
     const rangeLabel = `${new Date(firstDay + 'T12:00:00').toLocaleDateString('de-DE')} – ${new Date(lastDay + 'T12:00:00').toLocaleDateString('de-DE')}`;
 
     const [{ data: devices }, { data: logs }] = await Promise.all([
-        db.from('temperature_devices').select('*').eq('user_id', adminSession.user.id).order('name'),
+        db.from('temperature_devices').select('*').eq('user_id', adminSession.user.id).order('created_at', { ascending: true }),
         db.from('temperature_logs').select('*').eq('user_id', adminSession.user.id).gte('log_date', firstDay).lte('log_date', lastDay),
     ]);
 
@@ -234,7 +234,7 @@ async function loadTemperatureConfig() {
         .from('temperature_devices')
         .select('*')
         .eq('user_id', adminSession.user.id)
-        .order('name');
+        .order('created_at', { ascending: true });
 
     renderTemperatureDevices(devices || []);
     loadTemperatureDelegation();
