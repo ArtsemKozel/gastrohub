@@ -734,25 +734,19 @@ async function deleteTeamTask(id) {
 }
 
 async function loadTeamTasks() {
-    const { data: tasks } = await db
-        .from('tasks')
-        .select('*')
-        .eq('user_id', adminSession.user.id)
-        .eq('type', 'general')
-        .eq('is_archived', false)
-        .order('created_at', { ascending: false });
-
-    const container = document.getElementById('general-tasks-list');
-    if (!container) return;
-
-    if (!tasks || tasks.length === 0) {
-        container.innerHTML = '<div style="font-size:0.85rem; color:var(--color-text-light); padding:0.5rem 0;">Keine allgemeinen Aufgaben vorhanden.</div>';
-        return;
-    }
+    const [
+        { data: generalTasks },
+        { data: personalTasks },
+        { data: employees },
+    ] = await Promise.all([
+        db.from('tasks').select('*').eq('user_id', adminSession.user.id).eq('type', 'general').eq('is_archived', false).order('created_at', { ascending: false }),
+        db.from('tasks').select('*').eq('user_id', adminSession.user.id).eq('type', 'personal').eq('is_archived', false).order('created_at', { ascending: false }),
+        db.from('employees_planit').select('id, name').eq('user_id', adminSession.user.id).eq('is_active', true),
+    ]);
 
     const repeatLabel = r => ({ daily: 'Täglich', weekly: 'Wöchentlich', monthly: 'Monatlich' }[r] || null);
 
-    container.innerHTML = tasks.map(t => {
+    const renderTaskCard = (t, mode) => {
         const dateStr = t.due_date
             ? new Date(t.due_date + 'T12:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })
             : null;
@@ -760,12 +754,15 @@ async function loadTeamTasks() {
             ? `Alle ${t.repeat_every} Tage`
             : repeatLabel(t.repeat_interval);
         const taskJson = JSON.stringify(t).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+        const assignedName = mode === 'personal'
+            ? ((employees || []).find(e => e.id === t.assigned_to)?.name || 'Unbekannter Mitarbeiter')
+            : null;
         return `
         <div class="card" style="margin-bottom:0.75rem;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.25rem;">
                 <div style="font-weight:700; font-size:0.95rem;">${t.title}</div>
                 <div style="display:flex; gap:0.5rem; flex-shrink:0; margin-left:0.5rem;">
-                    <button class="btn-small btn-pdf-view btn-icon" onclick='openTeamTaskModal(${taskJson})'>
+                    <button class="btn-small btn-pdf-view btn-icon" onclick='openTeamTaskModal(${taskJson}, "${mode}")'>
                         <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
                     <button class="btn-small btn-pdf-view btn-icon" onclick="archiveTeamTask('${t.id}')">
@@ -776,9 +773,24 @@ async function loadTeamTasks() {
                     </button>
                 </div>
             </div>
+            ${assignedName ? `<div style="font-size:0.8rem; color:var(--color-primary); font-weight:600; margin-bottom:0.2rem;">Zugewiesen an: ${assignedName}</div>` : ''}
             ${t.description ? `<div style="font-size:0.85rem; color:var(--color-text-light); margin-bottom:0.25rem;">${t.description}</div>` : ''}
             ${dateStr ? `<div style="font-size:0.8rem; color:var(--color-text-light);">Fällig: ${dateStr}</div>` : ''}
             ${repeat ? `<div style="font-size:0.8rem; color:var(--color-text-light);">${repeat}</div>` : ''}
         </div>`;
-    }).join('');
+    };
+
+    const generalContainer = document.getElementById('general-tasks-list');
+    if (generalContainer) {
+        generalContainer.innerHTML = (generalTasks && generalTasks.length > 0)
+            ? generalTasks.map(t => renderTaskCard(t, 'general')).join('')
+            : '<div style="font-size:0.85rem; color:var(--color-text-light); padding:0.5rem 0;">Keine allgemeinen Aufgaben vorhanden.</div>';
+    }
+
+    const personalContainer = document.getElementById('personal-tasks-list');
+    if (personalContainer) {
+        personalContainer.innerHTML = (personalTasks && personalTasks.length > 0)
+            ? personalTasks.map(t => renderTaskCard(t, 'personal')).join('')
+            : '<div style="font-size:0.85rem; color:var(--color-text-light); padding:0.5rem 0;">Keine persönlichen Aufgaben vorhanden.</div>';
+    }
 }
