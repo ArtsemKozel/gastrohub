@@ -522,6 +522,12 @@
         .login-tabs { display: flex; background: var(--color-gray); border-radius: 10px; padding: 4px; margin-bottom: 1.5rem; }
         .login-tab { flex: 1; padding: 0.6rem; text-align: center; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--color-text-light); border: none; background: none; transition: all 0.2s; font-family: inherit; }
         .login-tab.active { background: white; color: var(--color-text); }
+
+        .loading-dots { display: flex; gap: 0.4rem; justify-content: center; padding: 0.75rem 0; }
+        .loading-dots span { width: 8px; height: 8px; border-radius: 50%; background: #B28A6E; opacity: 0.25; animation: loading-pulse 1.2s ease-in-out infinite; }
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes loading-pulse { 0%, 100% { opacity: 0.25; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.15); } }
     </style>
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
@@ -1270,7 +1276,7 @@
             </div>
         </div>
         <div id="hygiene-list">
-            <div class="empty-state"><p>Lädt…</p></div>
+            <div class="loading-dots"><span></span><span></span><span></span></div>
         </div>
     </div>
 
@@ -1297,7 +1303,7 @@
             <button onclick="changeTemperatureMonth(1)">▶</button>
         </div>
         <div id="temperature-days-list">
-            <div class="empty-state"><p>Lädt…</p></div>
+            <div class="loading-dots"><span></span><span></span><span></span></div>
         </div>
     </div>
 
@@ -1333,7 +1339,7 @@
             </div>
         </div>
         <div id="temperature-devices-list">
-            <div class="empty-state"><p>Lädt…</p></div>
+            <div class="loading-dots"><span></span><span></span><span></span></div>
         </div>
         <div class="card" style="margin-top:1rem;">
             <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleTemperatureDelegation()">
@@ -1342,7 +1348,7 @@
             </div>
             <div id="temperature-delegation-body" style="display:none; margin-top:0.75rem;">
                 <div id="temperature-delegation-list" style="margin-bottom:1rem;">
-                    <div style="font-size:0.85rem; color:var(--color-text-light);">Lädt…</div>
+                    <div class="loading-dots"><span></span><span></span><span></span></div>
                 </div>
                 <div style="display:flex; justify-content:center;">
                     <button onclick="saveTemperatureDelegation()" title="Speichern" style="width:3rem; height:3rem; border-radius:999px; background:#B28A6E; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
@@ -2360,24 +2366,24 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/shared/db.js?v=20260426113442"></script>
-<script src="js/shared/auth.js?v=20260426113442"></script>
-<script src="js/shared/utils.js?v=20260426113442"></script>
-<script src="js/admin/init.js?v=20260426113442"></script>
-<script src="js/admin/shifts.js?v=20260426113442"></script>
-<script src="js/admin/notify.js?v=20260426113442"></script>
-<script src="js/admin/team.js?v=20260426113442"></script>
-<script src="js/admin/vacation.js?v=20260426113442"></script>
-<script src="js/admin/hours.js?v=20260426113442"></script>
-<script src="js/admin/payroll.js?v=20260426113442"></script>
-<script src="js/admin/tips.js?v=20260426113442"></script>
-<script src="js/admin/inventory.js?v=20260426113442"></script>
-<script src="js/admin/hygiene.js?v=20260426113442"></script>
-<script src="js/admin/temperature.js?v=20260426113442"></script>
-<script src="js/admin/tasks.js?v=20260426113442"></script>
-<script src="js/admin/terminations.js?v=20260426113442"></script>
-<script src="js/admin/margincalc.js?v=20260426113442"></script>
-<script src="js/admin/restaurant.js?v=20260426113442"></script>
+<script src="js/shared/db.js?v=20260426144927"></script>
+<script src="js/shared/auth.js?v=20260426144927"></script>
+<script src="js/shared/utils.js?v=20260426144927"></script>
+<script src="js/admin/init.js?v=20260426144927"></script>
+<script src="js/admin/shifts.js?v=20260426144927"></script>
+<script src="js/admin/notify.js?v=20260426144927"></script>
+<script src="js/admin/team.js?v=20260426144927"></script>
+<script src="js/admin/vacation.js?v=20260426144927"></script>
+<script src="js/admin/hours.js?v=20260426144927"></script>
+<script src="js/admin/payroll.js?v=20260426144927"></script>
+<script src="js/admin/tips.js?v=20260426144927"></script>
+<script src="js/admin/inventory.js?v=20260426144927"></script>
+<script src="js/admin/hygiene.js?v=20260426144927"></script>
+<script src="js/admin/temperature.js?v=20260426144927"></script>
+<script src="js/admin/tasks.js?v=20260426144927"></script>
+<script src="js/admin/terminations.js?v=20260426144927"></script>
+<script src="js/admin/margincalc.js?v=20260426144927"></script>
+<script src="js/admin/restaurant.js?v=20260426144927"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </body>
