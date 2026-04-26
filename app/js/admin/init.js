@@ -38,6 +38,7 @@ function switchTab(tab) {
     if (tab === 'requests')          { loadRequests(); loadRequestsStats(); }
     if (tab === 'urlaubsverwaltung') loadUrlaubsverwaltung();
     if (tab === 'tasks')             loadTasks();
+    if (tab === 'team-tasks')        loadTeamTasks();
     if (tab === 'notes')             loadNotes();
     if (tab === 'trinkgeld')         loadTrinkgeld();
     if (tab === 'trinkgeld-config')  loadTrinkgeldConfig();

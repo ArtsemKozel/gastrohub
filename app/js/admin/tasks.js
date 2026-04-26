@@ -675,5 +675,37 @@ async function submitTeamTask() {
 }
 
 async function loadTeamTasks() {
-    // wird im nächsten Schritt implementiert
+    const { data: tasks } = await db
+        .from('tasks')
+        .select('*')
+        .eq('user_id', adminSession.user.id)
+        .eq('type', 'general')
+        .eq('is_archived', false)
+        .order('created_at', { ascending: false });
+
+    const container = document.getElementById('general-tasks-list');
+    if (!container) return;
+
+    if (!tasks || tasks.length === 0) {
+        container.innerHTML = '<div style="font-size:0.85rem; color:var(--color-text-light); padding:0.5rem 0;">Keine allgemeinen Aufgaben vorhanden.</div>';
+        return;
+    }
+
+    const repeatLabel = r => ({ daily: 'Täglich', weekly: 'Wöchentlich', monthly: 'Monatlich' }[r] || null);
+
+    container.innerHTML = tasks.map(t => {
+        const dateStr = t.due_date
+            ? new Date(t.due_date + 'T12:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })
+            : null;
+        const repeat = t.repeat_interval === 'custom' && t.repeat_every
+            ? `Alle ${t.repeat_every} Tage`
+            : repeatLabel(t.repeat_interval);
+        return `
+        <div class="card" style="margin-bottom:0.75rem;">
+            <div style="font-weight:700; font-size:0.95rem; margin-bottom:0.25rem;">${t.title}</div>
+            ${t.description ? `<div style="font-size:0.85rem; color:var(--color-text-light); margin-bottom:0.25rem;">${t.description}</div>` : ''}
+            ${dateStr ? `<div style="font-size:0.8rem; color:var(--color-text-light);">Fällig: ${dateStr}</div>` : ''}
+            ${repeat ? `<div style="font-size:0.8rem; color:var(--color-text-light);">${repeat}</div>` : ''}
+        </div>`;
+    }).join('');
 }
