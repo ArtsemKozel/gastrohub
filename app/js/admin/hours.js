@@ -139,7 +139,7 @@ async function loadAdminStunden() {
         return `
         <div class="card" style="margin-bottom:0.75rem;">
             <button style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:1rem; background:none; border:none; padding:0; cursor:pointer; touch-action:manipulation; text-align:left;" onclick="toggleStundenEmp('${emp.id}')">
-                <div style="font-weight:600;">${emp.name}</div>
+                <div style="font-weight:600; font-size:1.1rem;">${emp.name}</div>
                 <div style="display:flex; align-items:center; gap:0.75rem;">
                     <div style="font-size:0.8rem; color:var(--color-text-light);">${emp.department}</div>
                     <span id="stunden-toggle-${emp.id}" style="color:var(--color-text-light);">▶</span>
