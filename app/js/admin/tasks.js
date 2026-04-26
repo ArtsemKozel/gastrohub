@@ -642,16 +642,37 @@ async function deleteNote(id) {
 // ── TEAM-AUFGABEN ─────────────────────────────────────────
 
 let editTeamTaskId = null;
+let teamTaskMode   = 'general';
 
-function openTeamTaskModal(task) {
+async function openTeamTaskModal(task, mode) {
     editTeamTaskId = task ? task.id : null;
-    document.getElementById('team-task-title').value       = task?.title           || '';
-    document.getElementById('team-task-description').value = task?.description     || '';
-    document.getElementById('team-task-due-date').value    = task?.due_date        || '';
-    document.getElementById('team-task-repeat').value      = task?.repeat_interval || '';
-    document.getElementById('team-task-repeat-every').value = task?.repeat_every   || '';
+    teamTaskMode   = mode === 'personal' ? 'personal' : 'general';
+
+    document.getElementById('team-task-title').value        = task?.title           || '';
+    document.getElementById('team-task-description').value  = task?.description     || '';
+    document.getElementById('team-task-due-date').value     = task?.due_date        || '';
+    document.getElementById('team-task-repeat').value       = task?.repeat_interval || '';
+    document.getElementById('team-task-repeat-every').value = task?.repeat_every    || '';
     document.getElementById('team-task-repeat-every-group').style.display =
         task?.repeat_interval === 'custom' ? 'block' : 'none';
+
+    const assignedGroup = document.getElementById('team-task-assigned-to-group');
+    const assignedSel   = document.getElementById('team-task-assigned-to');
+    if (teamTaskMode === 'personal') {
+        const { data: emps } = await db
+            .from('employees_planit')
+            .select('id, name')
+            .eq('user_id', adminSession.user.id)
+            .eq('is_active', true)
+            .order('name');
+        assignedSel.innerHTML = '<option value="">Alle Mitarbeiter</option>' +
+            (emps || []).map(e => `<option value="${e.id}"${task?.assigned_to === e.id ? ' selected' : ''}>${e.name}</option>`).join('');
+        assignedGroup.style.display = 'block';
+    } else {
+        assignedSel.innerHTML = '<option value="">Alle Mitarbeiter</option>';
+        assignedGroup.style.display = 'none';
+    }
+
     document.getElementById('team-task-modal').classList.add('active');
 }
 
@@ -665,19 +686,24 @@ async function submitTeamTask() {
 
     if (!title) { alert('Bitte einen Titel eingeben.'); return; }
 
+    const assignedTo = teamTaskMode === 'personal'
+        ? (document.getElementById('team-task-assigned-to').value || null)
+        : null;
+
     const payload = {
         title,
         description:     description || null,
         due_date:        dueDate,
         repeat_interval: repeatInterval,
         repeat_every:    repeatEvery,
+        assigned_to:     assignedTo,
     };
 
     let error;
     if (editTeamTaskId) {
         ({ error } = await db.from('tasks').update(payload).eq('id', editTeamTaskId));
     } else {
-        ({ error } = await db.from('tasks').insert({ ...payload, user_id: adminSession.user.id, type: 'general' }));
+        ({ error } = await db.from('tasks').insert({ ...payload, user_id: adminSession.user.id, type: teamTaskMode }));
     }
 
     if (error) { alert('Fehler beim Speichern: ' + error.message); return; }
@@ -690,6 +716,8 @@ async function submitTeamTask() {
     document.getElementById('team-task-repeat').value = '';
     document.getElementById('team-task-repeat-every').value = '';
     document.getElementById('team-task-repeat-every-group').style.display = 'none';
+    document.getElementById('team-task-assigned-to-group').style.display = 'none';
+    document.getElementById('team-task-assigned-to').value = '';
 
     loadTeamTasks();
 }
