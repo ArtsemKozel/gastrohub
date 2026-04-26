@@ -23,6 +23,7 @@ function switchTab(tab) {
     if (tab === 'trinkgeld')    loadEmpTrinkgeld();
     if (tab === 'inventur-emp')    loadEmpInventur();
     if (tab === 'temperature-emp') loadEmployeeTemperature();
+    if (tab === 'aufgaben-emp')   loadEmpAufgaben();
     if (tab === 'mehr') {
         document.getElementById('trinkgeld-menu-item').style.display = 'none';
         const invItem  = document.getElementById('inventur-emp-menu-item');
