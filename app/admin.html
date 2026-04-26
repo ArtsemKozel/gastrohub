@@ -1367,8 +1367,11 @@
             <input type="text" id="team-task-title" placeholder="Aufgabentitel">
         </div>
         <div id="team-task-employees-group" style="display:none; margin-bottom:1rem;">
-            <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--color-text-light); margin-bottom:0.5rem;">Mitarbeiter</label>
-            <div id="team-task-employees-list" style="display:flex; flex-direction:column; gap:0.4rem;"></div>
+            <div onclick="const l=document.getElementById('team-task-employees-list');const a=document.getElementById('team-task-employees-arrow');const open=l.style.display!=='none';l.style.display=open?'none':'flex';a.textContent=open?'▶':'▼';" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:0.4rem 0; user-select:none;">
+                <span style="font-size:0.85rem; font-weight:600; color:var(--color-text-light);">Mitarbeiter auswählen</span>
+                <span id="team-task-employees-arrow" style="font-size:0.75rem; color:var(--color-text-light);">▶</span>
+            </div>
+            <div id="team-task-employees-list" style="display:none; flex-direction:column; gap:0.4rem;"></div>
         </div>
         <div class="form-group">
             <label>Beschreibung</label>
@@ -2357,24 +2360,24 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/shared/db.js?v=20260426104048"></script>
-<script src="js/shared/auth.js?v=20260426104048"></script>
-<script src="js/shared/utils.js?v=20260426104048"></script>
-<script src="js/admin/init.js?v=20260426104048"></script>
-<script src="js/admin/shifts.js?v=20260426104048"></script>
-<script src="js/admin/notify.js?v=20260426104048"></script>
-<script src="js/admin/team.js?v=20260426104048"></script>
-<script src="js/admin/vacation.js?v=20260426104048"></script>
-<script src="js/admin/hours.js?v=20260426104048"></script>
-<script src="js/admin/payroll.js?v=20260426104048"></script>
-<script src="js/admin/tips.js?v=20260426104048"></script>
-<script src="js/admin/inventory.js?v=20260426104048"></script>
-<script src="js/admin/hygiene.js?v=20260426104048"></script>
-<script src="js/admin/temperature.js?v=20260426104048"></script>
-<script src="js/admin/tasks.js?v=20260426104048"></script>
-<script src="js/admin/terminations.js?v=20260426104048"></script>
-<script src="js/admin/margincalc.js?v=20260426104048"></script>
-<script src="js/admin/restaurant.js?v=20260426104048"></script>
+<script src="js/shared/db.js?v=20260426111455"></script>
+<script src="js/shared/auth.js?v=20260426111455"></script>
+<script src="js/shared/utils.js?v=20260426111455"></script>
+<script src="js/admin/init.js?v=20260426111455"></script>
+<script src="js/admin/shifts.js?v=20260426111455"></script>
+<script src="js/admin/notify.js?v=20260426111455"></script>
+<script src="js/admin/team.js?v=20260426111455"></script>
+<script src="js/admin/vacation.js?v=20260426111455"></script>
+<script src="js/admin/hours.js?v=20260426111455"></script>
+<script src="js/admin/payroll.js?v=20260426111455"></script>
+<script src="js/admin/tips.js?v=20260426111455"></script>
+<script src="js/admin/inventory.js?v=20260426111455"></script>
+<script src="js/admin/hygiene.js?v=20260426111455"></script>
+<script src="js/admin/temperature.js?v=20260426111455"></script>
+<script src="js/admin/tasks.js?v=20260426111455"></script>
+<script src="js/admin/terminations.js?v=20260426111455"></script>
+<script src="js/admin/margincalc.js?v=20260426111455"></script>
+<script src="js/admin/restaurant.js?v=20260426111455"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </body>
