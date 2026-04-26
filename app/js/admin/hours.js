@@ -17,6 +17,13 @@ async function loadAdminStunden() {
     const firstDay = `${monthStr}-01`;
     const lastDay  = new Date(year, month + 1, 0).toISOString().split('T')[0];
 
+    const prevDate     = new Date(year, month - 1, 1);
+    const prevYear     = prevDate.getFullYear();
+    const prevMonth    = prevDate.getMonth();
+    const prevMonthStr = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}`;
+    const prevFirstDay = `${prevMonthStr}-01`;
+    const prevLastDay  = new Date(prevYear, prevMonth + 1, 0).toISOString().split('T')[0];
+
     const { data: emps } = await db
         .from('employees_planit')
         .select('*')
@@ -33,6 +40,10 @@ async function loadAdminStunden() {
         { data: approved },
         { data: actualHours },
         { data: vacations },
+        { data: prevShifts },
+        { data: prevApproved },
+        { data: prevActualHours },
+        { data: prevVacations },
     ] = await Promise.all([
         db.from('shifts').select('*').gte('shift_date', firstDay).lte('shift_date', lastDay),
         db.from('approved_hours').select('*').eq('month', monthStr),
@@ -44,7 +55,56 @@ async function loadAdminStunden() {
             .eq('type', 'vacation')
             .lte('start_date', lastDay)
             .gte('end_date', firstDay),
+        db.from('shifts').select('*').gte('shift_date', prevFirstDay).lte('shift_date', prevLastDay),
+        db.from('approved_hours').select('*').eq('month', prevMonthStr),
+        db.from('actual_hours').select('*').eq('month', prevMonthStr),
+        db.from('vacation_requests')
+            .select('employee_id, deducted_days, deducted_hours')
+            .eq('user_id', adminSession.user.id)
+            .eq('status', 'approved')
+            .eq('type', 'vacation')
+            .lte('start_date', prevLastDay)
+            .gte('end_date', prevFirstDay),
     ]);
+
+    // Auto carry-over: für Mitarbeiter ohne bestehenden actual_hours-Eintrag
+    // den Saldo des Vormonats automatisch übernehmen (manuell gesetzte Werte bleiben unberührt)
+    const effectiveActualHours = [...(actualHours || [])];
+    const autoUpserts = [];
+    for (const emp of emps) {
+        if (effectiveActualHours.find(a => a.employee_id === emp.id)) continue;
+        const prevApprovedEntry = (prevApproved || []).find(a => a.employee_id === emp.id);
+        if (!prevApprovedEntry) continue;
+
+        let prevActualMins = 0;
+        (prevShifts || []).filter(s => s.employee_id === emp.id).forEach(s => {
+            const startStr = s.actual_start_time || s.start_time;
+            const endStr   = s.actual_end_time   || s.end_time;
+            const breakMin = s.actual_break_minutes ?? s.break_minutes ?? 0;
+            const [sh, sm] = startStr.split(':').map(Number);
+            const [eh, em] = endStr.split(':').map(Number);
+            prevActualMins += (eh * 60 + em) - (sh * 60 + sm) - breakMin;
+        });
+
+        const hoursPerDay = emp.hours_per_vacation_day || 8;
+        let prevVacMins = 0;
+        (prevVacations || []).filter(v => v.employee_id === emp.id).forEach(v => {
+            if (v.deducted_hours != null) prevVacMins += Math.round(v.deducted_hours * 60);
+            else if (v.deducted_days)    prevVacMins += Math.round(v.deducted_days * hoursPerDay * 60);
+        });
+
+        const prevCarryEntry  = (prevActualHours || []).find(a => a.employee_id === emp.id);
+        const prevCarryMins   = prevCarryEntry ? (prevCarryEntry.carry_over_minutes || 0) : 0;
+        const autoCarry       = prevActualMins + prevVacMins - prevApprovedEntry.approved_minutes + prevCarryMins;
+
+        effectiveActualHours.push({ employee_id: emp.id, carry_over_minutes: autoCarry });
+        autoUpserts.push(db.from('actual_hours').upsert({
+            employee_id: emp.id, month: monthStr,
+            carry_over_minutes: autoCarry,
+            user_id: adminSession.user.id,
+        }, { onConflict: 'employee_id,month' }));
+    }
+    if (autoUpserts.length) Promise.all(autoUpserts);
 
     const html = emps.map(emp => {
         const empShifts = (shifts || []).filter(s => s.employee_id === emp.id);
@@ -96,7 +156,7 @@ async function loadAdminStunden() {
         }
 
         // Vormonat-Differenz
-        const actualEntry    = (actualHours || []).find(a => a.employee_id === emp.id);
+        const actualEntry    = effectiveActualHours.find(a => a.employee_id === emp.id);
         const prevDiffMinutes = actualEntry ? (actualEntry.carry_over_minutes || 0) : 0;
 
         // Saldo
