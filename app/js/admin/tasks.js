@@ -638,3 +638,42 @@ async function deleteNote(id) {
     await db.from('notes').delete().eq('id', id);
     await loadNotes();
 }
+
+// ── TEAM-AUFGABEN ─────────────────────────────────────────
+
+async function submitTeamTask() {
+    const title          = document.getElementById('team-task-title').value.trim();
+    const description    = document.getElementById('team-task-description').value.trim();
+    const dueDate        = document.getElementById('team-task-due-date').value || null;
+    const repeatInterval = document.getElementById('team-task-repeat').value || null;
+    const repeatEveryRaw = document.getElementById('team-task-repeat-every').value;
+    const repeatEvery    = repeatInterval === 'custom' ? (parseInt(repeatEveryRaw) || null) : null;
+
+    if (!title) { alert('Bitte einen Titel eingeben.'); return; }
+
+    const { error } = await db.from('tasks').insert({
+        user_id:         adminSession.user.id,
+        title,
+        description:     description || null,
+        due_date:        dueDate,
+        repeat_interval: repeatInterval,
+        repeat_every:    repeatEvery,
+        type:            'general',
+    });
+
+    if (error) { alert('Fehler beim Speichern: ' + error.message); return; }
+
+    document.getElementById('team-task-modal').classList.remove('active');
+    document.getElementById('team-task-title').value = '';
+    document.getElementById('team-task-description').value = '';
+    document.getElementById('team-task-due-date').value = '';
+    document.getElementById('team-task-repeat').value = '';
+    document.getElementById('team-task-repeat-every').value = '';
+    document.getElementById('team-task-repeat-every-group').style.display = 'none';
+
+    loadTeamTasks();
+}
+
+async function loadTeamTasks() {
+    // wird im nächsten Schritt implementiert
+}
