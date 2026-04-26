@@ -521,19 +521,10 @@
         await OneSignal.init({
           appId: "05a71a0f-9a52-4dee-b147-d9bfb6fb64cd",
           safari_web_id: "web.onesignal.auto.31ba082c-c81b-42a5-be17-ec59d526e60e",
-          notifyButton: {
-            enable: true,
-          },
+          notifyButton: { enable: false },
         });
-        function hideBell() {
-          const bell = document.getElementById('onesignal-bell-container');
-          if (bell) bell.style.display = 'none';
-        }
-        if (OneSignal.User.PushSubscription.optedIn) {
-          hideBell();
-          setTimeout(hideBell, 500);
-        } else {
-          OneSignal.Notifications.addEventListener('permissionChange', hideBell);
+        if (!OneSignal.User.PushSubscription.optedIn) {
+          OneSignal.Slidedown.promptPush();
         }
       });
     </script>
@@ -1237,22 +1228,22 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/shared/db.js?v=20260426112332"></script>
-<script src="js/shared/auth.js?v=20260426112332"></script>
-<script src="js/shared/utils.js?v=20260426112332"></script>
-<script src="js/employee/init.js?v=20260426112332"></script>
-<script src="js/employee/schichtplan.js?v=20260426112332"></script>
-<script src="js/employee/overview.js?v=20260426112332"></script>
-<script src="js/employee/vacation.js?v=20260426112332"></script>
-<script src="js/employee/availability.js?v=20260426112332"></script>
-<script src="js/employee/swaps.js?v=20260426112332"></script>
-<script src="js/employee/stunden.js?v=20260426112332"></script>
-<script src="js/employee/trinkgeld.js?v=20260426112332"></script>
-<script src="js/employee/payroll.js?v=20260426112332"></script>
-<script src="js/employee/inventory.js?v=20260426112332"></script>
-<script src="js/employee/temperature.js?v=20260426112332"></script>
-<script src="js/employee/tasks.js?v=20260426112332"></script>
-<script src="js/employee/profil.js?v=20260426112332"></script>
+<script src="js/shared/db.js?v=20260426113442"></script>
+<script src="js/shared/auth.js?v=20260426113442"></script>
+<script src="js/shared/utils.js?v=20260426113442"></script>
+<script src="js/employee/init.js?v=20260426113442"></script>
+<script src="js/employee/schichtplan.js?v=20260426113442"></script>
+<script src="js/employee/overview.js?v=20260426113442"></script>
+<script src="js/employee/vacation.js?v=20260426113442"></script>
+<script src="js/employee/availability.js?v=20260426113442"></script>
+<script src="js/employee/swaps.js?v=20260426113442"></script>
+<script src="js/employee/stunden.js?v=20260426113442"></script>
+<script src="js/employee/trinkgeld.js?v=20260426113442"></script>
+<script src="js/employee/payroll.js?v=20260426113442"></script>
+<script src="js/employee/inventory.js?v=20260426113442"></script>
+<script src="js/employee/temperature.js?v=20260426113442"></script>
+<script src="js/employee/tasks.js?v=20260426113442"></script>
+<script src="js/employee/profil.js?v=20260426113442"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </body>
