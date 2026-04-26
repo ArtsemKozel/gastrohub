@@ -656,21 +656,25 @@ async function openTeamTaskModal(task, mode) {
     document.getElementById('team-task-repeat-every-group').style.display =
         task?.repeat_interval === 'custom' ? 'block' : 'none';
 
-    const assignedGroup = document.getElementById('team-task-assigned-to-group');
-    const assignedSel   = document.getElementById('team-task-assigned-to');
+    const empGroup = document.getElementById('team-task-employees-group');
+    const empList  = document.getElementById('team-task-employees-list');
     if (teamTaskMode === 'personal') {
-        const { data: emps } = await db
-            .from('employees_planit')
-            .select('id, name')
-            .eq('user_id', adminSession.user.id)
-            .eq('is_active', true)
-            .order('name');
-        assignedSel.innerHTML = '<option value="">Alle Mitarbeiter</option>' +
-            (emps || []).map(e => `<option value="${e.id}"${task?.assigned_to === e.id ? ' selected' : ''}>${e.name}</option>`).join('');
-        assignedGroup.style.display = 'block';
+        const [{ data: emps }, { data: assignments }] = await Promise.all([
+            db.from('employees_planit').select('id, name').eq('user_id', adminSession.user.id).eq('is_active', true).order('name'),
+            editTeamTaskId
+                ? db.from('task_assignments').select('employee_id').eq('task_id', editTeamTaskId)
+                : Promise.resolve({ data: [] }),
+        ]);
+        const assignedIds = new Set((assignments || []).map(a => a.employee_id));
+        empList.innerHTML = (emps || []).map(e => `
+            <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.9rem; cursor:pointer; padding:0.3rem 0;">
+                <input type="checkbox" value="${e.id}"${assignedIds.has(e.id) ? ' checked' : ''} style="width:16px; height:16px; cursor:pointer;">
+                ${e.name}
+            </label>`).join('');
+        empGroup.style.display = 'block';
     } else {
-        assignedSel.innerHTML = '<option value="">Alle Mitarbeiter</option>';
-        assignedGroup.style.display = 'none';
+        empList.innerHTML = '';
+        empGroup.style.display = 'none';
     }
 
     document.getElementById('team-task-modal').classList.add('active');
@@ -686,27 +690,36 @@ async function submitTeamTask() {
 
     if (!title) { alert('Bitte einen Titel eingeben.'); return; }
 
-    const assignedTo = teamTaskMode === 'personal'
-        ? (document.getElementById('team-task-assigned-to').value || null)
-        : null;
-
     const payload = {
         title,
         description:     description || null,
         due_date:        dueDate,
         repeat_interval: repeatInterval,
         repeat_every:    repeatEvery,
-        assigned_to:     assignedTo,
     };
 
+    let taskId = editTeamTaskId;
     let error;
     if (editTeamTaskId) {
         ({ error } = await db.from('tasks').update(payload).eq('id', editTeamTaskId));
     } else {
-        ({ error } = await db.from('tasks').insert({ ...payload, user_id: adminSession.user.id, type: teamTaskMode }));
+        const { data: inserted, error: insertError } = await db
+            .from('tasks')
+            .insert({ ...payload, user_id: adminSession.user.id, type: teamTaskMode })
+            .select('id')
+            .single();
+        error = insertError;
+        if (!error) taskId = inserted.id;
     }
 
     if (error) { alert('Fehler beim Speichern: ' + error.message); return; }
+
+    if (teamTaskMode === 'personal' && taskId) {
+        const checked = [...document.querySelectorAll('#team-task-employees-list input[type=checkbox]:checked')]
+            .map(cb => ({ task_id: taskId, employee_id: cb.value }));
+        await db.from('task_assignments').delete().eq('task_id', taskId);
+        if (checked.length) await db.from('task_assignments').insert(checked);
+    }
 
     editTeamTaskId = null;
     document.getElementById('team-task-modal').classList.remove('active');
@@ -716,8 +729,8 @@ async function submitTeamTask() {
     document.getElementById('team-task-repeat').value = '';
     document.getElementById('team-task-repeat-every').value = '';
     document.getElementById('team-task-repeat-every-group').style.display = 'none';
-    document.getElementById('team-task-assigned-to-group').style.display = 'none';
-    document.getElementById('team-task-assigned-to').value = '';
+    document.getElementById('team-task-employees-list').innerHTML = '';
+    document.getElementById('team-task-employees-group').style.display = 'none';
 
     loadTeamTasks();
 }
@@ -737,12 +750,21 @@ async function loadTeamTasks() {
     const [
         { data: generalTasks },
         { data: personalTasks },
-        { data: employees },
+        { data: emps },
+        { data: allAssignments },
     ] = await Promise.all([
         db.from('tasks').select('*').eq('user_id', adminSession.user.id).eq('type', 'general').eq('is_archived', false).order('created_at', { ascending: false }),
         db.from('tasks').select('*').eq('user_id', adminSession.user.id).eq('type', 'personal').eq('is_archived', false).order('created_at', { ascending: false }),
         db.from('employees_planit').select('id, name').eq('user_id', adminSession.user.id).eq('is_active', true),
+        db.from('task_assignments').select('task_id, employee_id'),
     ]);
+
+    const empMap = Object.fromEntries((emps || []).map(e => [e.id, e.name]));
+    const assignMap = {};
+    for (const a of (allAssignments || [])) {
+        if (!assignMap[a.task_id]) assignMap[a.task_id] = [];
+        assignMap[a.task_id].push(empMap[a.employee_id] || 'Unbekannt');
+    }
 
     const repeatLabel = r => ({ daily: 'Täglich', weekly: 'Wöchentlich', monthly: 'Monatlich' }[r] || null);
 
@@ -754,9 +776,7 @@ async function loadTeamTasks() {
             ? `Alle ${t.repeat_every} Tage`
             : repeatLabel(t.repeat_interval);
         const taskJson = JSON.stringify(t).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
-        const assignedName = mode === 'personal'
-            ? ((employees || []).find(e => e.id === t.assigned_to)?.name || 'Unbekannter Mitarbeiter')
-            : null;
+        const assignedNames = mode === 'personal' ? (assignMap[t.id] || []) : [];
         return `
         <div class="card" style="margin-bottom:0.75rem;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.25rem;">
@@ -773,7 +793,7 @@ async function loadTeamTasks() {
                     </button>
                 </div>
             </div>
-            ${assignedName ? `<div style="font-size:0.8rem; color:var(--color-primary); font-weight:600; margin-bottom:0.2rem;">Zugewiesen an: ${assignedName}</div>` : ''}
+            ${assignedNames.length ? `<div style="font-size:0.8rem; color:var(--color-primary); font-weight:600; margin-bottom:0.2rem;">Zugewiesen an: ${assignedNames.join(', ')}</div>` : ''}
             ${t.description ? `<div style="font-size:0.85rem; color:var(--color-text-light); margin-bottom:0.25rem;">${t.description}</div>` : ''}
             ${dateStr ? `<div style="font-size:0.8rem; color:var(--color-text-light);">Fällig: ${dateStr}</div>` : ''}
             ${repeat ? `<div style="font-size:0.8rem; color:var(--color-text-light);">${repeat}</div>` : ''}
