@@ -1,14 +1,19 @@
-async function loadFehlzeiten() {
-    const input = document.getElementById('statistiken-month');
-    if (!input.value) {
-        const now = new Date();
-        input.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    }
-    const monthVal = input.value;
+let statistikenDate = new Date();
 
-    const [year, month] = monthVal.split('-').map(Number);
-    const firstDay = `${monthVal}-01`;
+function changeStatistikenMonth(dir) {
+    statistikenDate.setMonth(statistikenDate.getMonth() + dir);
+    loadFehlzeiten();
+}
+
+async function loadFehlzeiten() {
+    const year     = statistikenDate.getFullYear();
+    const month    = statistikenDate.getMonth() + 1;
+    const monthStr = String(month).padStart(2, '0');
+    const firstDay = `${year}-${monthStr}-01`;
     const lastDay  = new Date(year, month, 0).toISOString().split('T')[0];
+
+    const label = statistikenDate.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+    document.getElementById('statistiken-month-label').textContent = label;
 
     const [{ data: sickLeaves }, { data: shifts }, { data: emps }] = await Promise.all([
         db.from('sick_leaves')
