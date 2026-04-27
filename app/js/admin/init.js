@@ -51,7 +51,7 @@ function switchTab(tab) {
     if (tab === 'temperature-config') loadTemperatureConfig();
     if (tab === 'margincalc')        MarginCalcApp.init();
     if (tab === 'payroll')           loadPayroll();
-    if (tab === 'statistiken')       loadFehlzeiten();
+    if (tab === 'statistiken')       { loadFehlzeiten(); loadFehlzeitenJahr(); }
 
     localStorage.setItem('planit_admin_tab', tab);
 }

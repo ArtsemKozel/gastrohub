@@ -1,8 +1,78 @@
 let statistikenDate = new Date();
+let statistikenYear = new Date().getFullYear();
 
 function changeStatistikenMonth(dir) {
     statistikenDate.setMonth(statistikenDate.getMonth() + dir);
     loadFehlzeiten();
+}
+
+function changeStatistikenYear(dir) {
+    statistikenYear += dir;
+    document.getElementById('statistiken-year-label').textContent = statistikenYear;
+    loadFehlzeitenJahr();
+}
+
+async function loadFehlzeitenJahr() {
+    document.getElementById('statistiken-year-label').textContent = statistikenYear;
+
+    const firstDay = `${statistikenYear}-01-01`;
+    const lastDay  = `${statistikenYear}-12-31`;
+
+    const [{ data: sickLeaves }, { data: shifts }, { data: emps }] = await Promise.all([
+        db.from('sick_leaves')
+            .select('*')
+            .eq('user_id', adminSession.user.id)
+            .lte('start_date', lastDay)
+            .gte('end_date', firstDay),
+        db.from('shifts')
+            .select('employee_id, shift_date')
+            .eq('user_id', adminSession.user.id)
+            .eq('is_open', false)
+            .gte('shift_date', firstDay)
+            .lte('shift_date', lastDay),
+        db.from('employees_planit')
+            .select('id, name')
+            .eq('user_id', adminSession.user.id)
+            .eq('is_active', true)
+            .order('name'),
+    ]);
+
+    const byEmp = {};
+    for (const s of (sickLeaves || [])) {
+        if (!byEmp[s.employee_id]) byEmp[s.employee_id] = [];
+        byEmp[s.employee_id].push(s);
+    }
+
+    const tbody = document.getElementById('fehlzeiten-year-tbody');
+
+    tbody.innerHTML = (emps || []).map(emp => {
+        const leaves = byEmp[emp.id] || [];
+        const monthCounts = Array(12).fill(0);
+
+        for (const s of leaves) {
+            const affected = (shifts || []).filter(sh =>
+                sh.employee_id === emp.id &&
+                sh.shift_date  >= s.start_date &&
+                sh.shift_date  <= s.end_date
+            );
+            for (const sh of affected) {
+                const m = parseInt(sh.shift_date.split('-')[1], 10) - 1;
+                monthCounts[m]++;
+            }
+        }
+
+        const total = monthCounts.reduce((a, b) => a + b, 0);
+        const cells = monthCounts.map(c =>
+            `<td style="padding:0.5rem 0.3rem; text-align:center;">${c || ''}</td>`
+        ).join('');
+
+        return `
+        <tr style="border-bottom:1px solid var(--color-border);">
+            <td style="padding:0.5rem 0.4rem; font-weight:600; white-space:nowrap;">${emp.name}</td>
+            ${cells}
+            <td style="padding:0.5rem 0.3rem; text-align:center; font-weight:700;">${total || ''}</td>
+        </tr>`;
+    }).join('');
 }
 
 async function loadFehlzeiten() {
