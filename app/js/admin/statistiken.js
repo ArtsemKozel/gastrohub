@@ -29,22 +29,16 @@ async function loadFehlzeiten() {
             .order('name'),
     ]);
 
-    const empMap = Object.fromEntries((emps || []).map(e => [e.id, e.name]));
-    const tbody  = document.getElementById('fehlzeiten-tbody');
-
-    if (!sickLeaves || sickLeaves.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="padding:1rem 0.5rem; color:var(--color-text-light); font-size:0.85rem;">Keine Krankmeldungen in diesem Monat.</td></tr>`;
-        return;
-    }
+    const tbody = document.getElementById('fehlzeiten-tbody');
 
     const byEmp = {};
-    for (const s of sickLeaves) {
+    for (const s of (sickLeaves || [])) {
         if (!byEmp[s.employee_id]) byEmp[s.employee_id] = [];
         byEmp[s.employee_id].push(s);
     }
 
-    const rows = [];
-    for (const [empId, leaves] of Object.entries(byEmp)) {
+    const rows = (emps || []).map(emp => {
+        const leaves = byEmp[emp.id] || [];
         let calDays    = 0;
         let shiftCount = 0;
         let sickMins   = 0;
@@ -55,7 +49,7 @@ async function loadFehlzeiten() {
             calDays += Math.round((new Date(clampEnd) - new Date(clampStart)) / 86400000) + 1;
 
             const affected = (shifts || []).filter(sh =>
-                sh.employee_id === empId &&
+                sh.employee_id === emp.id &&
                 sh.shift_date  >= s.start_date &&
                 sh.shift_date  <= s.end_date
             );
@@ -69,13 +63,10 @@ async function loadFehlzeiten() {
             }
         }
 
-        const h    = Math.floor(sickMins / 60);
-        const m    = String(sickMins % 60).padStart(2, '0');
-        const name = empMap[empId] || 'Unbekannt';
-        rows.push({ name, calDays, shiftCount, display: `${h}:${m}` });
-    }
-
-    rows.sort((a, b) => a.name.localeCompare(b.name, 'de'));
+        const h = Math.floor(sickMins / 60);
+        const m = String(sickMins % 60).padStart(2, '0');
+        return { name: emp.name, calDays, shiftCount, display: `${h}:${m}` };
+    });
 
     tbody.innerHTML = rows.map(r => `
         <tr style="border-bottom:1px solid var(--color-border);">
