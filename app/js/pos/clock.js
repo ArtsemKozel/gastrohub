@@ -143,7 +143,7 @@ function renderPinScreen() {
     return `
     <div class="pos-card">
         <div class="pos-header">
-            <div class="pos-logo"><img src="/assets/logo.png" alt="GastroHub" style="height: 32px;"></div>
+            <div class="pos-logo"><img src="assets/logo.png" alt="GastroHub" style="height: 32px;"></div>
             <div style="font-size:0.8rem; color:var(--color-text-light);">Zeiterfassung</div>
         </div>
         <div class="pos-clock-display">
