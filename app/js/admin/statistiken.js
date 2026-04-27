@@ -1,7 +1,9 @@
 let statistikenDate       = new Date();
 let statistikenYear       = new Date().getFullYear();
-let statistikenVerlaufYear = new Date().getFullYear();
-let verlaufChart          = null;
+let statistikenVerlaufYear  = new Date().getFullYear();
+let verlaufChart            = null;
+let statistikenTrinkgeldYear = new Date().getFullYear();
+let trinkgeldChart          = null;
 
 function changeStatistikenMonth(dir) {
     statistikenDate.setMonth(statistikenDate.getMonth() + dir);
@@ -224,4 +226,51 @@ async function loadFehlzeiten() {
             <td style="padding:0.65rem 0.5rem; text-align:center;">${r.shiftCount}</td>
             <td style="padding:0.65rem 0.5rem; text-align:center;">${r.display}</td>
         </tr>`).join('');
+}
+
+function changeStatistikenTrinkgeldYear(dir) {
+    statistikenTrinkgeldYear += dir;
+    document.getElementById('statistiken-trinkgeld-year-label').textContent = statistikenTrinkgeldYear;
+    loadTrinkgeldVerlauf();
+}
+
+async function loadTrinkgeldVerlauf() {
+    document.getElementById('statistiken-trinkgeld-year-label').textContent = statistikenTrinkgeldYear;
+
+    const firstDay = `${statistikenTrinkgeldYear}-01-01`;
+    const lastDay  = `${statistikenTrinkgeldYear}-12-31`;
+
+    const { data: entries } = await db.from('tip_entries')
+        .select('entry_date, amount_card, amount_cash')
+        .eq('user_id', adminSession.user.id)
+        .gte('entry_date', firstDay)
+        .lte('entry_date', lastDay);
+
+    const monthTotals = Array(12).fill(0);
+    for (const e of (entries || [])) {
+        const m = parseInt(e.entry_date.split('-')[1], 10) - 1;
+        monthTotals[m] += (e.amount_card || 0) + (e.amount_cash || 0);
+    }
+
+    const ctx = document.getElementById('trinkgeld-verlauf-chart').getContext('2d');
+    if (trinkgeldChart) trinkgeldChart.destroy();
+    trinkgeldChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['01','02','03','04','05','06','07','08','09','10','11','12'],
+            datasets: [{
+                label: 'Trinkgeld (€)',
+                data: monthTotals.map(v => Math.round(v * 100) / 100),
+                backgroundColor: '#B28A6E',
+                borderRadius: 6,
+            }],
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { callback: v => v + ' €' } },
+            },
+        },
+    });
 }

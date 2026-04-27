@@ -933,6 +933,20 @@
                 <canvas id="krankheitsverlauf-chart"></canvas>
             </div>
         </div>
+        <div class="card" style="margin-bottom:1rem;">
+            <div onclick="const b=document.getElementById('trinkgeld-verlauf-body');const a=document.getElementById('trinkgeld-verlauf-arrow');const open=b.style.display!=='none';b.style.display=open?'none':'block';a.textContent=open?'▶':'▼';" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none;">
+                <span style="font-weight:700; font-size:0.95rem;">Trinkgeld-Verlauf</span>
+                <span id="trinkgeld-verlauf-arrow" style="font-size:0.75rem; color:var(--color-text-light);">▶</span>
+            </div>
+            <div id="trinkgeld-verlauf-body" style="display:none; margin-top:1rem;">
+                <div class="month-selector" style="margin-bottom:1.25rem;">
+                    <button onclick="changeStatistikenTrinkgeldYear(-1)">◀</button>
+                    <span id="statistiken-trinkgeld-year-label"></span>
+                    <button onclick="changeStatistikenTrinkgeldYear(1)">▶</button>
+                </div>
+                <canvas id="trinkgeld-verlauf-chart"></canvas>
+            </div>
+        </div>
     </div>
 
     <!-- TAB: KÜNDIGUNGEN -->
@@ -2452,25 +2466,25 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/shared/db.js?v=20260427115631"></script>
-<script src="js/shared/auth.js?v=20260427115631"></script>
-<script src="js/shared/utils.js?v=20260427115631"></script>
-<script src="js/admin/init.js?v=20260427115631"></script>
-<script src="js/admin/shifts.js?v=20260427115631"></script>
-<script src="js/admin/notify.js?v=20260427115631"></script>
-<script src="js/admin/team.js?v=20260427115631"></script>
-<script src="js/admin/vacation.js?v=20260427115631"></script>
-<script src="js/admin/hours.js?v=20260427115631"></script>
-<script src="js/admin/payroll.js?v=20260427115631"></script>
-<script src="js/admin/tips.js?v=20260427115631"></script>
-<script src="js/admin/inventory.js?v=20260427115631"></script>
-<script src="js/admin/hygiene.js?v=20260427115631"></script>
-<script src="js/admin/temperature.js?v=20260427115631"></script>
-<script src="js/admin/tasks.js?v=20260427115631"></script>
-<script src="js/admin/terminations.js?v=20260427115631"></script>
-<script src="js/admin/margincalc.js?v=20260427115631"></script>
-<script src="js/admin/restaurant.js?v=20260427115631"></script>
-<script src="js/admin/statistiken.js?v=20260427115631"></script>
+<script src="js/shared/db.js?v=20260427122650"></script>
+<script src="js/shared/auth.js?v=20260427122650"></script>
+<script src="js/shared/utils.js?v=20260427122650"></script>
+<script src="js/admin/init.js?v=20260427122650"></script>
+<script src="js/admin/shifts.js?v=20260427122650"></script>
+<script src="js/admin/notify.js?v=20260427122650"></script>
+<script src="js/admin/team.js?v=20260427122650"></script>
+<script src="js/admin/vacation.js?v=20260427122650"></script>
+<script src="js/admin/hours.js?v=20260427122650"></script>
+<script src="js/admin/payroll.js?v=20260427122650"></script>
+<script src="js/admin/tips.js?v=20260427122650"></script>
+<script src="js/admin/inventory.js?v=20260427122650"></script>
+<script src="js/admin/hygiene.js?v=20260427122650"></script>
+<script src="js/admin/temperature.js?v=20260427122650"></script>
+<script src="js/admin/tasks.js?v=20260427122650"></script>
+<script src="js/admin/terminations.js?v=20260427122650"></script>
+<script src="js/admin/margincalc.js?v=20260427122650"></script>
+<script src="js/admin/restaurant.js?v=20260427122650"></script>
+<script src="js/admin/statistiken.js?v=20260427122650"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </body>
