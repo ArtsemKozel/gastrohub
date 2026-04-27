@@ -25,7 +25,7 @@ async function loadFehlzeitenJahr() {
             .lte('start_date', lastDay)
             .gte('end_date', firstDay),
         db.from('shifts')
-            .select('employee_id, shift_date')
+            .select('employee_id, shift_date, start_time, end_time, break_minutes')
             .eq('user_id', adminSession.user.id)
             .eq('is_open', false)
             .gte('shift_date', firstDay)
@@ -47,30 +47,38 @@ async function loadFehlzeitenJahr() {
 
     tbody.innerHTML = (emps || []).map(emp => {
         const leaves = byEmp[emp.id] || [];
-        const monthCounts = Array(12).fill(0);
+        let calDays    = 0;
+        let shiftCount = 0;
+        let sickMins   = 0;
 
         for (const s of leaves) {
+            const clampStart = s.start_date < firstDay ? firstDay : s.start_date;
+            const clampEnd   = s.end_date   > lastDay  ? lastDay  : s.end_date;
+            calDays += Math.round((new Date(clampEnd) - new Date(clampStart)) / 86400000) + 1;
+
             const affected = (shifts || []).filter(sh =>
                 sh.employee_id === emp.id &&
                 sh.shift_date  >= s.start_date &&
                 sh.shift_date  <= s.end_date
             );
+            shiftCount += affected.length;
+
             for (const sh of affected) {
-                const m = parseInt(sh.shift_date.split('-')[1], 10) - 1;
-                monthCounts[m]++;
+                const [startH, startM] = sh.start_time.split(':').map(Number);
+                const [endH,   endM]   = sh.end_time.split(':').map(Number);
+                const duration = (endH * 60 + endM) - (startH * 60 + startM) - (sh.break_minutes || 0);
+                sickMins += Math.max(0, duration);
             }
         }
 
-        const total = monthCounts.reduce((a, b) => a + b, 0);
-        const cells = monthCounts.map(c =>
-            `<td style="padding:0.5rem 0.3rem; text-align:center;">${c || ''}</td>`
-        ).join('');
-
+        const h = Math.floor(sickMins / 60);
+        const m = String(sickMins % 60).padStart(2, '0');
         return `
         <tr style="border-bottom:1px solid var(--color-border);">
-            <td style="padding:0.5rem 0.4rem; font-weight:600; white-space:nowrap;">${emp.name}</td>
-            ${cells}
-            <td style="padding:0.5rem 0.3rem; text-align:center; font-weight:700;">${total || ''}</td>
+            <td style="padding:0.65rem 0.5rem; font-weight:600;">${emp.name}</td>
+            <td style="padding:0.65rem 0.5rem;">${calDays}</td>
+            <td style="padding:0.65rem 0.5rem; text-align:center;">${shiftCount}</td>
+            <td style="padding:0.65rem 0.5rem; text-align:center;">${h}:${m}</td>
         </tr>`;
     }).join('');
 }
