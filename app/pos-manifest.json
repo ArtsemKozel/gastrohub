@@ -1,0 +1,21 @@
+{
+  "name": "GastroHub",
+  "short_name": "GH Zeit",
+  "start_url": "/app/pos",
+  "scope": "/app/",
+  "display": "standalone",
+  "background_color": "#F5F0EB",
+  "theme_color": "#B28A6E",
+  "icons": [
+    {
+      "src": "assets/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
