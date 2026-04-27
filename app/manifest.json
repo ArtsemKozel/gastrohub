@@ -1,7 +1,8 @@
 {
   "name": "GastroHub",
   "short_name": "GastroHub",
-  "start_url": "/",
+  "start_url": "/app/admin",
+  "scope": "/app/",
   "display": "standalone",
   "background_color": "#F5F0EB",
   "theme_color": "#B28A6E",
