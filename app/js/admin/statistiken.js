@@ -111,8 +111,7 @@ async function loadKrankheitsverlauf() {
             .lte('shift_date', lastDay),
     ]);
 
-    const monthLabels = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-                         'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    const monthLabels = ['01','02','03','04','05','06','07','08','09','10','11','12'];
     const monthCounts = Array(12).fill(0);
 
     for (const s of (sickLeaves || [])) {
