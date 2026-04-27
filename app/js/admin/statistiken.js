@@ -1,5 +1,7 @@
-let statistikenDate = new Date();
-let statistikenYear = new Date().getFullYear();
+let statistikenDate       = new Date();
+let statistikenYear       = new Date().getFullYear();
+let statistikenVerlaufYear = new Date().getFullYear();
+let verlaufChart          = null;
 
 function changeStatistikenMonth(dir) {
     statistikenDate.setMonth(statistikenDate.getMonth() + dir);
@@ -81,6 +83,71 @@ async function loadFehlzeitenJahr() {
             <td style="padding:0.65rem 0.5rem; text-align:center;">${h}:${m}</td>
         </tr>`;
     }).join('');
+}
+
+function changeStatistikenVerlaufYear(dir) {
+    statistikenVerlaufYear += dir;
+    document.getElementById('statistiken-verlauf-year-label').textContent = statistikenVerlaufYear;
+    loadKrankheitsverlauf();
+}
+
+async function loadKrankheitsverlauf() {
+    document.getElementById('statistiken-verlauf-year-label').textContent = statistikenVerlaufYear;
+
+    const firstDay = `${statistikenVerlaufYear}-01-01`;
+    const lastDay  = `${statistikenVerlaufYear}-12-31`;
+
+    const [{ data: sickLeaves }, { data: shifts }] = await Promise.all([
+        db.from('sick_leaves')
+            .select('*')
+            .eq('user_id', adminSession.user.id)
+            .lte('start_date', lastDay)
+            .gte('end_date', firstDay),
+        db.from('shifts')
+            .select('employee_id, shift_date')
+            .eq('user_id', adminSession.user.id)
+            .eq('is_open', false)
+            .gte('shift_date', firstDay)
+            .lte('shift_date', lastDay),
+    ]);
+
+    const monthLabels = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+                         'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    const monthCounts = Array(12).fill(0);
+
+    for (const s of (sickLeaves || [])) {
+        const affected = (shifts || []).filter(sh =>
+            sh.employee_id === s.employee_id &&
+            sh.shift_date  >= s.start_date &&
+            sh.shift_date  <= s.end_date
+        );
+        for (const sh of affected) {
+            const m = parseInt(sh.shift_date.split('-')[1], 10) - 1;
+            monthCounts[m]++;
+        }
+    }
+
+    const ctx = document.getElementById('krankheitsverlauf-chart').getContext('2d');
+    if (verlaufChart) verlaufChart.destroy();
+    verlaufChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: monthLabels,
+            datasets: [{
+                label: 'Kranktage',
+                data: monthCounts,
+                backgroundColor: '#B28A6E',
+                borderRadius: 6,
+            }],
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+            },
+        },
+    });
 }
 
 async function loadFehlzeiten() {
