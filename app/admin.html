@@ -1618,8 +1618,10 @@
             </div>
         </div>
         <div id="shift-error" style="color:var(--color-red); font-size:0.85rem; margin-bottom:1rem; display:none;"></div>
-        <button id="shift-delete-btn" class="btn-secondary" style="margin-bottom:0.75rem; color:var(--color-red); border-color:var(--color-red);" onclick="deleteShift()">Schicht löschen</button>
-        <button class="btn-primary" onclick="submitShift()">Schicht speichern</button>
+        <div style="display:flex; justify-content:center; gap:1rem;">
+            <button id="shift-delete-btn" onclick="deleteShift()" style="width:48px; height:48px; border-radius:50%; background:#B28A6E; border:none; cursor:pointer; padding:14px;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+            <button onclick="submitShift()" style="width:48px; height:48px; border-radius:50%; background:#B28A6E; border:none; cursor:pointer; padding:14px;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        </div>
     </div>
 </div>
 
@@ -1927,8 +1929,10 @@
             <input type="text" id="open-shift-note" placeholder="z.B. Verstärkung gesucht">
         </div>
         <div id="open-shift-error" style="color:var(--color-red); font-size:0.85rem; margin-bottom:1rem; display:none;"></div>
-        <button id="open-shift-delete-btn" class="btn-secondary" style="margin-bottom:0.75rem; color:var(--color-red); border-color:var(--color-red); display:none;" onclick="deleteOpenShift()">Schicht löschen</button>
-        <button class="btn-primary" onclick="submitOpenShift()">Speichern</button>
+        <div style="display:flex; justify-content:center; gap:1rem;">
+            <button id="open-shift-delete-btn" onclick="deleteOpenShift()" style="width:48px; height:48px; border-radius:50%; background:#B28A6E; border:none; cursor:pointer; padding:14px; display:none;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+            <button onclick="submitOpenShift()" style="width:48px; height:48px; border-radius:50%; background:#B28A6E; border:none; cursor:pointer; padding:14px;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        </div>
     </div>
 </div>
 
@@ -2468,25 +2472,25 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/shared/db.js?v=20260428084213"></script>
-<script src="js/shared/auth.js?v=20260428084213"></script>
-<script src="js/shared/utils.js?v=20260428084213"></script>
-<script src="js/admin/init.js?v=20260428084213"></script>
-<script src="js/admin/shifts.js?v=20260428084213"></script>
-<script src="js/admin/notify.js?v=20260428084213"></script>
-<script src="js/admin/team.js?v=20260428084213"></script>
-<script src="js/admin/vacation.js?v=20260428084213"></script>
-<script src="js/admin/hours.js?v=20260428084213"></script>
-<script src="js/admin/payroll.js?v=20260428084213"></script>
-<script src="js/admin/tips.js?v=20260428084213"></script>
-<script src="js/admin/inventory.js?v=20260428084213"></script>
-<script src="js/admin/hygiene.js?v=20260428084213"></script>
-<script src="js/admin/temperature.js?v=20260428084213"></script>
-<script src="js/admin/tasks.js?v=20260428084213"></script>
-<script src="js/admin/terminations.js?v=20260428084213"></script>
-<script src="js/admin/margincalc.js?v=20260428084213"></script>
-<script src="js/admin/restaurant.js?v=20260428084213"></script>
-<script src="js/admin/statistiken.js?v=20260428084213"></script>
+<script src="js/shared/db.js?v=20260428085249"></script>
+<script src="js/shared/auth.js?v=20260428085249"></script>
+<script src="js/shared/utils.js?v=20260428085249"></script>
+<script src="js/admin/init.js?v=20260428085249"></script>
+<script src="js/admin/shifts.js?v=20260428085249"></script>
+<script src="js/admin/notify.js?v=20260428085249"></script>
+<script src="js/admin/team.js?v=20260428085249"></script>
+<script src="js/admin/vacation.js?v=20260428085249"></script>
+<script src="js/admin/hours.js?v=20260428085249"></script>
+<script src="js/admin/payroll.js?v=20260428085249"></script>
+<script src="js/admin/tips.js?v=20260428085249"></script>
+<script src="js/admin/inventory.js?v=20260428085249"></script>
+<script src="js/admin/hygiene.js?v=20260428085249"></script>
+<script src="js/admin/temperature.js?v=20260428085249"></script>
+<script src="js/admin/tasks.js?v=20260428085249"></script>
+<script src="js/admin/terminations.js?v=20260428085249"></script>
+<script src="js/admin/margincalc.js?v=20260428085249"></script>
+<script src="js/admin/restaurant.js?v=20260428085249"></script>
+<script src="js/admin/statistiken.js?v=20260428085249"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/app/sw.js");</script>
