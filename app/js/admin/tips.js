@@ -265,14 +265,23 @@ async function loadTrinkgeld() {
                 const prevDept    = prevEmp ? prevEmp.employees_planit.department : '';
                 const deptHeader  = currentDept && currentDept !== prevDept
                     ? `<div style="font-size:0.75rem; font-weight:700; color:var(--color-primary); padding:0.5rem 0 0.25rem; letter-spacing:0.05em;">${currentDept.toUpperCase()}</div>` : '';
-                const empTotalMin = (tipHours || []).filter(h => h.employee_id === empId).reduce((sum, h) => sum + h.minutes, 0);
-                const empHours    = empTotalMin > 0 ? `${Math.floor(empTotalMin / 60)}h ${String(empTotalMin % 60).padStart(2, '0')}m` : '';
-                const dayRows     = allDates.filter(dateStr => Object.values(dayResults[dateStr].empResults).some(r => r.empId === empId)).map(dateStr => {
+                const empTotalMin  = (tipHours || []).filter(h => h.employee_id === empId).reduce((sum, h) => sum + h.minutes, 0);
+                const empHours     = empTotalMin > 0 ? `${Math.floor(empTotalMin / 60)}h ${String(empTotalMin % 60).padStart(2, '0')}m` : '';
+                const fixedDeptRec = (depts || []).find(d => d.department === currentDept && d.fixed_hours_per_month);
+                const avgDayMins   = fixedDeptRec ? (fixedDeptRec.fixed_hours_per_month * 60) / daysInMonth : null;
+                const dayRows      = allDates.filter(dateStr => Object.values(dayResults[dateStr].empResults).some(r => r.empId === empId)).map(dateStr => {
                     const d           = dayResults[dateStr];
                     const dateLabel   = new Date(dateStr + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
                     const dayEmpTotal = Object.values(d.empResults).filter(r => r.empId === empId).reduce((sum, r) => sum + r.card + r.cash, 0);
-                    const dayEmpMins  = d.hours.filter(h => h.employee_id === empId).reduce((sum, h) => sum + h.minutes, 0);
-                    const dayHoursStr = dayEmpMins > 0 ? `${Math.floor(dayEmpMins / 60)}h ${String(dayEmpMins % 60).padStart(2, '0')}m` : '';
+                    let dayHoursStr;
+                    if (avgDayMins !== null) {
+                        const ah = Math.floor(avgDayMins / 60);
+                        const am = Math.round(avgDayMins % 60);
+                        dayHoursStr = `Ø ${ah} h ${String(am).padStart(2, '0')} m`;
+                    } else {
+                        const dayEmpMins = d.hours.filter(h => h.employee_id === empId).reduce((sum, h) => sum + h.minutes, 0);
+                        dayHoursStr = dayEmpMins > 0 ? `${Math.floor(dayEmpMins / 60)}h ${String(dayEmpMins % 60).padStart(2, '0')}m` : '';
+                    }
                     return `<div style="display:flex; justify-content:space-between; align-items:center; font-size:0.82rem; padding:0.25rem 0; border-bottom:1px solid var(--color-border);"><span style="color:var(--color-text-light);">${dateLabel}</span><div style="display:flex; gap:1rem; align-items:center;">${dayHoursStr ? `<span style="color:var(--color-text-light);">${dayHoursStr}</span>` : ''}<span style="font-weight:600; min-width:4rem; text-align:right;">${dayEmpTotal.toFixed(2)} €</span></div></div>`;
                 }).join('');
                 return `${deptHeader}
