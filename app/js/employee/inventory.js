@@ -21,22 +21,21 @@ async function loadEmpInventur() {
     updateEmpInventurDateLabel();
     const date = empInventurDate.toISOString().split('T')[0];
 
-    const { data: suppliers } = await db
-        .from('planit_suppliers')
-        .select('*, planit_inventory_items(*)')
-        .eq('user_id', currentEmployee.user_id)
-        .order('created_at', { ascending: true });
+    const [{ data: suppliers }, { data: entries }, { data: prevEntriesRaw }] = await Promise.all([
+        db.from('planit_suppliers').select('*, planit_inventory_items(*)').eq('user_id', currentEmployee.user_id).order('created_at', { ascending: true }),
+        db.from('planit_inventory_entries').select('*').eq('user_id', currentEmployee.user_id).eq('entry_date', date),
+        db.from('planit_inventory_entries').select('item_id,actual_amount,entry_date').eq('user_id', currentEmployee.user_id).lt('entry_date', date).order('entry_date', { ascending: false })
+    ]);
 
-    const { data: entries } = await db
-        .from('planit_inventory_entries')
-        .select('*')
-        .eq('user_id', currentEmployee.user_id)
-        .eq('entry_date', date);
+    const prevEntries = {};
+    for (const e of (prevEntriesRaw || [])) {
+        if (!(e.item_id in prevEntries)) prevEntries[e.item_id] = e.actual_amount;
+    }
 
-    renderEmpInventur(suppliers, entries);
+    renderEmpInventur(suppliers, entries, prevEntries);
 }
 
-function renderEmpInventur(suppliers, entries) {
+function renderEmpInventur(suppliers, entries, prevEntries = {}) {
     const container = document.getElementById('emp-inventur-list');
 
     if (!suppliers || suppliers.length === 0) {
@@ -74,11 +73,14 @@ function renderEmpInventur(suppliers, entries) {
                                 <div style="font-size:0.75rem; color:var(--color-text-light);">${item.unit}</div>
                             </div>
                             <div style="text-align:center; font-size:0.9rem;">${item.target_amount}</div>
-                            <input type="number" value="${actual}" min="0" step="0.1"
-                                data-item-id="${item.id}"
-                                data-target="${item.target_amount}"
-                                onchange="updateEmpOrderValue(this)"
-                                style="text-align:center; padding:0.3rem; border-radius:6px; border:1px solid var(--color-border); font-size:0.85rem; width:100%;">
+                            <div>
+                                <input type="number" value="${actual}" min="0" step="0.1"
+                                    data-item-id="${item.id}"
+                                    data-target="${item.target_amount}"
+                                    onchange="updateEmpOrderValue(this)"
+                                    style="text-align:center; padding:0.3rem; border-radius:6px; border:1px solid var(--color-border); font-size:0.85rem; width:100%;">
+                                ${prevEntries[item.id] !== undefined ? `<div style="font-size:0.72rem; color:var(--color-text-light); text-align:center; margin-top:0.15rem;">Letztes Mal: ${prevEntries[item.id]} ${item.unit}</div>` : ''}
+                            </div>
                             <div id="emp-order-${item.id}"
                                  style="text-align:center; font-size:0.9rem; font-weight:600; color:${order > 0 ? 'var(--color-red)' : 'var(--color-green)'};">
                                 ${order !== '' ? order : '–'}
