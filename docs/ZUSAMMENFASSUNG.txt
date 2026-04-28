@@ -318,3 +318,31 @@ Admin-Module. Logik aus PlanIt/js/employee.js (~2400 Zeilen) wird aufgeteilt
 in die 7 Mitarbeiter-Module. Funktionen die in beiden PlanIt-Dateien identisch
 vorhanden waren landen in js/shared/utils.js. Keine inhaltlichen Änderungen
 an der Logik während der Migration — erst migrieren, dann verbessern.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ PREISGESTALTUNG
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Modular buchbar (web/pricing.html). Alle Preise Netto zzgl. MwSt.
+Einmalige Setup-Gebühr: 99 € (Einrichtung, Konfiguration, Einführung)
+
+ KERN-FEATURES
+  Schichtplanung              10 € / Monat
+  Mitarbeiter-Verwaltung       8 € / Monat
+  Urlaubsverwaltung            8 € / Monat
+  Zeiterfassung               12 € / Monat
+
+ ABRECHNUNG
+  Vorlohnabrechnung           10 € / Monat
+  Trinkgeld-Verwaltung         6 € / Monat
+  Stundenübersicht             5 € / Monat
+
+ EXTRAS
+  Inventur                     6 € / Monat
+  Aufgaben & Notizen           4 € / Monat
+  Hygiene-Protokoll            4 € / Monat
+  Abgänge & Kündigungen        5 € / Monat
+  MarginCalc                   5 € / Monat
+
+Beispiel Vollpaket (alle 12 Module): 83 € / Monat + 99 € Setup einmalig.
