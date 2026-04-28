@@ -24,6 +24,14 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
     event.respondWith(
-        caches.match(event.request).then(cached => cached || fetch(event.request))
+        caches.match(event.request).then(cached => {
+            if (cached) return cached;
+            return fetch(event.request).then(response => {
+                if (response.redirected || response.type === 'opaqueredirect') {
+                    return fetch(event.request);
+                }
+                return response;
+            });
+        })
     );
 });
