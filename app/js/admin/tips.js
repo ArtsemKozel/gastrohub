@@ -267,8 +267,8 @@ async function loadTrinkgeld() {
                     ? `<div style="font-size:0.75rem; font-weight:700; color:var(--color-primary); padding:0.5rem 0 0.25rem; letter-spacing:0.05em;">${currentDept.toUpperCase()}</div>` : '';
                 const empTotalMin  = (tipHours || []).filter(h => h.employee_id === empId).reduce((sum, h) => sum + h.minutes, 0);
                 const empHours     = empTotalMin > 0 ? `${Math.floor(empTotalMin / 60)}h ${String(empTotalMin % 60).padStart(2, '0')}m` : '';
-                const fixedDeptRec = (depts || []).find(d => d.department === currentDept && d.fixed_hours_per_month);
-                const avgDayMins   = fixedDeptRec ? (fixedDeptRec.fixed_hours_per_month * 60) / daysInMonth : null;
+                const isPoolDept = (depts || []).find(d => d.department === currentDept && d.pool_department);
+                const avgDayMins = isPoolDept ? (poolDeptMonthMinutes[currentDept] || 0) / daysInMonth : null;
                 const dayRows      = allDates.filter(dateStr => Object.values(dayResults[dateStr].empResults).some(r => r.empId === empId)).map(dateStr => {
                     const d           = dayResults[dateStr];
                     const dateLabel   = new Date(dateStr + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
