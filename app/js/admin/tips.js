@@ -267,16 +267,21 @@ async function loadTrinkgeld() {
                     ? `<div style="font-size:0.75rem; font-weight:700; color:var(--color-primary); padding:0.5rem 0 0.25rem; letter-spacing:0.05em;">${currentDept.toUpperCase()}</div>` : '';
                 const empTotalMin = (tipHours || []).filter(h => h.employee_id === empId).reduce((sum, h) => sum + h.minutes, 0);
                 const empHours    = empTotalMin > 0 ? `${Math.floor(empTotalMin / 60)}h ${String(empTotalMin % 60).padStart(2, '0')}m` : '';
+                const dayRows     = allDates.filter(dateStr => Object.values(dayResults[dateStr].empResults).some(r => r.empId === empId)).map(dateStr => {
+                    const d           = dayResults[dateStr];
+                    const dateLabel   = new Date(dateStr + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
+                    const dayEmpTotal = Object.values(d.empResults).filter(r => r.empId === empId).reduce((sum, r) => sum + r.card + r.cash, 0);
+                    const dayEmpMins  = d.hours.filter(h => h.employee_id === empId).reduce((sum, h) => sum + h.minutes, 0);
+                    const dayHoursStr = dayEmpMins > 0 ? `${Math.floor(dayEmpMins / 60)}h ${String(dayEmpMins % 60).padStart(2, '0')}m` : '';
+                    return `<div style="display:flex; justify-content:space-between; align-items:center; font-size:0.82rem; padding:0.25rem 0; border-bottom:1px solid var(--color-border);"><span style="color:var(--color-text-light);">${dateLabel}</span><div style="display:flex; gap:1rem; align-items:center;">${dayHoursStr ? `<span style="color:var(--color-text-light);">${dayHoursStr}</span>` : ''}<span style="font-weight:600; min-width:4rem; text-align:right;">${dayEmpTotal.toFixed(2)} €</span></div></div>`;
+                }).join('');
                 return `${deptHeader}
-                <div class="list-item">
-                    <div class="list-item-info">
-                        <h4>${name}</h4>
-                        <p>Karte: ${totals.card.toFixed(2)} € | Bar: ${totals.cash.toFixed(2)} €</p>
+                <div style="background:white; border-radius:10px; margin-bottom:0.5rem; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:0.65rem 0.85rem; cursor:pointer;" onclick="(function(){var b=document.getElementById('te-b-${empId}'),t=document.getElementById('te-a-${empId}'),o=b.style.display==='block';b.style.display=o?'none':'block';t.textContent=o?'▶':'▼';})();">
+                        <div><div style="font-weight:600; font-size:0.9rem;">${name}</div>${empHours ? `<div style="font-size:0.75rem; color:var(--color-text-light);">${empHours}</div>` : ''}</div>
+                        <div style="display:flex; align-items:center; gap:0.5rem;"><div style="font-weight:700; color:var(--color-primary);">${(totals.card + totals.cash).toFixed(2)} €</div><span id="te-a-${empId}" style="color:var(--color-text-light); font-size:0.8rem;">▶</span></div>
                     </div>
-                    <div style="text-align:right;">
-                        <div style="font-weight:700; color:var(--color-primary);">${(totals.card + totals.cash).toFixed(2)} €</div>
-                        ${empHours ? `<div style="font-size:0.8rem; color:var(--color-text-light);">${empHours}</div>` : ''}
-                    </div>
+                    <div id="te-b-${empId}" style="display:none; padding:0.5rem 0.85rem 0.65rem; border-top:1px solid var(--color-border); background:var(--color-gray);">${dayRows || '<div style="font-size:0.82rem; color:var(--color-text-light);">Keine Tagesdaten.</div>'}</div>
                 </div>`;
             }).join('')}`;
     }
