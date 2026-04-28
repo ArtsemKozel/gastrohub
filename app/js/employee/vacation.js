@@ -86,7 +86,7 @@ function renderVacationCalendar(year, month, vacations) {
 
     if (visible.length > 0) {
         const fmtShort  = d => { const p = d.split('-'); return `${parseInt(p[2])}.${parseInt(p[1])}.`; };
-        const typeLabel = t => t === 'payout' ? '💰' : t === 'manual' ? '✏️' : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#B28A6E"><path d="M12 3 C7 3 3 7 3 12 L12 12 Z"/><path d="M12 3 C17 3 21 7 21 12 L12 12 Z" opacity="0.6"/><rect x="11.5" y="12" width="1" height="9" rx="0.5"/><ellipse cx="12" cy="21.5" rx="3" ry="0.8"/></svg>';
+        const typeLabel = t => t === 'payout' ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#B28A6E"><ellipse cx="12" cy="15" rx="8" ry="7"/><path d="M9 8 C9 5 15 5 15 8" /><path d="M10 8 Q12 6 14 8" fill="none" stroke="#B28A6E" stroke-width="1.5"/><text x="12" y="17" text-anchor="middle" font-size="7" fill="white" font-weight="bold">€</text></svg>' : t === 'manual' ? '✏️' : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#B28A6E"><path d="M12 3 C7 3 3 7 3 12 L12 12 Z"/><path d="M12 3 C17 3 21 7 21 12 L12 12 Z" opacity="0.6"/><rect x="11.5" y="12" width="1" height="9" rx="0.5"/><ellipse cx="12" cy="21.5" rx="3" ry="0.8"/></svg>';
         const listEl    = document.createElement('div');
         listEl.style.marginTop = '1rem';
         const sorted = [...visible].sort((a, b) => a.start_date.localeCompare(b.start_date));
@@ -382,7 +382,7 @@ function showVacExplain(type) {
             body = '<div style="color:var(--color-text-light);">Keine Einträge.</div>';
         } else {
             body  = d.usedEntries.map(r => {
-                const typeLabel = r.type === 'payout' ? '💰' : r.type === 'manual' ? '✏️' : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#B28A6E"><path d="M12 3 C7 3 3 7 3 12 L12 12 Z"/><path d="M12 3 C17 3 21 7 21 12 L12 12 Z" opacity="0.6"/><rect x="11.5" y="12" width="1" height="9" rx="0.5"/><ellipse cx="12" cy="21.5" rx="3" ry="0.8"/></svg>';
+                const typeLabel = r.type === 'payout' ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#B28A6E"><ellipse cx="12" cy="15" rx="8" ry="7"/><path d="M9 8 C9 5 15 5 15 8" /><path d="M10 8 Q12 6 14 8" fill="none" stroke="#B28A6E" stroke-width="1.5"/><text x="12" y="17" text-anchor="middle" font-size="7" fill="white" font-weight="bold">€</text></svg>' : r.type === 'manual' ? '✏️' : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#B28A6E"><path d="M12 3 C7 3 3 7 3 12 L12 12 Z"/><path d="M12 3 C17 3 21 7 21 12 L12 12 Z" opacity="0.6"/><rect x="11.5" y="12" width="1" height="9" rx="0.5"/><ellipse cx="12" cy="21.5" rx="3" ry="0.8"/></svg>';
                 const hrs       = r.deducted_hours != null ? ` / ${r.deducted_hours} Std` : '';
                 return `<div style="display:flex; justify-content:space-between; padding:0.35rem 0; border-bottom:1px solid var(--color-border); font-size:0.85rem;">
                     <span>${typeLabel} ${fmt(r.start_date)}</span>

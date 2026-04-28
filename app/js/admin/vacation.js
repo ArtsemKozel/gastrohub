@@ -23,7 +23,7 @@ async function loadAdminVacations() {
                 <h4>${v.employees_planit?.name || 'Unbekannt'}</h4>
                 <p>${v.type === 'payout' ? `Erstellt am ${formatDate(v.start_date)}` : `${formatDate(v.start_date)} – ${formatDate(v.end_date)}`}</p>
 ${v.reason ? `<p style="font-size:0.8rem;">${v.reason}</p>` : ''}
-${v.status === 'approved' ? `<p style="font-size:0.8rem; color:var(--color-primary);">${v.type === 'payout' ? '💰' : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#B28A6E"><path d="M12 3 C7 3 3 7 3 12 L12 12 Z"/><path d="M12 3 C17 3 21 7 21 12 L12 12 Z" opacity="0.6"/><rect x="11.5" y="12" width="1" height="9" rx="0.5"/><ellipse cx="12" cy="21.5" rx="3" ry="0.8"/></svg>'} ${(Math.round((v.deducted_days || 0) * 100) / 100).toFixed(2)} ${v.type === 'payout' ? 'Urlaubstage ausgezahlt' : 'Urlaubstage abgezogen'}${v.payout_month ? ` · ${v.payout_month}` : ''}</p>` : ''}
+${v.status === 'approved' ? `<p style="font-size:0.8rem; color:var(--color-primary);">${v.type === 'payout' ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#B28A6E"><ellipse cx="12" cy="15" rx="8" ry="7"/><path d="M9 8 C9 5 15 5 15 8" /><path d="M10 8 Q12 6 14 8" fill="none" stroke="#B28A6E" stroke-width="1.5"/><text x="12" y="17" text-anchor="middle" font-size="7" fill="white" font-weight="bold">€</text></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#B28A6E"><path d="M12 3 C7 3 3 7 3 12 L12 12 Z"/><path d="M12 3 C17 3 21 7 21 12 L12 12 Z" opacity="0.6"/><rect x="11.5" y="12" width="1" height="9" rx="0.5"/><ellipse cx="12" cy="21.5" rx="3" ry="0.8"/></svg>'} ${(Math.round((v.deducted_days || 0) * 100) / 100).toFixed(2)} ${v.type === 'payout' ? 'Urlaubstage ausgezahlt' : 'Urlaubstage abgezogen'}${v.payout_month ? ` · ${v.payout_month}` : ''}</p>` : ''}
             </div>
             <div style="display:flex; flex-direction:column; gap:0.4rem; align-items:flex-end;">
                 <span class="badge badge-${v.status}">
@@ -382,7 +382,7 @@ function renderAdminVacationCalendar(year, month, vacations) {
 
     if (vacations.length > 0) {
         const fmtShort  = d => { const p = d.split('-'); return `${parseInt(p[2])}.${parseInt(p[1])}.`; };
-        const typeLabel = t => t === 'payout' ? '💰' : t === 'manual' ? '✏️' : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#B28A6E"><path d="M12 3 C7 3 3 7 3 12 L12 12 Z"/><path d="M12 3 C17 3 21 7 21 12 L12 12 Z" opacity="0.6"/><rect x="11.5" y="12" width="1" height="9" rx="0.5"/><ellipse cx="12" cy="21.5" rx="3" ry="0.8"/></svg>';
+        const typeLabel = t => t === 'payout' ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#B28A6E"><ellipse cx="12" cy="15" rx="8" ry="7"/><path d="M9 8 C9 5 15 5 15 8" /><path d="M10 8 Q12 6 14 8" fill="none" stroke="#B28A6E" stroke-width="1.5"/><text x="12" y="17" text-anchor="middle" font-size="7" fill="white" font-weight="bold">€</text></svg>' : t === 'manual' ? '✏️' : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#B28A6E"><path d="M12 3 C7 3 3 7 3 12 L12 12 Z"/><path d="M12 3 C17 3 21 7 21 12 L12 12 Z" opacity="0.6"/><rect x="11.5" y="12" width="1" height="9" rx="0.5"/><ellipse cx="12" cy="21.5" rx="3" ry="0.8"/></svg>';
         const depts = [...new Set(vacations.map(v => v.employees_planit?.department || 'Allgemein'))].sort();
         const listEl = document.createElement('div');
         listEl.style.marginTop = '1rem';
@@ -711,7 +711,7 @@ function showVacationExplain(empId, type) {
             body = '<div style="color:var(--color-text-light);">Keine Einträge.</div>';
         } else {
             body = vacations.map(v => {
-                const typeLabel = v.type === 'payout' ? '💰' : v.type === 'manual' ? '✏️' : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#B28A6E"><path d="M12 3 C7 3 3 7 3 12 L12 12 Z"/><path d="M12 3 C17 3 21 7 21 12 L12 12 Z" opacity="0.6"/><rect x="11.5" y="12" width="1" height="9" rx="0.5"/><ellipse cx="12" cy="21.5" rx="3" ry="0.8"/></svg>';
+                const typeLabel = v.type === 'payout' ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#B28A6E"><ellipse cx="12" cy="15" rx="8" ry="7"/><path d="M9 8 C9 5 15 5 15 8" /><path d="M10 8 Q12 6 14 8" fill="none" stroke="#B28A6E" stroke-width="1.5"/><text x="12" y="17" text-anchor="middle" font-size="7" fill="white" font-weight="bold">€</text></svg>' : v.type === 'manual' ? '✏️' : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#B28A6E"><path d="M12 3 C7 3 3 7 3 12 L12 12 Z"/><path d="M12 3 C17 3 21 7 21 12 L12 12 Z" opacity="0.6"/><rect x="11.5" y="12" width="1" height="9" rx="0.5"/><ellipse cx="12" cy="21.5" rx="3" ry="0.8"/></svg>';
                 const hrs = v.deducted_hours != null ? ` / ${v.deducted_hours} Std` : '';
                 return `<div style="display:flex; justify-content:space-between; align-items:baseline; padding:0.35rem 0; border-bottom:1px solid var(--color-border); font-size:0.85rem;">
                     <span>${typeLabel} ${fmt(v.start_date)}${v.reason ? ' · ' + v.reason : ''}</span>
