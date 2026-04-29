@@ -144,7 +144,7 @@ function renderPinScreen() {
     <div class="pos-card">
         <div class="pos-header">
             <div class="pos-logo">Zeiterfassung</div>
-            <div style="font-size:0.8rem; color:var(--color-text-light);">GastroHub</div>
+            <div style="font-size:14px; font-weight:500; color:var(--color-text-light);">GastroHub</div>
         </div>
         <div class="pos-clock-display">
             <div class="time" id="pos-time">${time}</div>
