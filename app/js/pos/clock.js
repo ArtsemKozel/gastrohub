@@ -143,7 +143,7 @@ function renderPinScreen() {
     return `
     <div class="pos-card">
         <div class="pos-header">
-            <div class="pos-logo">Schichtplanung &amp; Team-Organisation</div>
+            <div class="pos-logo">Zeiterfassung</div>
             <div style="font-size:0.8rem; color:var(--color-text-light);">GastroHub</div>
         </div>
         <div class="pos-clock-display">
