@@ -63,5 +63,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         checkInventurVisibility(),
         checkTemperatureVisibility(),
         checkTimeclockVisibility(),
+        loadEmpTimeclock(),
     ]);
 });

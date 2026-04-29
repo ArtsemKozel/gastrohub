@@ -355,6 +355,70 @@ function checkTimeclockVisibility() {
     if (section) section.style.display = currentEmployee.can_do_timeclock ? 'block' : 'none';
 }
 
+// ── MOBILE ZEITERFASSUNG ──────────────────────────────────
+let empTimerInterval = null;
+let empClockInTime   = null;
+
+async function loadEmpTimeclock() {
+    if (!currentEmployee.can_do_timeclock) return;
+    const { data } = await db
+        .from('gh_time_entries')
+        .select('id, clock_in')
+        .eq('employee_id', currentEmployee.id)
+        .is('clock_out', null)
+        .maybeSingle();
+    if (data) {
+        empClockInTime = new Date(data.clock_in);
+        document.getElementById('timeclock-emp-out').style.display = 'none';
+        document.getElementById('timeclock-emp-in').style.display  = 'block';
+        startEmpTimer();
+    }
+}
+
+async function empClockIn() {
+    const { error } = await db.from('gh_time_entries').insert({
+        employee_id: currentEmployee.id,
+        user_id:     currentEmployee.user_id,
+        clock_in:    new Date().toISOString(),
+        is_manual:   false,
+    });
+    if (error) return;
+    empClockInTime = new Date();
+    document.getElementById('timeclock-emp-out').style.display = 'none';
+    document.getElementById('timeclock-emp-in').style.display  = 'block';
+    startEmpTimer();
+}
+
+async function empClockOut() {
+    const { data } = await db
+        .from('gh_time_entries')
+        .select('id')
+        .eq('employee_id', currentEmployee.id)
+        .is('clock_out', null)
+        .maybeSingle();
+    if (!data) return;
+    await db.from('gh_time_entries')
+        .update({ clock_out: new Date().toISOString() })
+        .eq('id', data.id);
+    clearInterval(empTimerInterval);
+    empTimerInterval = null;
+    empClockInTime   = null;
+    document.getElementById('timeclock-emp-in').style.display  = 'none';
+    document.getElementById('timeclock-emp-out').style.display = 'block';
+}
+
+function startEmpTimer() {
+    const timerEl = document.getElementById('timeclock-emp-timer');
+    clearInterval(empTimerInterval);
+    empTimerInterval = setInterval(() => {
+        const diff = Math.floor((Date.now() - empClockInTime.getTime()) / 1000);
+        const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+        const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+        const s = String(diff % 60).padStart(2, '0');
+        if (timerEl) timerEl.textContent = `${h}:${m}:${s}`;
+    }, 1000);
+}
+
 // ── KÜNDIGUNG (eigene zurückziehen) ───────────────────────
 async function deleteOwnTermination(id) {
     if (!confirm('Kündigungsantrag wirklich zurückziehen?')) return;
