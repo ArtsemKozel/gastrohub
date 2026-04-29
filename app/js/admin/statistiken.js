@@ -245,7 +245,7 @@ async function loadBerichteFilters() {
     document.getElementById('bericht-mitarbeiter-list').innerHTML =
         emps.map(e => `
             <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.9rem; cursor:pointer;">
-                <input type="checkbox" value="${e.id}" checked style="width:1rem; height:1rem;">
+                <input type="checkbox" value="${e.id}" style="width:1rem; height:1rem;">
                 ${e.name}
             </label>`).join('');
 }
