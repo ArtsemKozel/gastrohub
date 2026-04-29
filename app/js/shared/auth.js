@@ -76,12 +76,13 @@ async function loginEmployee() {
     }
 
     localStorage.setItem('planit_employee', JSON.stringify({
-        id:            employee.id,
-        name:          employee.name,
-        login_code:    employee.login_code,
-        user_id:       employee.user_id,
-        is_apprentice: employee.is_apprentice || false,
-        department:    employee.department
+        id:               employee.id,
+        name:             employee.name,
+        login_code:       employee.login_code,
+        user_id:          employee.user_id,
+        is_apprentice:    employee.is_apprentice    || false,
+        can_do_timeclock: employee.can_do_timeclock || false,
+        department:       employee.department
     }));
     window.location.href = 'employee.html';
 }
