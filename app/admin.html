@@ -1869,6 +1869,23 @@
                 </div>
             </div>
         </div>
+
+        <!-- Block 4: Zugriffsrechte (zugeklappt) -->
+        <div style="margin-bottom:0.75rem; border:1px solid var(--color-border); border-radius:10px; overflow:hidden;">
+            <div onclick="const b=document.getElementById('edit-emp-block-zugriffsrechte');const o=b.style.display==='none';b.style.display=o?'block':'none';this.querySelector('.edit-emp-arr').textContent=o?'▼':'▶';" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; padding:0.6rem 0.75rem; background:var(--color-gray);">
+                <span style="font-size:0.9rem; font-weight:600;">Zugriffsrechte</span>
+                <span class="edit-emp-arr" style="font-size:0.85rem; color:var(--color-text-light);">▶</span>
+            </div>
+            <div id="edit-emp-block-zugriffsrechte" style="display:none; padding:0.75rem;">
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:0.5rem;">
+                        <input type="checkbox" id="edit-emp-timeclock" style="width:auto;">
+                        Mobile Zeiterfassung
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <div id="edit-emp-error" style="color:var(--color-red); font-size:0.85rem; margin-bottom:1rem; display:none;"></div>
         <div style="display:flex;justify-content:center;margin-top:0.5rem;">
             <button onclick="submitEditEmployee()" title="Speichern" style="width:3.2rem;height:3.2rem;border-radius:50%;background:#B28A6E;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
@@ -2472,25 +2489,25 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/shared/db.js?v=20260429112418"></script>
-<script src="js/shared/auth.js?v=20260429112418"></script>
-<script src="js/shared/utils.js?v=20260429112418"></script>
-<script src="js/admin/init.js?v=20260429112418"></script>
-<script src="js/admin/shifts.js?v=20260429112418"></script>
-<script src="js/admin/notify.js?v=20260429112418"></script>
-<script src="js/admin/team.js?v=20260429112418"></script>
-<script src="js/admin/vacation.js?v=20260429112418"></script>
-<script src="js/admin/hours.js?v=20260429112418"></script>
-<script src="js/admin/payroll.js?v=20260429112418"></script>
-<script src="js/admin/tips.js?v=20260429112418"></script>
-<script src="js/admin/inventory.js?v=20260429112418"></script>
-<script src="js/admin/hygiene.js?v=20260429112418"></script>
-<script src="js/admin/temperature.js?v=20260429112418"></script>
-<script src="js/admin/tasks.js?v=20260429112418"></script>
-<script src="js/admin/terminations.js?v=20260429112418"></script>
-<script src="js/admin/margincalc.js?v=20260429112418"></script>
-<script src="js/admin/restaurant.js?v=20260429112418"></script>
-<script src="js/admin/statistiken.js?v=20260429112418"></script>
+<script src="js/shared/db.js?v=20260429115320"></script>
+<script src="js/shared/auth.js?v=20260429115320"></script>
+<script src="js/shared/utils.js?v=20260429115320"></script>
+<script src="js/admin/init.js?v=20260429115320"></script>
+<script src="js/admin/shifts.js?v=20260429115320"></script>
+<script src="js/admin/notify.js?v=20260429115320"></script>
+<script src="js/admin/team.js?v=20260429115320"></script>
+<script src="js/admin/vacation.js?v=20260429115320"></script>
+<script src="js/admin/hours.js?v=20260429115320"></script>
+<script src="js/admin/payroll.js?v=20260429115320"></script>
+<script src="js/admin/tips.js?v=20260429115320"></script>
+<script src="js/admin/inventory.js?v=20260429115320"></script>
+<script src="js/admin/hygiene.js?v=20260429115320"></script>
+<script src="js/admin/temperature.js?v=20260429115320"></script>
+<script src="js/admin/tasks.js?v=20260429115320"></script>
+<script src="js/admin/terminations.js?v=20260429115320"></script>
+<script src="js/admin/margincalc.js?v=20260429115320"></script>
+<script src="js/admin/restaurant.js?v=20260429115320"></script>
+<script src="js/admin/statistiken.js?v=20260429115320"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/app/sw.js");</script>

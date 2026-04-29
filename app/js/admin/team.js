@@ -271,6 +271,7 @@ function openEditEmployeeModal(id) {
     document.getElementById('edit-emp-hygiene-erste').value        = emp.hygiene_erste || '';
     document.getElementById('edit-emp-hygiene-letzte').value       = emp.hygiene_letzte || '';
     document.getElementById('edit-emp-hygiene-monate').value       = emp.hygiene_gueltig_monate ?? 12;
+    document.getElementById('edit-emp-timeclock').checked          = emp.can_do_timeclock || false;
 
     currentPhases = [];
     renderEmploymentPhases();
@@ -395,10 +396,11 @@ async function submitEditEmployee() {
         return;
     }
 
-    const is_apprentice  = document.getElementById('edit-emp-apprentice').checked;
-    const hygieneErste   = document.getElementById('edit-emp-hygiene-erste').value || null;
-    const hygieneLetzte  = document.getElementById('edit-emp-hygiene-letzte').value || null;
-    const hygieneMonate  = parseInt(document.getElementById('edit-emp-hygiene-monate').value) || 12;
+    const is_apprentice    = document.getElementById('edit-emp-apprentice').checked;
+    const hygieneErste     = document.getElementById('edit-emp-hygiene-erste').value || null;
+    const hygieneLetzte    = document.getElementById('edit-emp-hygiene-letzte').value || null;
+    const hygieneMonate    = parseInt(document.getElementById('edit-emp-hygiene-monate').value) || 12;
+    const can_do_timeclock = document.getElementById('edit-emp-timeclock').checked;
 
     const payload = {
         name, login_code: loginCode, department, departments, birthdate,
@@ -406,6 +408,7 @@ async function submitEditEmployee() {
         hours_per_vacation_day: hoursPerVacationDay,
         employment_type: employmentType, wage_type: wageType, hourly_rate: hourlyRate,
         hygiene_erste: hygieneErste, hygiene_letzte: hygieneLetzte, hygiene_gueltig_monate: hygieneMonate,
+        can_do_timeclock,
     };
     if (password) payload.password_hash = password;
 
