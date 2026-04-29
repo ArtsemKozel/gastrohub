@@ -201,6 +201,7 @@ async function renderWeekGrid(days, shifts, availCache = {}, sickLeaves = []) {
 
                 if (shift) {
                     cell.textContent = `${shift.start_time.slice(0,5)}\n${shift.end_time.slice(0,5)}`;
+                    if (shift.is_unplanned)      cell.style.background = '#C8E6C9';
                     if (shift.actual_start_time) cell.style.background = '#E8D4A0';
                     if (dayShifts.length > 1) {
                         const badge = document.createElement('span');
