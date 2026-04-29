@@ -162,6 +162,7 @@ function renderPinScreen() {
             </button>
         </div>
         <div class="pos-error" id="pos-error">${posState.error}</div>
+        <div style="text-align:center; font-size:13px; color:var(--color-text-light);">Dein Restaurant. Dein Team. Dein Hub.</div>
     </div>`;
 }
 
