@@ -432,6 +432,22 @@ async function empClockIn() {
     if (error) return;
     empClockInTime = new Date();
     empTimeEntryId = data.id;
+
+    const today = empClockInTime.toISOString().split('T')[0];
+    const { data: existingShift } = await db.from('shifts')
+        .select('id').eq('user_id', currentEmployee.user_id)
+        .eq('employee_id', currentEmployee.id).eq('shift_date', today).maybeSingle();
+    if (!existingShift) {
+        const p = n => String(n).padStart(2, '0');
+        const startTime = `${p(empClockInTime.getHours())}:${p(empClockInTime.getMinutes())}`;
+        const endTime   = `${p((empClockInTime.getHours() + 8) % 24)}:${p(empClockInTime.getMinutes())}`;
+        await db.from('shifts').insert({
+            user_id: currentEmployee.user_id, employee_id: currentEmployee.id,
+            shift_date: today, start_time: startTime, end_time: endTime,
+            break_minutes: 0, is_open: false, is_unplanned: true,
+        });
+    }
+
     empSetUI(true, false);
     startEmpTimer();
 }

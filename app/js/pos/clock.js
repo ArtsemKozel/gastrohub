@@ -390,6 +390,22 @@ async function posClockIn() {
     posState.noteSaved   = false;
     posState.entries.push(data);
 
+    const today = new Date(now).toISOString().split('T')[0];
+    const { data: existingShift } = await db.from('shifts')
+        .select('id').eq('user_id', posState.userId)
+        .eq('employee_id', emp.id).eq('shift_date', today).maybeSingle();
+    if (!existingShift) {
+        const clockInDate = new Date(now);
+        const p = n => String(n).padStart(2, '0');
+        const startTime = `${p(clockInDate.getHours())}:${p(clockInDate.getMinutes())}`;
+        const endTime   = `${p((clockInDate.getHours() + 8) % 24)}:${p(clockInDate.getMinutes())}`;
+        await db.from('shifts').insert({
+            user_id: posState.userId, employee_id: emp.id,
+            shift_date: today, start_time: startTime, end_time: endTime,
+            break_minutes: 0, is_open: false, is_unplanned: true,
+        });
+    }
+
     await loadRecentEntries();
     const timeStr = new Date(now).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
     posShowToast('✓ Eingestempelt um ' + timeStr + ' Uhr');
