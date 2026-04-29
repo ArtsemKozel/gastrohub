@@ -967,27 +967,28 @@
             <div></div>
         </div>
 
-        <!-- Braune Uhrzeit-Karte (immer sichtbar) -->
-        <div style="background:#B28A6E; border-radius:12px; padding:1.5rem 1rem; margin-bottom:1rem; text-align:center; color:white;">
-            <div id="timeclock-emp-clock" style="font-size:2.5rem; font-weight:700; line-height:1; margin-bottom:0.3rem;">--:--:--</div>
-            <div id="timeclock-emp-date" style="font-size:0.85rem; opacity:0.85;"></div>
+        <div style="background: #B28A6E; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; color: white;">
+            <div id="timeclock-emp-clock" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.75rem;">--:--:--</div>
+            <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                <div id="timeclock-emp-arbeitszeit-box" style="display:none; flex-direction:column; align-items:center; justify-content:center; min-height:130px; background:rgba(255,255,255,0.2); border-radius:14px; padding:1rem;">
+                    <div style="font-size:0.7rem; opacity:0.85; margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.06em;">Arbeitszeit</div>
+                    <div id="timeclock-emp-timer" style="font-size:2.5rem; font-weight:800; line-height:1;">–</div>
+                </div>
+                <div id="timeclock-emp-pause-box" style="display:none; flex-direction:column; align-items:center; justify-content:center; min-height:130px; background:rgba(107,142,111,0.5); border-radius:14px; padding:1rem;">
+                    <div style="font-size:0.7rem; opacity:0.85; margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.06em;">🍽️ Pause</div>
+                    <div id="timeclock-emp-break-timer" style="font-size:2.5rem; font-weight:800; line-height:1;">–</div>
+                </div>
+            </div>
         </div>
 
-        <!-- Zustand: nicht eingestempelt -->
-        <div id="timeclock-emp-out" style="display:block;">
-            <div style="background:var(--color-gray); border-radius:12px; padding:1.25rem; margin-bottom:1rem; text-align:center;">
-                <div style="font-size:0.85rem; color:var(--color-text-light);">Noch nicht eingestempelt</div>
-            </div>
-            <button onclick="empClockIn()" style="width:100%; background:#6B8E6F; color:white; border:none; padding:1rem; border-radius:12px; cursor:pointer; font-weight:600; font-size:1rem;">Einstempeln</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <button id="btn-emp-clock-in" onclick="empClockIn()" style="background: #6B8E6F; color: white; border: none; padding: 1rem; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 1rem;">Einstempeln</button>
+            <button id="btn-emp-clock-out" onclick="empClockOut()" disabled style="background: #B28A6E; color: white; border: none; padding: 1rem; border-radius: 12px; cursor: default; font-weight: 600; font-size: 1rem; opacity: 0.5;">Ausstempeln</button>
         </div>
 
-        <!-- Zustand: eingestempelt -->
-        <div id="timeclock-emp-in" style="display:none;">
-            <div style="background:var(--color-gray); border-radius:12px; padding:1.25rem; margin-bottom:1rem; text-align:center;">
-                <div style="font-size:0.7rem; color:var(--color-text-light); font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.3rem;">Arbeitszeit</div>
-                <div id="timeclock-emp-timer" style="font-size:2rem; font-weight:800; color:var(--color-text); line-height:1;">00:00:00</div>
-            </div>
-            <button onclick="empClockOut()" style="width:100%; background:#B28A6E; color:white; border:none; padding:1rem; border-radius:12px; cursor:pointer; font-weight:600; font-size:1rem;">Ausstempeln</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <button id="btn-emp-break-start" onclick="empBreakStart()" disabled style="background: #B28A6E; color: white; border: none; padding: 1rem; border-radius: 12px; cursor: default; font-weight: 600; font-size: 1rem; opacity: 0.5;">🍽️ Pause starten</button>
+            <button id="btn-emp-break-end" onclick="empBreakEnd()" disabled style="background: #6B8E6F; color: white; border: none; padding: 1rem; border-radius: 12px; cursor: default; font-weight: 600; font-size: 1rem; opacity: 0.5;">✓ Pause beenden</button>
         </div>
     </div>
 
@@ -1271,22 +1272,22 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/shared/db.js?v=20260429131745"></script>
-<script src="js/shared/auth.js?v=20260429131745"></script>
-<script src="js/shared/utils.js?v=20260429131745"></script>
-<script src="js/employee/init.js?v=20260429131745"></script>
-<script src="js/employee/schichtplan.js?v=20260429131745"></script>
-<script src="js/employee/overview.js?v=20260429131745"></script>
-<script src="js/employee/vacation.js?v=20260429131745"></script>
-<script src="js/employee/availability.js?v=20260429131745"></script>
-<script src="js/employee/swaps.js?v=20260429131745"></script>
-<script src="js/employee/stunden.js?v=20260429131745"></script>
-<script src="js/employee/trinkgeld.js?v=20260429131745"></script>
-<script src="js/employee/payroll.js?v=20260429131745"></script>
-<script src="js/employee/inventory.js?v=20260429131745"></script>
-<script src="js/employee/temperature.js?v=20260429131745"></script>
-<script src="js/employee/tasks.js?v=20260429131745"></script>
-<script src="js/employee/profil.js?v=20260429131745"></script>
+<script src="js/shared/db.js?v=20260429135421"></script>
+<script src="js/shared/auth.js?v=20260429135421"></script>
+<script src="js/shared/utils.js?v=20260429135421"></script>
+<script src="js/employee/init.js?v=20260429135421"></script>
+<script src="js/employee/schichtplan.js?v=20260429135421"></script>
+<script src="js/employee/overview.js?v=20260429135421"></script>
+<script src="js/employee/vacation.js?v=20260429135421"></script>
+<script src="js/employee/availability.js?v=20260429135421"></script>
+<script src="js/employee/swaps.js?v=20260429135421"></script>
+<script src="js/employee/stunden.js?v=20260429135421"></script>
+<script src="js/employee/trinkgeld.js?v=20260429135421"></script>
+<script src="js/employee/payroll.js?v=20260429135421"></script>
+<script src="js/employee/inventory.js?v=20260429135421"></script>
+<script src="js/employee/temperature.js?v=20260429135421"></script>
+<script src="js/employee/tasks.js?v=20260429135421"></script>
+<script src="js/employee/profil.js?v=20260429135421"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/app/sw.js");</script>

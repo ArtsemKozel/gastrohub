@@ -356,19 +356,39 @@ function checkTimeclockVisibility() {
 }
 
 // ── MOBILE ZEITERFASSUNG ──────────────────────────────────
-let empTimerInterval    = null;
+let empTimerInterval     = null;
 let empClockTickInterval = null;
-let empClockInTime      = null;
+let empBreakTickInterval = null;
+let empClockInTime       = null;
+let empBreakStartTime    = null;
+let empActiveBreakId     = null;
+let empTimeEntryId       = null;
+
+function empSetUI(isClockedIn, onBreak) {
+    const btnIn  = document.getElementById('btn-emp-clock-in');
+    const btnOut = document.getElementById('btn-emp-clock-out');
+    const btnBS  = document.getElementById('btn-emp-break-start');
+    const btnBE  = document.getElementById('btn-emp-break-end');
+    const wrkBox = document.getElementById('timeclock-emp-arbeitszeit-box');
+    const brkBox = document.getElementById('timeclock-emp-pause-box');
+    const setBtn = (btn, disabled) => {
+        if (!btn) return;
+        btn.disabled      = disabled;
+        btn.style.opacity = disabled ? '0.5' : '1';
+        btn.style.cursor  = disabled ? 'default' : 'pointer';
+    };
+    setBtn(btnIn,  isClockedIn);
+    setBtn(btnOut, !isClockedIn || onBreak);
+    setBtn(btnBS,  !isClockedIn || onBreak);
+    setBtn(btnBE,  !onBreak);
+    if (wrkBox) wrkBox.style.display = isClockedIn ? 'flex' : 'none';
+    if (brkBox) brkBox.style.display = onBreak     ? 'flex' : 'none';
+}
 
 function startEmpClock() {
     const clockEl = document.getElementById('timeclock-emp-clock');
-    const dateEl  = document.getElementById('timeclock-emp-date');
     clearInterval(empClockTickInterval);
-    const tick = () => {
-        const now = new Date();
-        if (clockEl) clockEl.textContent = now.toLocaleTimeString('de-DE');
-        if (dateEl)  dateEl.textContent  = now.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
-    };
+    const tick = () => { if (clockEl) clockEl.textContent = new Date().toLocaleTimeString('de-DE'); };
     tick();
     empClockTickInterval = setInterval(tick, 1000);
 }
@@ -376,31 +396,43 @@ function startEmpClock() {
 async function loadEmpTimeclock() {
     if (!currentEmployee.can_do_timeclock) return;
     startEmpClock();
-    const { data } = await db
+    empSetUI(false, false);
+    const { data: entry } = await db
         .from('gh_time_entries')
         .select('id, clock_in')
         .eq('employee_id', currentEmployee.id)
         .is('clock_out', null)
         .maybeSingle();
-    if (data) {
-        empClockInTime = new Date(data.clock_in);
-        document.getElementById('timeclock-emp-out').style.display = 'none';
-        document.getElementById('timeclock-emp-in').style.display  = 'block';
-        startEmpTimer();
+    if (!entry) return;
+    empClockInTime = new Date(entry.clock_in);
+    empTimeEntryId = entry.id;
+    startEmpTimer();
+    const { data: brk } = await db
+        .from('gh_breaks')
+        .select('id, break_start')
+        .eq('employee_id', currentEmployee.id)
+        .eq('time_entry_id', entry.id)
+        .is('break_end', null)
+        .maybeSingle();
+    if (brk) {
+        empActiveBreakId  = brk.id;
+        empBreakStartTime = new Date(brk.break_start);
+        startEmpBreakTimer();
     }
+    empSetUI(true, !!brk);
 }
 
 async function empClockIn() {
-    const { error } = await db.from('gh_time_entries').insert({
+    const { data, error } = await db.from('gh_time_entries').insert({
         employee_id: currentEmployee.id,
         user_id:     currentEmployee.user_id,
         clock_in:    new Date().toISOString(),
         is_manual:   false,
-    });
+    }).select('id').single();
     if (error) return;
     empClockInTime = new Date();
-    document.getElementById('timeclock-emp-out').style.display = 'none';
-    document.getElementById('timeclock-emp-in').style.display  = 'block';
+    empTimeEntryId = data.id;
+    empSetUI(true, false);
     startEmpTimer();
 }
 
@@ -416,21 +448,63 @@ async function empClockOut() {
         .update({ clock_out: new Date().toISOString() })
         .eq('id', data.id);
     clearInterval(empTimerInterval);
-    empTimerInterval = null;
-    empClockInTime   = null;
-    document.getElementById('timeclock-emp-in').style.display  = 'none';
-    document.getElementById('timeclock-emp-out').style.display = 'block';
+    clearInterval(empBreakTickInterval);
+    empTimerInterval     = null;
+    empBreakTickInterval = null;
+    empClockInTime       = null;
+    empTimeEntryId       = null;
+    empActiveBreakId     = null;
+    empBreakStartTime    = null;
+    empSetUI(false, false);
+}
+
+async function empBreakStart() {
+    if (!empTimeEntryId) return;
+    const now = new Date().toISOString();
+    const { data, error } = await db.from('gh_breaks').insert({
+        user_id:       currentEmployee.user_id,
+        employee_id:   currentEmployee.id,
+        time_entry_id: empTimeEntryId,
+        break_start:   now,
+    }).select('id').single();
+    if (error) return;
+    empActiveBreakId  = data.id;
+    empBreakStartTime = new Date(now);
+    empSetUI(true, true);
+    startEmpBreakTimer();
+}
+
+async function empBreakEnd() {
+    if (!empActiveBreakId) return;
+    await db.from('gh_breaks')
+        .update({ break_end: new Date().toISOString() })
+        .eq('id', empActiveBreakId);
+    clearInterval(empBreakTickInterval);
+    empBreakTickInterval = null;
+    empActiveBreakId     = null;
+    empBreakStartTime    = null;
+    empSetUI(true, false);
 }
 
 function startEmpTimer() {
-    const timerEl = document.getElementById('timeclock-emp-timer');
     clearInterval(empTimerInterval);
     empTimerInterval = setInterval(() => {
-        const diff = Math.floor((Date.now() - empClockInTime.getTime()) / 1000);
-        const h = String(Math.floor(diff / 3600)).padStart(2, '0');
-        const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
-        const s = String(diff % 60).padStart(2, '0');
-        if (timerEl) timerEl.textContent = `${h}:${m}:${s}`;
+        const el = document.getElementById('timeclock-emp-timer');
+        if (!el || !empClockInTime) return;
+        const s = Math.max(0, Math.floor((Date.now() - empClockInTime.getTime()) / 1000));
+        const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+        el.textContent = (h > 0 ? h + 'h ' : '') + m + 'min';
+    }, 1000);
+}
+
+function startEmpBreakTimer() {
+    clearInterval(empBreakTickInterval);
+    empBreakTickInterval = setInterval(() => {
+        const el = document.getElementById('timeclock-emp-break-timer');
+        if (!el || !empBreakStartTime) return;
+        const s = Math.floor((Date.now() - empBreakStartTime.getTime()) / 1000);
+        const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+        el.textContent = (h > 0 ? h + 'h ' : '') + m + 'min';
     }, 1000);
 }
 
