@@ -52,6 +52,7 @@ function switchTab(tab) {
     if (tab === 'margincalc')        MarginCalcApp.init();
     if (tab === 'payroll')           loadPayroll();
     if (tab === 'statistiken')       { loadFehlzeiten(); loadFehlzeitenJahr(); loadKrankheitsverlauf(); loadTrinkgeldVerlauf(); }
+    if (tab === 'berichte')          loadBerichteFilters();
 
     localStorage.setItem('planit_admin_tab', tab);
 }
