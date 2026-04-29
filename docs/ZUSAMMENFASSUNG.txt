@@ -344,5 +344,7 @@ Einmalige Setup-Gebühr: 99 € (Einrichtung, Konfiguration, Einführung)
   Hygiene-Protokoll            4 € / Monat
   Abgänge & Kündigungen        5 € / Monat
   MarginCalc                   5 € / Monat
+  Temperaturkontrolle          5 € / Monat
+  Push-Benachrichtigungen      3 € / Monat
 
-Beispiel Vollpaket (alle 12 Module): 83 € / Monat + 99 € Setup einmalig.
+Beispiel Vollpaket (alle 14 Module): 91 € / Monat + 99 € Setup einmalig.
