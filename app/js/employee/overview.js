@@ -350,6 +350,11 @@ async function checkTemperatureVisibility() {
     menuItem.style.display = data?.can_do_temperature ? 'flex' : 'none';
 }
 
+function checkTimeclockVisibility() {
+    const section = document.getElementById('timeclock-emp-section');
+    if (section) section.style.display = currentEmployee.can_do_timeclock ? 'block' : 'none';
+}
+
 // ── KÜNDIGUNG (eigene zurückziehen) ───────────────────────
 async function deleteOwnTermination(id) {
     if (!confirm('Kündigungsantrag wirklich zurückziehen?')) return;

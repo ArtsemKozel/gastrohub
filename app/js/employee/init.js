@@ -62,5 +62,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         checkTrinkgeldVisibility(),
         checkInventurVisibility(),
         checkTemperatureVisibility(),
+        checkTimeclockVisibility(),
     ]);
 });
