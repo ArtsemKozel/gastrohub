@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gastrohub-v1';
+const CACHE_NAME = 'gastrohub-v2';
 const PRECACHE = [
     '/app/admin.html',
     '/app/employee.html',
