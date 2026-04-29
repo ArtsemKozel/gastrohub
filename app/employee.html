@@ -967,27 +967,27 @@
             <div></div>
         </div>
 
-        <div class="card" style="text-align:center; padding:1.25rem 1rem;">
+        <!-- Braune Uhrzeit-Karte (immer sichtbar) -->
+        <div style="background:#B28A6E; border-radius:12px; padding:1.5rem 1rem; margin-bottom:1rem; text-align:center; color:white;">
+            <div id="timeclock-emp-clock" style="font-size:2.5rem; font-weight:700; line-height:1; margin-bottom:0.3rem;">--:--:--</div>
+            <div id="timeclock-emp-date" style="font-size:0.85rem; opacity:0.85;"></div>
+        </div>
 
-            <!-- Zustand: nicht eingestempelt -->
-            <div id="timeclock-emp-out" style="display:block;">
-                <div style="font-size:0.85rem; font-weight:600; color:var(--color-text-light); margin-bottom:0.75rem;">Noch nicht eingestempelt</div>
-                <button onclick="empClockIn()" style="width:56px; height:56px; border-radius:50%; background:#B28A6E; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; margin:0 auto;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-                </button>
-                <div style="font-size:0.8rem; color:var(--color-text-light); margin-top:0.5rem;">Einstempeln</div>
+        <!-- Zustand: nicht eingestempelt -->
+        <div id="timeclock-emp-out" style="display:block;">
+            <div style="background:var(--color-gray); border-radius:12px; padding:1.25rem; margin-bottom:1rem; text-align:center;">
+                <div style="font-size:0.85rem; color:var(--color-text-light);">Noch nicht eingestempelt</div>
             </div>
+            <button onclick="empClockIn()" style="width:100%; background:#6B8E6F; color:white; border:none; padding:1rem; border-radius:12px; cursor:pointer; font-weight:600; font-size:1rem;">Einstempeln</button>
+        </div>
 
-            <!-- Zustand: eingestempelt -->
-            <div id="timeclock-emp-in" style="display:none;">
-                <div style="font-size:0.85rem; font-weight:600; color:var(--color-text-light); margin-bottom:0.25rem;">Eingestempelt seit</div>
-                <div id="timeclock-emp-timer" style="font-size:2rem; font-weight:700; letter-spacing:0.05em; color:var(--color-text); margin-bottom:0.75rem;">00:00:00</div>
-                <button onclick="empClockOut()" style="width:56px; height:56px; border-radius:50%; background:#B28A6E; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; margin:0 auto;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                </button>
-                <div style="font-size:0.8rem; color:var(--color-text-light); margin-top:0.5rem;">Ausstempeln</div>
+        <!-- Zustand: eingestempelt -->
+        <div id="timeclock-emp-in" style="display:none;">
+            <div style="background:var(--color-gray); border-radius:12px; padding:1.25rem; margin-bottom:1rem; text-align:center;">
+                <div style="font-size:0.7rem; color:var(--color-text-light); font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.3rem;">Arbeitszeit</div>
+                <div id="timeclock-emp-timer" style="font-size:2rem; font-weight:800; color:var(--color-text); line-height:1;">00:00:00</div>
             </div>
-
+            <button onclick="empClockOut()" style="width:100%; background:#B28A6E; color:white; border:none; padding:1rem; border-radius:12px; cursor:pointer; font-weight:600; font-size:1rem;">Ausstempeln</button>
         </div>
     </div>
 
@@ -1271,22 +1271,22 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/shared/db.js?v=20260429130358"></script>
-<script src="js/shared/auth.js?v=20260429130358"></script>
-<script src="js/shared/utils.js?v=20260429130358"></script>
-<script src="js/employee/init.js?v=20260429130358"></script>
-<script src="js/employee/schichtplan.js?v=20260429130358"></script>
-<script src="js/employee/overview.js?v=20260429130358"></script>
-<script src="js/employee/vacation.js?v=20260429130358"></script>
-<script src="js/employee/availability.js?v=20260429130358"></script>
-<script src="js/employee/swaps.js?v=20260429130358"></script>
-<script src="js/employee/stunden.js?v=20260429130358"></script>
-<script src="js/employee/trinkgeld.js?v=20260429130358"></script>
-<script src="js/employee/payroll.js?v=20260429130358"></script>
-<script src="js/employee/inventory.js?v=20260429130358"></script>
-<script src="js/employee/temperature.js?v=20260429130358"></script>
-<script src="js/employee/tasks.js?v=20260429130358"></script>
-<script src="js/employee/profil.js?v=20260429130358"></script>
+<script src="js/shared/db.js?v=20260429131745"></script>
+<script src="js/shared/auth.js?v=20260429131745"></script>
+<script src="js/shared/utils.js?v=20260429131745"></script>
+<script src="js/employee/init.js?v=20260429131745"></script>
+<script src="js/employee/schichtplan.js?v=20260429131745"></script>
+<script src="js/employee/overview.js?v=20260429131745"></script>
+<script src="js/employee/vacation.js?v=20260429131745"></script>
+<script src="js/employee/availability.js?v=20260429131745"></script>
+<script src="js/employee/swaps.js?v=20260429131745"></script>
+<script src="js/employee/stunden.js?v=20260429131745"></script>
+<script src="js/employee/trinkgeld.js?v=20260429131745"></script>
+<script src="js/employee/payroll.js?v=20260429131745"></script>
+<script src="js/employee/inventory.js?v=20260429131745"></script>
+<script src="js/employee/temperature.js?v=20260429131745"></script>
+<script src="js/employee/tasks.js?v=20260429131745"></script>
+<script src="js/employee/profil.js?v=20260429131745"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/app/sw.js");</script>

@@ -356,11 +356,26 @@ function checkTimeclockVisibility() {
 }
 
 // ── MOBILE ZEITERFASSUNG ──────────────────────────────────
-let empTimerInterval = null;
-let empClockInTime   = null;
+let empTimerInterval    = null;
+let empClockTickInterval = null;
+let empClockInTime      = null;
+
+function startEmpClock() {
+    const clockEl = document.getElementById('timeclock-emp-clock');
+    const dateEl  = document.getElementById('timeclock-emp-date');
+    clearInterval(empClockTickInterval);
+    const tick = () => {
+        const now = new Date();
+        if (clockEl) clockEl.textContent = now.toLocaleTimeString('de-DE');
+        if (dateEl)  dateEl.textContent  = now.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+    };
+    tick();
+    empClockTickInterval = setInterval(tick, 1000);
+}
 
 async function loadEmpTimeclock() {
     if (!currentEmployee.can_do_timeclock) return;
+    startEmpClock();
     const { data } = await db
         .from('gh_time_entries')
         .select('id, clock_in')
