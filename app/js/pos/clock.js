@@ -399,11 +399,12 @@ async function posClockIn() {
         const p = n => String(n).padStart(2, '0');
         const startTime = `${p(clockInDate.getHours())}:${p(clockInDate.getMinutes())}`;
         const endTime   = `${p((clockInDate.getHours() + 8) % 24)}:${p(clockInDate.getMinutes())}`;
-        await db.from('shifts').insert({
+        const { error: shiftErr } = await db.from('shifts').insert({
             user_id: posState.userId, employee_id: emp.id,
             shift_date: today, start_time: startTime, end_time: endTime,
             break_minutes: 0, is_open: false, is_unplanned: true,
         });
+        if (shiftErr) console.error('Auto-Schicht konnte nicht erstellt werden:', shiftErr);
     }
 
     await loadRecentEntries();

@@ -441,11 +441,12 @@ async function empClockIn() {
         const p = n => String(n).padStart(2, '0');
         const startTime = `${p(empClockInTime.getHours())}:${p(empClockInTime.getMinutes())}`;
         const endTime   = `${p((empClockInTime.getHours() + 8) % 24)}:${p(empClockInTime.getMinutes())}`;
-        await db.from('shifts').insert({
+        const { error: shiftErr } = await db.from('shifts').insert({
             user_id: currentEmployee.user_id, employee_id: currentEmployee.id,
             shift_date: today, start_time: startTime, end_time: endTime,
             break_minutes: 0, is_open: false, is_unplanned: true,
         });
+        if (shiftErr) console.error('Auto-Schicht konnte nicht erstellt werden:', shiftErr);
     }
 
     empSetUI(true, false);
