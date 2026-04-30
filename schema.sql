@@ -518,7 +518,7 @@ BEGIN
         'temperature_devices','temperature_logs',
         'task_templates','task_template_steps','tasks','task_steps',
         'task_assignments','notes',
-        'categories','suppliers','ingredients','dishes','dish_ingredients'
+        'categories','suppliers','ingredients','dishes'
     ])
     LOOP
         EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY;', t);
@@ -546,5 +546,5 @@ BEGIN
     END LOOP;
 END $$;
 
--- dish_ingredients hat keine user_id – Zugriff über dishes erlauben
+-- dish_ingredients hat keine user_id – RLS deaktiviert, Zugriff offen
 ALTER TABLE dish_ingredients DISABLE ROW LEVEL SECURITY;
