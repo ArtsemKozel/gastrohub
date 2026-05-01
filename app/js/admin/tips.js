@@ -520,8 +520,9 @@ async function saveTrinkgeldHours() {
             user_id: userId,
             employee_id: emp.id,
             work_date: date,
-            minutes: totalMinutes
-        }, { onConflict: 'user_id,employee_id,work_date' });
+            minutes: totalMinutes,
+            department: emp.department || null
+        }, { onConflict: 'user_id,employee_id,work_date,department' });
     }
 
     closeTrinkgeldHoursModal();
