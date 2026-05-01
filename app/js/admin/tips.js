@@ -13,8 +13,8 @@ async function loadTrinkgeld() {
     document.getElementById('trinkgeld-month-label').textContent = label;
 
     const firstDay    = `${monthStr}-01`;
-    const lastDay     = new Date(year, month + 1, 0).toISOString().split('T')[0];
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const lastDay     = `${monthStr}-${String(daysInMonth).padStart(2, '0')}`;
 
     const [
         { data: entries },
