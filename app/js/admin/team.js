@@ -702,10 +702,10 @@ async function deleteSickLeave(id) {
 
 function toggleArchive() {
     const list   = document.getElementById('archive-list');
-    const btn    = document.querySelector('[onclick="toggleArchive()"]');
+    const arrow  = document.getElementById('archive-toggle');
     const isOpen = list.style.display === 'block';
     list.style.display = isOpen ? 'none' : 'block';
-    if (btn) btn.textContent = isOpen ? 'Anzeigen' : 'Verbergen';
+    if (arrow) arrow.textContent = isOpen ? '▶' : '▼';
     if (!isOpen && list.innerHTML.trim() === '') loadArchive();
 }
 
