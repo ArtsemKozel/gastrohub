@@ -188,7 +188,7 @@ async function loadTrinkgeld() {
                     const avgMins = (poolDeptMonthMinutes[currentDept] || 0) / daysInMonth;
                     if (avgMins > 0) hoursDisplay = `⌀ ${Math.floor(avgMins / 60)}h ${String(Math.round(avgMins % 60)).padStart(2, '0')}m`;
                 } else {
-                    const hours = d.hours.find(h => h.employee_id === r.empId && (h.department === currentDept || (!h.department && !currentDept)));
+                    const hours = d.hours.find(h => h.employee_id === r.empId && ((h.department || h.employees_planit?.department) === currentDept));
                     if (hours) hoursDisplay = `${Math.floor(hours.minutes / 60)}h ${String(hours.minutes % 60).padStart(2, '0')}m`;
                 }
                 return `${deptHeader}
