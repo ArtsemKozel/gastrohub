@@ -122,7 +122,7 @@ async function loadTasks() {
         if (archivedTasks && archivedTasks.length > 0) {
             archiveContainer.innerHTML = `
         <div>
-            <div style="font-size:0.85rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.05em; margin-bottom:0.75rem; cursor:pointer; display:flex; justify-content:space-between;" onclick="toggleArchive()">
+            <div style="font-size:0.85rem; font-weight:700; color:var(--color-text-light); letter-spacing:0.05em; margin-bottom:0.75rem; cursor:pointer; display:flex; justify-content:space-between;" onclick="toggleTasksArchive()">
                 <span>ARCHIV (${archivedTasks.length})</span>
                 <span id="tasks-archive-toggle">▶</span>
             </div>
@@ -153,7 +153,7 @@ async function unarchiveTask(taskId) {
     await loadTasks();
 }
 
-function toggleArchive() {
+function toggleTasksArchive() {
     const list = document.getElementById('tasks-archive-list');
     const toggle = document.getElementById('tasks-archive-toggle');
     const isOpen = list.style.display === 'block';
