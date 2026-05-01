@@ -713,22 +713,49 @@ async function loadArchive() {
     const { data: emps } = await db.from('employees_planit')
         .select('id, name, department')
         .eq('user_id', adminSession.user.id)
-        .eq('is_active', false)
-        .order('name');
+        .eq('is_active', false);
 
     const list = document.getElementById('archive-list');
     if (!emps || emps.length === 0) {
         list.innerHTML = '<div style="color:var(--color-text-light); font-size:0.9rem; padding:0.5rem 0;">Keine archivierten Mitarbeiter.</div>';
         return;
     }
-    list.innerHTML = emps.map(e => `
+
+    const empIds = emps.map(e => e.id);
+    const { data: terminations } = await db.from('planit_terminations')
+        .select('employee_id, requested_date')
+        .in('employee_id', empIds);
+
+    const termMap = {};
+    if (terminations) {
+        for (const t of terminations) {
+            if (!termMap[t.employee_id] || t.requested_date > termMap[t.employee_id]) {
+                termMap[t.employee_id] = t.requested_date;
+            }
+        }
+    }
+
+    emps.sort((a, b) => {
+        const da = termMap[a.id] || '';
+        const db_ = termMap[b.id] || '';
+        if (da === db_) return a.name.localeCompare(b.name);
+        if (!da) return 1;
+        if (!db_) return -1;
+        return da > db_ ? -1 : 1;
+    });
+
+    list.innerHTML = emps.map(e => {
+        const termDate = termMap[e.id] ? new Date(termMap[e.id]).toLocaleDateString('de-DE') : null;
+        return `
         <div style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0; border-bottom:1px solid var(--color-border);">
             <div>
                 <div style="font-weight:600; font-size:0.9rem;">${e.name}</div>
                 ${e.department ? `<div style="font-size:0.8rem; color:var(--color-text-light);">${e.department}</div>` : ''}
+                ${termDate ? `<div style="font-size:0.75rem; color:var(--color-text-light);">Gekündigt: ${termDate}</div>` : ''}
             </div>
             <button class="btn-small btn-secondary" style="width:auto; font-size:0.8rem;" onclick="restoreEmployee('${e.id}')">Wiederherstellen</button>
-        </div>`).join('');
+        </div>`;
+    }).join('');
 }
 
 async function restoreEmployee(id) {
