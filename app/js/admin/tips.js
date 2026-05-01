@@ -150,8 +150,6 @@ async function loadTrinkgeld() {
         }
     }
 
-    console.log('dayResults 31.Mai', dayResults['2026-05-31']);
-
     // Tage rendern
     const daysContainer = document.getElementById('trinkgeld-days-list');
     if (allDates.length === 0) {
