@@ -699,3 +699,11 @@ async function deleteSickLeave(id) {
     await loadSickLeaves();
     await loadWeekGrid();
 }
+
+function toggleArchive() {
+    const list   = document.getElementById('archive-list');
+    const btn    = document.querySelector('[onclick="toggleArchive()"]');
+    const isOpen = list.style.display === 'block';
+    list.style.display = isOpen ? 'none' : 'block';
+    if (btn) btn.textContent = isOpen ? 'Anzeigen' : 'Verbergen';
+}
