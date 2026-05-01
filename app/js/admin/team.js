@@ -706,4 +706,32 @@ function toggleArchive() {
     const isOpen = list.style.display === 'block';
     list.style.display = isOpen ? 'none' : 'block';
     if (btn) btn.textContent = isOpen ? 'Anzeigen' : 'Verbergen';
+    if (!isOpen && list.innerHTML.trim() === '') loadArchive();
+}
+
+async function loadArchive() {
+    const { data: emps } = await db.from('employees_planit')
+        .select('id, name, department')
+        .eq('user_id', adminSession.user.id)
+        .eq('is_active', false)
+        .order('name');
+
+    const list = document.getElementById('archive-list');
+    if (!emps || emps.length === 0) {
+        list.innerHTML = '<div style="color:var(--color-text-light); font-size:0.9rem; padding:0.5rem 0;">Keine archivierten Mitarbeiter.</div>';
+        return;
+    }
+    list.innerHTML = emps.map(e => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0; border-bottom:1px solid var(--color-border);">
+            <div>
+                <div style="font-weight:600; font-size:0.9rem;">${e.name}</div>
+                ${e.department ? `<div style="font-size:0.8rem; color:var(--color-text-light);">${e.department}</div>` : ''}
+            </div>
+            <button class="btn-small btn-secondary" style="width:auto; font-size:0.8rem;" onclick="restoreEmployee('${e.id}')">Wiederherstellen</button>
+        </div>`).join('');
+}
+
+async function restoreEmployee(id) {
+    await db.from('employees_planit').update({ is_active: true }).eq('id', id);
+    await Promise.all([loadArchive(), loadArchiveBadge()]);
 }
