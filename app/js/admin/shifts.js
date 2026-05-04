@@ -794,6 +794,7 @@ function openEditTimeEntry(id, employeeId, dateStr, cin, cout, pauseMin, entryDa
 }
 
 async function saveEditTimeEntry(id, employeeId, dateStr, entryDate) {
+    console.log('pauseVal', document.getElementById('ete-pause')?.value);
     const cinVal   = document.getElementById('ete-cin').value;
     const coutVal  = document.getElementById('ete-cout').value;
     const pauseVal = parseInt(document.getElementById('ete-pause').value, 10) || 0;
