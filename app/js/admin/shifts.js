@@ -818,6 +818,7 @@ async function saveEditTimeEntry(id, employeeId, dateStr, entryDate) {
     if (pauseVal > 0) {
         const bStart = new Date(cinISO);
         const bEnd   = new Date(bStart.getTime() + pauseVal * 60000);
+        console.log('inserting break', { time_entry_id: id, break_start: bStart.toISOString(), break_end: bEnd.toISOString() });
         const { error: bErr } = await db.from('gh_breaks').insert({
             time_entry_id: id,
             break_start:   bStart.toISOString(),
