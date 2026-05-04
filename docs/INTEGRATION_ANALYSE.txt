@@ -1,6 +1,6 @@
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                     GASTROHUB — INTEGRATIONS-ANALYSE                       ║
-║                              Stand: 25.04.2026                             ║
+║                              Stand: 04.05.2026                             ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 Dokumentiert die Abhängigkeiten zwischen Modulen, bekannte technische
@@ -45,10 +45,13 @@ adminSession.user.id als user_id-Filter. Wenn adminSession noch nicht gesetzt
 ist, schlagen die Queries stillschweigend fehl. Daher muss shifts.js immer
 nach requireAdminSession() ausgeführt werden.
 
-js/admin/notify.js muss vor allen Modulen geladen sein die
-sendPushNotification() aufrufen (shifts.js, vacation.js, terminations.js).
-Die Funktion ist als window.sendPushNotification registriert und somit
-global verfügbar — kein ES-Modul-Import notwendig.
+js/admin/notify.js ist in der Ladereihenfolge nach shifts.js, vacation.js und
+terminations.js eingebunden — das ist korrekt. sendPushNotification() wird
+ausschließlich zur Laufzeit aufgerufen (als Reaktion auf User-Aktionen), nie
+beim Laden. Da die Funktion als window-Global registriert ist, muss notify.js
+nur vor dem ersten tatsächlichen Aufruf geladen sein, nicht vor den aufrufenden
+Modulen. Die Ladereihenfolge ist daher unkritisch solange notify.js vor dem
+ersten Nutzerinteraktion geladen ist.
 
 js/employee/temperature.js benötigt currentEmployee aus js/employee/init.js
 (localStorage-Objekt). Die user_id-Eigenschaft des currentEmployee-Objekts
@@ -80,11 +83,17 @@ keinen Admin-Zugang brauchen.
  GH_TIME_ENTRIES — DATENFLUSS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Schreiben: Der POS-Kiosk (clock.js) schreibt automatische Einträge.
-           Der Admin (shifts.js) kann Einträge manuell nachtragen
-           (is_manual=true). Manuell nachgetragene Einträge erhalten
-           im Stempelzeiten-Block ein "manuell"-Badge.
-Lesen: Der Admin (shifts.js) liest gh_time_entries im Schicht-Modal.
+Schreiben:
+  POS-Kiosk (clock.js): automatische Einträge via posClockIn() / posClockOut().
+  Admin (shifts.js): manuell nachgetragene Einträge (is_manual=true) über das
+  Stempelzeiten-Block-Formular im Schicht-Modal.
+  Admin (shifts.js): bestehende Einträge bearbeiten via saveEditTimeEntry() —
+  UPDATE auf clock_in und clock_out eines vorhandenen Eintrags.
+
+Lesen: Der Admin (shifts.js) liest gh_time_entries im Schicht-Modal via
+loadAndRenderClockList(). Die Mitarbeiter-Ansicht (overview.js) liest
+eigene Einträge für die mobile Zeiterfassung.
+
 Löschen: Nur der Admin (deleteTimeEntry in shifts.js) kann Einträge löschen.
 Beim Löschen werden zuerst alle gh_breaks mit time_entry_id = id entfernt,
 danach erst der gh_time_entries-Eintrag — sonst entstehen verwaiste Pausen.
@@ -102,12 +111,26 @@ Auswirkungen auf die Zeitberechnung — es ist rein informativer Natur.
  GH_BREAKS — DATENFLUSS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Schreiben: Nur der POS-Kiosk (breaks.js) schreibt in gh_breaks.
+Schreiben:
+  POS-Kiosk (breaks.js): posBreakStart() / posBreakEnd() für Live-Pausen.
+  Admin (shifts.js): saveEditTimeEntry() löscht beim Bearbeiten eines Eintrags
+  alle vorhandenen gh_breaks (WHERE time_entry_id = id) und legt bei pauseVal > 0
+  einen neuen synthetischen Break an:
+    break_start = clock_in des Eintrags
+    break_end   = clock_in + pauseVal Minuten
+
 Lesen: shifts.js liest gh_breaks beim Berechnen der Netto-Arbeitszeiten in
 loadAndRenderClockList(). Dabei wird für jeden time_entry_id die Summe aller
 abgeschlossenen Pausen (break_end IS NOT NULL) berechnet und vom
 clock_out−clock_in-Wert abgezogen.
-Löschen: Nur indirekt via deleteTimeEntry() in shifts.js (kaskadiert).
+
+Löschen:
+  Kaskadierend via deleteTimeEntry() in shifts.js (alle Breaks des Eintrags).
+  Im Rahmen von saveEditTimeEntry(): DELETE aller Breaks vor dem Re-Insert.
+
+RLS-Policies auf gh_breaks: SELECT, INSERT, UPDATE, DELETE mit USING(true)
+müssen in Supabase aktiviert sein. Ohne diese Policies scheitert das Speichern
+von Pausen im Bearbeiten-Modal (saveEditTimeEntry) ohne Fehlermeldung im UI.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -252,7 +275,7 @@ noteSaved=false. Nach einmaligem Speichern via posSubmitNote() wird
 noteSaved=true gesetzt und das Feld verschwindet. Es kann innerhalb
 einer Session nur einmal gespeichert werden.
 
-Zeitanzeige (neu):
+Zeitanzeige:
   Im Employee-Screen werden unterhalb der Uhrzeit zwei zusätzliche Zeilen
   angezeigt: die laufende Arbeitszeit (HH:MM:SS, abzüglich Pausen) und die
   Gesamtpausenzeit (HH:MM:SS). Beide werden von startPosClock() jede Sekunde
@@ -280,11 +303,27 @@ Beide Blöcke starten zugeklappt (shift-clock-body und shift-actual-body
 haben display:none). Das Toggle-Symbol beginnt bei ▶ (geschlossen) und
 wechselt zu ▼ (offen).
 
-Eintrags-Darstellung (neu):
+Eintrags-Darstellung:
   Jeder Eintrag in #shift-clock-list beginnt mit einer Kopfzeile:
   "Eintrag N" als Label (linksbündig) und optional ein "manuell"-Badge
   (rechtsbündig, braune Pill) wenn is_manual=true. Darunter folgt die
-  4-spaltige Eintragszeile (Eingestempelt, Ausgestempelt, Netto, Löschen).
+  Eintragszeile mit Einstempelzeit, Ausstempelzeit, Netto-Dauer und einem
+  Flex-Container mit zwei übereinander gestapelten runden Buttons:
+    • Stift-Button (Bearbeiten) → openEditTimeEntry()
+    • Mülleimer-Button (Löschen) → deleteTimeEntry()
+  Der Button-Container hat display:flex; flex-direction:column; flex-shrink:0.
+
+Bearbeiten-Overlay (openEditTimeEntry):
+  Dynamisch erzeugtes Overlay-Modal (document.createElement, body.appendChild).
+  Felder: Einstempelzeit (type=time), Ausstempelzeit (type=time), Pausendauer
+  in Minuten (type=number). ✕-Button oben rechts schließt das Overlay.
+  Runder Häkchen-Button speichert via saveEditTimeEntry(). Klick auf den
+  Hintergrund (e.target === overlay) schließt ebenfalls.
+
+  Wichtig: entryDate = te.clock_in.slice(0,10) — das Datum des Eintrags, nicht
+  das Schichtdatum (dateStr). Zeitstempel werden als lokale Zeit interpretiert:
+  new Date(`${entryDate}T${timeStr}:00`).toISOString() konvertiert korrekt
+  auf UTC (z.B. 09:30 Ortszeit → 07:30Z bei UTC+2).
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -339,10 +378,11 @@ ohne dass Nutzer Hard-Refresh durchführen müssen.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 PlanIt hatte alle Admin-Logik in einer einzigen Datei admin.js (~7100 Zeilen).
-GastroHub teilt diese Logik auf 17 Admin-Module auf. Stand 25.04.2026 sind
-alle Module implementiert: shifts.js, team.js, vacation.js, hours.js, tips.js,
-inventory.js, hygiene.js, tasks.js, terminations.js, margincalc.js, payroll.js,
-restaurant.js, time_entries.js, temperature.js, notify.js.
+GastroHub teilt diese Logik auf 18 Admin-Module auf. Stand 04.05.2026 sind
+alle Module implementiert: init.js, shifts.js, team.js, vacation.js, hours.js,
+tips.js, inventory.js, hygiene.js, tasks.js, terminations.js, margincalc.js,
+payroll.js, restaurant.js, time_entries.js, temperature.js, notify.js,
+statistiken.js — sowie branches.js als Platzhalter-Modul.
 
 PlanIt hatte keine POS-Funktionalität. Die gesamte POS-Logik (pos.html,
 clock.js, breaks.js, gh_time_entries, gh_breaks) ist eine Neuentwicklung
