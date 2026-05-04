@@ -335,8 +335,24 @@ async function posLogin() {
     const empEntries = posState.entries.filter(e => e.employee_id === emp.id);
     const lastEntry  = empEntries.length ? empEntries[empEntries.length - 1] : null;
 
+    // Falls kein offener heutiger Eintrag, früheren offenen Eintrag suchen
+    let resolvedEntry = lastEntry;
+    if (!resolvedEntry || resolvedEntry.clock_out) {
+        const today = new Date().toISOString().split('T')[0];
+        const { data: prevOpen } = await db.from('gh_time_entries')
+            .select('id, employee_id, clock_in, clock_out, note')
+            .eq('user_id', posState.userId)
+            .eq('employee_id', emp.id)
+            .is('clock_out', null)
+            .lt('clock_in', today + 'T00:00:00')
+            .order('clock_in', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        if (prevOpen) resolvedEntry = prevOpen;
+    }
+
     posState.employee    = emp;
-    posState.entry       = lastEntry;
+    posState.entry       = resolvedEntry;
     posState.pin         = '';
     posState.error       = '';
     posState.shiftsOpen  = false;
