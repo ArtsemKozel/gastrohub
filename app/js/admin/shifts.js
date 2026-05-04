@@ -551,8 +551,13 @@ async function loadAndRenderClockList(employeeId, dateStr) {
             : '—';
         const label = entries.length > 1 ? `Eintrag ${i + 1}` : '';
 
-        const pauseMin = breakMinByEntry[te.id] || 0;
-        const pause    = pauseMin > 0 ? `${pauseMin} min` : '—';
+        const pauseMin   = breakMinByEntry[te.id] || 0;
+        const pause      = pauseMin > 0 ? `${pauseMin} min` : '—';
+        const firstBreak = breaks.find(b => b.time_entry_id === te.id);
+        const fmtHHMM    = iso => iso ? new Date(iso).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '';
+        const pauseStart = fmtHHMM(firstBreak?.break_start);
+        const pauseEnd   = fmtHHMM(firstBreak?.break_end);
+        const coutEdit   = te.clock_out ? cout : '';
 
         let netto = '—';
         if (te.clock_out) {
@@ -591,6 +596,10 @@ async function loadAndRenderClockList(employeeId, dateStr) {
                         <div style="font-size:0.95rem; font-weight:600; color:var(--color-text);">${netto}</div>
                     </div>
                 </div>
+                <button onclick="openEditTimeEntry('${te.id}','${employeeId}','${dateStr}','${cin}','${coutEdit}','${pauseStart}','${pauseEnd}')"
+                    style="flex-shrink:0; background:none; border:none; cursor:pointer; color:#B28A6E; font-size:1.1rem; padding:0.25rem;" title="Eintrag bearbeiten">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
                 <button onclick="deleteTimeEntry('${te.id}','${employeeId}','${dateStr}')"
                     style="flex-shrink:0; background:none; border:none; cursor:pointer; color:#B28A6E; font-size:1.1rem; padding:0.25rem;" title="Eintrag löschen">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
@@ -739,6 +748,90 @@ async function deleteTimeEntry(id, employeeId, dateStr) {
     if (breakErr) { alert('Fehler beim Löschen der Pausen: ' + breakErr.message); return; }
     const { error } = await db.from('gh_time_entries').delete().eq('id', id);
     if (error) { alert('Fehler: ' + error.message); return; }
+    await loadAndRenderClockList(employeeId, dateStr);
+}
+
+function openEditTimeEntry(id, employeeId, dateStr, cin, cout, pauseStart, pauseEnd) {
+    const existing = document.getElementById('edit-time-entry-modal');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'edit-time-entry-modal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;';
+
+    overlay.innerHTML = `
+    <div style="background:var(--color-bg,#fff);border-radius:14px;padding:1.25rem 1.25rem 1rem;width:100%;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+        <div style="font-size:1rem;font-weight:700;margin-bottom:1rem;">Eintrag bearbeiten</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:0.6rem;">
+            <div>
+                <div style="font-size:0.7rem;color:var(--color-text-light);margin-bottom:0.2rem;">Einstempelzeit</div>
+                <input id="ete-cin" type="time" value="${cin}"
+                    style="width:100%;padding:0.4rem 0.5rem;border:1px solid #ddd;border-radius:7px;font-size:0.95rem;">
+            </div>
+            <div>
+                <div style="font-size:0.7rem;color:var(--color-text-light);margin-bottom:0.2rem;">Ausstempelzeit</div>
+                <input id="ete-cout" type="time" value="${cout}"
+                    style="width:100%;padding:0.4rem 0.5rem;border:1px solid #ddd;border-radius:7px;font-size:0.95rem;">
+            </div>
+            <div>
+                <div style="font-size:0.7rem;color:var(--color-text-light);margin-bottom:0.2rem;">Pausenbeginn</div>
+                <input id="ete-pstart" type="time" value="${pauseStart}"
+                    style="width:100%;padding:0.4rem 0.5rem;border:1px solid #ddd;border-radius:7px;font-size:0.95rem;">
+            </div>
+            <div>
+                <div style="font-size:0.7rem;color:var(--color-text-light);margin-bottom:0.2rem;">Pausenende</div>
+                <input id="ete-pend" type="time" value="${pauseEnd}"
+                    style="width:100%;padding:0.4rem 0.5rem;border:1px solid #ddd;border-radius:7px;font-size:0.95rem;">
+            </div>
+        </div>
+        <div id="ete-error" style="color:#E05555;font-size:0.8rem;min-height:1rem;margin-bottom:0.5rem;"></div>
+        <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+            <button onclick="document.getElementById('edit-time-entry-modal').remove()"
+                style="background:none;border:1px solid #ccc;border-radius:8px;padding:0.4rem 1rem;font-size:0.85rem;cursor:pointer;">
+                Abbrechen
+            </button>
+            <button onclick="saveEditTimeEntry('${id}','${employeeId}','${dateStr}')"
+                style="background:#B28A6E;color:white;border:none;border-radius:8px;padding:0.4rem 1rem;font-size:0.85rem;font-weight:600;cursor:pointer;">
+                Speichern
+            </button>
+        </div>
+    </div>`;
+
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+}
+
+async function saveEditTimeEntry(id, employeeId, dateStr) {
+    const cinVal    = document.getElementById('ete-cin').value;
+    const coutVal   = document.getElementById('ete-cout').value;
+    const pStartVal = document.getElementById('ete-pstart').value;
+    const pEndVal   = document.getElementById('ete-pend').value;
+    const errEl     = document.getElementById('ete-error');
+    errEl.textContent = '';
+
+    if (!cinVal) { errEl.textContent = 'Einstempelzeit ist erforderlich.'; return; }
+
+    const toISO = (timeStr) => timeStr ? `${dateStr}T${timeStr}:00` : null;
+    const cinISO  = toISO(cinVal);
+    const coutISO = toISO(coutVal) || null;
+
+    const { error: teErr } = await db.from('gh_time_entries')
+        .update({ clock_in: cinISO, clock_out: coutISO })
+        .eq('id', id);
+    if (teErr) { errEl.textContent = 'Fehler: ' + teErr.message; return; }
+
+    await db.from('gh_breaks').delete().eq('time_entry_id', id);
+
+    if (pStartVal && pEndVal) {
+        const { error: bErr } = await db.from('gh_breaks').insert({
+            time_entry_id: id,
+            break_start: toISO(pStartVal),
+            break_end: toISO(pEndVal)
+        });
+        if (bErr) { errEl.textContent = 'Fehler beim Speichern der Pause: ' + bErr.message; return; }
+    }
+
+    document.getElementById('edit-time-entry-modal').remove();
     await loadAndRenderClockList(employeeId, dateStr);
 }
 
