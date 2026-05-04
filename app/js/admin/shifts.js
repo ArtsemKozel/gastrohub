@@ -794,11 +794,9 @@ function openEditTimeEntry(id, employeeId, dateStr, cin, cout, pauseMin, entryDa
 }
 
 async function saveEditTimeEntry(id, employeeId, dateStr, entryDate) {
-    console.log('pauseVal', document.getElementById('ete-pause')?.value);
     const cinVal   = document.getElementById('ete-cin').value;
     const coutVal  = document.getElementById('ete-cout').value;
     const pauseVal = parseInt(document.getElementById('ete-pause').value, 10) || 0;
-    console.log('pauseVal parsed', pauseVal);
     const errEl    = document.getElementById('ete-error');
     errEl.textContent = '';
 
@@ -818,13 +816,11 @@ async function saveEditTimeEntry(id, employeeId, dateStr, entryDate) {
     if (pauseVal > 0) {
         const bStart = new Date(cinISO);
         const bEnd   = new Date(bStart.getTime() + pauseVal * 60000);
-        console.log('inserting break', { time_entry_id: id, break_start: bStart.toISOString(), break_end: bEnd.toISOString() });
         const { error: bErr } = await db.from('gh_breaks').insert({
             time_entry_id: id,
             break_start:   bStart.toISOString(),
             break_end:     bEnd.toISOString()
         });
-        console.log('break insert result', bErr);
         if (bErr) { errEl.textContent = 'Fehler beim Speichern der Pause: ' + bErr.message; return; }
     }
 
