@@ -199,9 +199,10 @@ async function loadTrinkgeld() {
                         <span class="tip-emp-col" style="color:var(--color-text-light); min-width:3.5rem; text-align:right; font-size:0.8rem;">${r.card.toFixed(2)} €</span>
                         <span class="tip-emp-col" style="color:var(--color-text-light); min-width:3.5rem; text-align:right; font-size:0.8rem;">${r.cash.toFixed(2)} €</span>
                         <span class="tip-emp-total" style="font-weight:600; min-width:4rem; text-align:right;">${(r.card + r.cash).toFixed(2)} €</span>
-                        <div class="tip-emp-split" style="display:none; text-align:right;">
+                        <div class="tip-emp-split" style="display:none; text-align:left;">
                             <div style="font-weight:600;">${(r.card + r.cash).toFixed(2)} €</div>
-                            <div style="font-size:0.75rem; color:var(--color-text-light);">K: ${r.card.toFixed(2)}€ · B: ${r.cash.toFixed(2)}€</div>
+                            <div style="font-size:0.75rem; color:var(--color-text-light);">Karte: ${r.card.toFixed(2)} €</div>
+                            <div style="font-size:0.75rem; color:var(--color-text-light);">Bar: ${r.cash.toFixed(2)} €</div>
                         </div>
                     </div>
                 </div>`;
