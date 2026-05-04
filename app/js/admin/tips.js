@@ -155,7 +155,7 @@ async function loadTrinkgeld() {
     if (allDates.length === 0) {
         daysContainer.innerHTML = '<div class="empty-state"><p>Keine Einträge vorhanden.</p></div>';
     } else {
-        daysContainer.innerHTML = allDates.map(dateStr => {
+        daysContainer.innerHTML = '<style>.tip-emp-col{display:inline-block;}.tip-emp-split{display:none;}@media(max-width:480px){.tip-emp-col,.tip-emp-total{display:none!important;}.tip-emp-split{display:block!important;}}</style>' + allDates.map(dateStr => {
             const d         = dayResults[dateStr];
             const dateLabel = new Date(dateStr + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
             const total     = (d.card + d.cash).toFixed(2);
@@ -194,9 +194,15 @@ async function loadTrinkgeld() {
                 return `${deptHeader}
                 <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; padding:0.3rem 0; border-bottom:1px solid var(--color-border);">
                     <span>${name}</span>
-                    <div style="display:flex; align-items:center; gap:1rem;">
+                    <div style="display:flex; align-items:center; gap:0.75rem;">
                         ${hoursDisplay ? `<span style="color:var(--color-text-light);">${hoursDisplay}</span>` : ''}
-                        <span style="font-weight:600; min-width:4rem; text-align:right;">${(r.card + r.cash).toFixed(2)} €</span>
+                        <span class="tip-emp-col" style="color:var(--color-text-light); min-width:3.5rem; text-align:right; font-size:0.8rem;">${r.card.toFixed(2)} €</span>
+                        <span class="tip-emp-col" style="color:var(--color-text-light); min-width:3.5rem; text-align:right; font-size:0.8rem;">${r.cash.toFixed(2)} €</span>
+                        <span class="tip-emp-total" style="font-weight:600; min-width:4rem; text-align:right;">${(r.card + r.cash).toFixed(2)} €</span>
+                        <div class="tip-emp-split" style="display:none; text-align:right;">
+                            <div style="font-weight:600;">${(r.card + r.cash).toFixed(2)} €</div>
+                            <div style="font-size:0.75rem; color:var(--color-text-light);">K: ${r.card.toFixed(2)}€ · B: ${r.cash.toFixed(2)}€</div>
+                        </div>
                     </div>
                 </div>`;
             }).join('');
