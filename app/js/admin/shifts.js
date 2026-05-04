@@ -802,7 +802,7 @@ async function saveEditTimeEntry(id, employeeId, dateStr, entryDate) {
 
     if (!cinVal) { errEl.textContent = 'Einstempelzeit ist erforderlich.'; return; }
 
-    const toISO  = (timeStr) => timeStr ? `${entryDate}T${timeStr}:00` : null;
+    const toISO  = (timeStr) => timeStr ? new Date(`${entryDate}T${timeStr}:00`).toISOString() : null;
     const cinISO  = toISO(cinVal);
     const coutISO = toISO(coutVal) || null;
 
