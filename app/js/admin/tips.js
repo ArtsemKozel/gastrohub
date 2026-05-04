@@ -295,7 +295,17 @@ async function loadTrinkgeld() {
                 <div style="background:white; border-radius:10px; margin-bottom:0.5rem; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.06);">
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:0.65rem 0.85rem; cursor:pointer;" onclick="(function(){var b=document.getElementById('te-b-${empId}'),t=document.getElementById('te-a-${empId}'),o=b.style.display==='block';b.style.display=o?'none':'block';t.textContent=o?'▶':'▼';})();">
                         <div><div style="font-weight:600; font-size:0.9rem;">${name}</div>${empHours ? `<div style="font-size:0.75rem; color:var(--color-text-light);">${empHours}</div>` : ''}</div>
-                        <div style="display:flex; align-items:center; gap:0.5rem;"><div style="font-weight:700; color:var(--color-primary);">${(totals.card + totals.cash).toFixed(2)} €</div><span id="te-a-${empId}" style="color:var(--color-text-light); font-size:0.8rem;">▶</span></div>
+                        <div style="display:flex; align-items:center; gap:0.75rem;">
+                            <span class="tip-emp-col" style="color:var(--color-text-light); min-width:3.5rem; text-align:right; font-size:0.8rem;">${totals.card.toFixed(2)} €</span>
+                            <span class="tip-emp-col" style="color:var(--color-text-light); min-width:3.5rem; text-align:right; font-size:0.8rem;">${totals.cash.toFixed(2)} €</span>
+                            <div class="tip-emp-total" style="font-weight:700; color:var(--color-primary); min-width:4rem; text-align:right;">${(totals.card + totals.cash).toFixed(2)} €</div>
+                            <div class="tip-emp-split" style="display:none; text-align:left;">
+                                <div style="font-weight:700; color:var(--color-primary);">${(totals.card + totals.cash).toFixed(2)} €</div>
+                                <div style="font-size:0.75rem; color:var(--color-text-light);">Karte: ${totals.card.toFixed(2)} €</div>
+                                <div style="font-size:0.75rem; color:var(--color-text-light);">Bar: ${totals.cash.toFixed(2)} €</div>
+                            </div>
+                            <span id="te-a-${empId}" style="color:var(--color-text-light); font-size:0.8rem;">▶</span>
+                        </div>
                     </div>
                     <div id="te-b-${empId}" style="display:none; padding:0.5rem 0.85rem 0.65rem; border-top:1px solid var(--color-border); background:var(--color-gray);">${dayRows || '<div style="font-size:0.82rem; color:var(--color-text-light);">Keine Tagesdaten.</div>'}</div>
                 </div>`;
