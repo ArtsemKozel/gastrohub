@@ -558,6 +558,7 @@ async function loadAndRenderClockList(employeeId, dateStr) {
         const pauseStart = fmtHHMM(firstBreak?.break_start);
         const pauseEnd   = fmtHHMM(firstBreak?.break_end);
         const coutEdit   = te.clock_out ? cout : '';
+        const entryDate  = te.clock_in.slice(0, 10);
 
         let netto = '—';
         if (te.clock_out) {
@@ -596,7 +597,7 @@ async function loadAndRenderClockList(employeeId, dateStr) {
                         <div style="font-size:0.95rem; font-weight:600; color:var(--color-text);">${netto}</div>
                     </div>
                 </div>
-                <button onclick="openEditTimeEntry('${te.id}','${employeeId}','${dateStr}','${cin}','${coutEdit}','${pauseMin}')"
+                <button onclick="openEditTimeEntry('${te.id}','${employeeId}','${dateStr}','${cin}','${coutEdit}','${pauseMin}','${entryDate}')"
                     style="flex-shrink:0; background:none; border:none; cursor:pointer; color:#B28A6E; font-size:1.1rem; padding:0.25rem;" title="Eintrag bearbeiten">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
@@ -751,7 +752,7 @@ async function deleteTimeEntry(id, employeeId, dateStr) {
     await loadAndRenderClockList(employeeId, dateStr);
 }
 
-function openEditTimeEntry(id, employeeId, dateStr, cin, cout, pauseMin) {
+function openEditTimeEntry(id, employeeId, dateStr, cin, cout, pauseMin, entryDate) {
     const existing = document.getElementById('edit-time-entry-modal');
     if (existing) existing.remove();
 
@@ -782,7 +783,7 @@ function openEditTimeEntry(id, employeeId, dateStr, cin, cout, pauseMin) {
             </div>
         </div>
         <div id="ete-error" style="color:#E05555;font-size:0.8rem;min-height:1rem;margin-bottom:0.5rem;"></div>
-        <button onclick="saveEditTimeEntry('${id}','${employeeId}','${dateStr}')"
+        <button onclick="saveEditTimeEntry('${id}','${employeeId}','${dateStr}','${entryDate}')"
             style="width:48px;height:48px;background:#B28A6E;border:none;border-radius:50%;cursor:pointer;display:block;margin:0 auto;color:white;display:flex;align-items:center;justify-content:center;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="20 6 9 17 4 12"/></svg>
         </button>
@@ -792,7 +793,7 @@ function openEditTimeEntry(id, employeeId, dateStr, cin, cout, pauseMin) {
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
 }
 
-async function saveEditTimeEntry(id, employeeId, dateStr) {
+async function saveEditTimeEntry(id, employeeId, dateStr, entryDate) {
     const cinVal   = document.getElementById('ete-cin').value;
     const coutVal  = document.getElementById('ete-cout').value;
     const pauseVal = parseInt(document.getElementById('ete-pause').value, 10) || 0;
@@ -801,7 +802,7 @@ async function saveEditTimeEntry(id, employeeId, dateStr) {
 
     if (!cinVal) { errEl.textContent = 'Einstempelzeit ist erforderlich.'; return; }
 
-    const toISO  = (timeStr) => timeStr ? `${dateStr}T${timeStr}:00` : null;
+    const toISO  = (timeStr) => timeStr ? `${entryDate}T${timeStr}:00` : null;
     const cinISO  = toISO(cinVal);
     const coutISO = toISO(coutVal) || null;
 
