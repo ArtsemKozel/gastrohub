@@ -1,6 +1,6 @@
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                         GASTROHUB — ZUSAMMENFASSUNG                        ║
-║                              Stand: 25.04.2026                             ║
+║                              Stand: 04.05.2026                             ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -12,11 +12,15 @@ monolithische Single-Page-App (eine große admin.js + employee.js). GastroHub
 zerlegt diese Logik in eine modulare Ordnerstruktur mit getrennten JS-Dateien
 pro Feature-Bereich und drei klar getrennten Nutzergruppen.
 
+Dieses Repo (gastrohub-new) ist die Basic-Variante für Ein-Filial-Betriebe.
+Die Mehr-Filialen-Variante ist gastrohub-iaro (Supabase: ecxvbjrxhyllqnuknwly,
+Repo: https://github.com/ArtsemKozel/gastrohub-iaro).
+
 Quell-Repository:  /Users/artchiebald/Documents/PlanIt/
 Ziel-Repository:   /Users/artchiebald/Documents/gastrohub-new/
                    https://github.com/ArtsemKozel/gastrohub
 
-Datenbank:         Supabase (identischer Account und URL wie PlanIt)
+Datenbank:         Supabase
                    URL: https://ulazvcrpasnhufzlywxf.supabase.co
 
 Deployment:        Cloudflare Pages
@@ -37,11 +41,12 @@ Deployment:        Cloudflare Pages
   │   ├── register.html
   │   ├── js/
   │   │   ├── shared/         db.js, auth.js, utils.js
-  │   │   ├── admin/          init.js, shifts.js, team.js, vacation.js,
-  │   │   │                   hours.js, tips.js, inventory.js, hygiene.js,
-  │   │   │                   tasks.js, terminations.js, margincalc.js,
-  │   │   │                   payroll.js, restaurant.js, time_entries.js,
-  │   │   │                   temperature.js, notify.js
+  │   │   ├── admin/          init.js, branches.js, shifts.js, team.js,
+  │   │   │                   vacation.js, hours.js, tips.js, inventory.js,
+  │   │   │                   hygiene.js, tasks.js, terminations.js,
+  │   │   │                   margincalc.js, payroll.js, restaurant.js,
+  │   │   │                   time_entries.js, temperature.js, notify.js,
+  │   │   │                   statistiken.js
   │   │   ├── employee/       init.js, overview.js, vacation.js,
   │   │   │                   availability.js, swaps.js, inventory.js,
   │   │   │                   profil.js, schichtplan.js, stunden.js,
@@ -63,17 +68,20 @@ Deployment:        Cloudflare Pages
                           Neu hinzugefügt:
                             can_do_inventory    boolean — Inventur-Delegation
                             can_do_temperature  boolean — Temperaturkontrolle-
-                                                Delegation (wie can_do_inventory)
+                                                Delegation
+                            can_do_timeclock    boolean — Mobile Zeiterfassung
                             employment_type     text — Beschäftigungsart
                             hourly_rate         numeric — Stundenlohn
                             wage_type           text — Lohnart (Stunden/Monat)
 
     planit_restaurants    Restaurant-Konten (id, name, owner_id)
     shifts                Schichtplanung
+                          Neu: is_unplanned (boolean) — automatisch beim
+                          Einstempeln ohne geplante Schicht angelegt
     shift_templates       Schichtvorlagen
     vacation_requests     Urlaubsanträge
     availability          Verfügbarkeitsangaben
-    tips                  Trinkgeldverteilung
+    tips                  Trinkgeldverteilung (card + cash Spalten)
     inventory             Inventureinträge
     hygiene_logs          Hygieneprotokoll
     tasks / notes         Aufgaben und Notizen
@@ -83,8 +91,7 @@ Deployment:        Cloudflare Pages
                           Spalten: id, user_id, employee_id,
                           clock_in (timestamptz), clock_out (timestamptz),
                           note (text),
-                          is_manual (boolean) — true wenn manuell vom Admin
-                          nachgetragen (zeigt "manuell"-Badge im Clock-Block)
+                          is_manual (boolean) — true wenn manuell nachgetragen
                           Hinweis: RLS auf anon key blockiert chained
                           .insert().select() — nach INSERT immer separates
                           SELECT durchführen
@@ -93,32 +100,37 @@ Deployment:        Cloudflare Pages
                           Spalten: id, user_id, employee_id,
                           time_entry_id (FK → gh_time_entries.id),
                           break_start (timestamptz), break_end (timestamptz)
-                          Hinweis: Beim Löschen eines gh_time_entries-Eintrags
-                          zuerst alle gh_breaks mit time_entry_id löschen
+                          RLS-Policies: SELECT, INSERT, UPDATE, DELETE
+                          Hinweis: Beim Bearbeiten einer Stempelzeit wird der
+                          bestehende gh_breaks-Eintrag gelöscht und neu
+                          angelegt. Die Pausendauer wird als synthetischer
+                          Eintrag gespeichert: break_start = clock_in,
+                          break_end = clock_in + pauseMin Minuten
 
-    planit_payrolls       Vorlohnabrechnungen (Lohnzettel-Entwürfe)
+    planit_payrolls       Vorlohnabrechnungen
                           Spalten: id, user_id, employee_id, month (YYYY-MM),
-                          data (jsonb mit Stunden, Zuschlägen, Abzügen),
-                          created_at
+                          data (jsonb), created_at
 
-    planit_terminations   Kündigungsanträge und Arbeitgeber-Kündigungen
+    planit_terminations   Kündigungsanträge
                           Spalten: id, user_id, employee_id, requested_date,
-                          approved_date, reason, status (pending/approved/
-                          rejected), initiated_by (employer/employee), pdf_url
+                          approved_date, reason, status, initiated_by, pdf_url
 
-    employment_phases     Beschäftigungsphasen eines Mitarbeiters
+    employment_phases     Beschäftigungsphasen
                           Spalten: id, employee_id, start_date, end_date
-                          end_date = null → aktuell aktive Phase
 
-    temperature_devices   Temperaturkontrolle-Geräte/Messpunkte
-                          Spalten: id, user_id, name, min_temp (numeric),
-                          max_temp (numeric), created_at
-                          Sortierung: immer nach created_at ascending
+    temperature_devices   Temperaturkontrolle-Geräte
+                          Spalten: id, user_id, name, min_temp, max_temp,
+                          created_at (Sortierung: immer ascending)
 
     temperature_logs      Temperaturmesswerte
-                          Spalten: id, user_id, employee_id, device_id
-                          (FK → temperature_devices.id), temperature (numeric),
-                          note (text), log_date (date), created_at
+                          Spalten: id, user_id, employee_id, device_id,
+                          temperature, note, log_date, created_at
+
+    planit_hour_balances  Stundenkonto-Saldi
+                          Enthält carry_over_minutes für Monatsübertrag.
+                          Auto-Übertrag: loadAdminStunden() berechnet
+                          Vormonat-Saldo automatisch wenn kein manueller
+                          Eintrag existiert und der Vormonat Daten hat.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -173,130 +185,137 @@ Deployment:        Cloudflare Pages
   Amber:         #F59E0B  — Pause-Zustand
   Fehler:        #E05555
 
+  Button-Design-Standard: Alle Aktions-Buttons sind rund ohne Text mit
+  SVG-Icons — Häkchen für Speichern, Mülleimer für Löschen, Stift für
+  Bearbeiten, Plus für Hinzufügen, Pfeil für Navigieren. Größe 40–56px,
+  Hintergrundfarbe #B28A6E, border-radius: 50%, SVG in Weiß.
+
+  Schichtfarben im Wochenraster:
+    Standard:     #B28A6E (Primärfarbe)
+    Ungeplant:    #C8E6C9 (Hellgrün) — is_unplanned = true
+    Mit Ist-Zeit: #E8D4A0 (Gelb) — actual_start_time gesetzt (überschreibt Grün)
+
   POS-Kiosk orientiert sich an ShiftIn (externes Referenz-Projekt) —
   inline CSS in renderPinScreen() und renderEmployeeScreen() in clock.js.
   Admin-Bereich verwendet CSS-Variablen aus admin.html <style>-Block.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- AKTUELLER STAND (25.04.2026)
+ FEATURES — AKTUELLER STAND (04.05.2026)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  FERTIG ✓
+  js/admin/shifts.js
   ─────────────────────────────────────────────────────────────
-  index.html              Login-Seite (Admin + Mitarbeiter, Pill-Tabs)
-  register.html           Registrierung (GastroHub-Design, planit_restaurants)
-  admin.html              HTML-Struktur vollständig, alle Modals vorhanden
-  employee.html           HTML-Struktur vollständig
+  Schichtplanung vollständig:
+    — Schicht erstellen / bearbeiten / löschen
+    — Wiederholung (N Wochen), Vorlagen laden und anwenden
+    — Verfügbarkeits-Warnungen, Überschneidungs-Prüfung
+    — Tatsächliche Zeiten (klappbarer Block)
+    — Stempelzeiten aus gh_time_entries (klappbarer Block)
+      mit Netto-Dauer, Pausen abgezogen, Gesamt-Netto
+    — Stempelzeit bearbeiten: Bearbeiten-Button neben Löschen in der
+      Stempelzeiten-Liste. Modal mit Einstempelzeit, Ausstempelzeit,
+      Pausendauer (Min). Speichert in gh_time_entries per UPDATE und
+      gh_breaks per DELETE + INSERT. Zeitzone via
+      new Date(`${entryDate}T${timeStr}:00`).toISOString() auf UTC.
+      entryDate = te.clock_in.slice(0,10) (Datum des Eintrags, nicht
+      der Schicht).
+    — Stempelzeiten manuell nachtragen (is_manual-Flag)
+    — ⋮-Zelle: Extra Schicht, Selektiv löschen, Alle löschen
+    — Multi-Schicht-Badge, Schichtplan veröffentlichen
+    — Ungeplante Schichten: beim Einstempeln ohne geplante Schicht wird
+      automatisch eine Schicht mit is_unplanned = true angelegt.
+      RLS-Policy für anonyme Inserts auf shifts bei is_unplanned = true.
 
-  js/shared/db.js         Supabase-Client-Initialisierung (global "db")
-  js/shared/auth.js       Login, Session-Checks, Logout für alle Gruppen
-  js/shared/utils.js      Feiertage BW, Datum-Formatierung, Abteilungen
+  js/pos/clock.js
+  ─────────────────────────────────────────────────────────────
+    — PIN-Login, Ein-/Ausstempeln, Kommentar, Logout
+    — Zeitanzeige: laufende Arbeitszeit und Pausenzeit (sekündlich)
+    — Offene Einstempelungen aus Vortagen: posLogin() prüft ob ein
+      offener Eintrag mit clock_out IS NULL und clock_in < heute
+      existiert und setzt den Mitarbeiter korrekt als eingestempelt.
 
-  js/admin/init.js        requireAdminSession(), DOMContentLoaded, switchTab()
-  js/admin/shifts.js      Schichtplanung vollständig:
-                          — Schicht erstellen / bearbeiten / löschen
-                          — Wiederholung (N Wochen)
-                          — Vorlagen laden und anwenden
-                          — Verfügbarkeits-Warnungen
-                          — Tatsächliche Zeiten (klappbarer Block)
-                          — Stempelzeiten aus gh_time_entries (klappbarer Block)
-                            mit Netto-Dauer, Pausen abgezogen, Gesamt-Netto
-                          — Kommentar (note) aus gh_time_entries im Block
-                          — Eintrag löschen (zuerst gh_breaks, dann Eintrag)
-                          — Stempelzeiten manuell nachtragen (is_manual-Flag,
-                            "manuell"-Badge über der Eintragszeile)
-                          — Überschneidungs-Prüfung beim Schicht-Speichern
-                            (Intervall-Overlap-Check, Bestätigung via confirm())
-                          — ⋮-Zelle im Wochengitter: Extra Schicht,
-                            Selektiv löschen, Alle löschen
-                          — Multi-Schicht-Badge (Anzahl-Bubble oben rechts
-                            wenn > 1 Schicht am selben Tag)
-                          — Schichtplan veröffentlichen (Push-Benachrichtigung)
-  js/admin/team.js        Team-Verwaltung
-  js/admin/vacation.js    Urlaubsverwaltung
-                          — Push-Benachrichtigungen bei Genehmigung/Ablehnung
-                          — Offene Schicht zuweisen mit Benachrichtigung
-  js/admin/hours.js       Stundenübersicht
-  js/admin/tips.js        Trinkgeldverteilung
-  js/admin/inventory.js   Inventur
-  js/admin/hygiene.js     Hygieneprotokoll
-  js/admin/tasks.js       Aufgaben & Notizen
-  js/admin/terminations.js  Abgänge
-                          — Push-Benachrichtigungen bei Genehmigung/Ablehnung
-  js/admin/margincalc.js  Deckungsbeitragsrechnung (MarginCalc):
-                          Umsatz, Wareneinsatz, Personalkosten, DB I / DB II
-  js/admin/payroll.js     Vorlohnabrechnung:
-                          Lohnzettel-Entwurf pro Mitarbeiter und Monat,
-                          Speichern in planit_payrolls, PDF-Export via jsPDF
-  js/admin/restaurant.js  Restaurant-Einstellungen
-  js/admin/time_entries.js  Stempelzeiten-Übersicht (alle Mitarbeiter)
-  js/admin/temperature.js Temperaturkontrolle:
-                          — Tagesansicht mit klappbaren Tageskarten
-                          — Geräteverwaltung (Anlegen, Bearbeiten, Löschen)
-                          — Delegation an Mitarbeiter (can_do_temperature)
-                          — PDF-Export mit Von/Bis-Datumsbereich
-  js/admin/notify.js      Push-Benachrichtigungen:
-                          sendPushNotification(title, message, external_id?)
-                          POST an Cloudflare Worker
+  js/admin/tips.js
+  ─────────────────────────────────────────────────────────────
+    — Tagesansicht, Monatsübersicht und Tagesliste pro Mitarbeiter:
+      Karte und Bar getrennt. Desktop: drei Spalten (Karte | Bar | Gesamt).
+      Mobile: Gesamt fett oben, darunter "Karte: X.XX€" und "Bar: X.XX€"
+      — rechtsbündig, min-width 90px.
+    — lastDay UTC-Bug behoben: lastDay als String konstruiert
+      (`${monthStr}-${String(daysInMonth).padStart(2,'0')}`) statt
+      toISOString().
 
-  js/employee/init.js     requireEmployeeSession(), DOMContentLoaded, switchTab()
-                          OneSignal.login(String(currentEmployee.id)) beim Start
-  js/employee/overview.js Übersicht (Schichtplan der Woche)
-                          checkTemperatureVisibility() — zeigt/versteckt
-                          Temperaturkontrolle-Menüpunkt je nach Flag
-  js/employee/vacation.js Urlaubsantrag & Kalender
-  js/employee/availability.js  Verfügbarkeitsangaben
-  js/employee/swaps.js    Schichttausch
-  js/employee/inventory.js     Inventurformular (Mitarbeiter)
-  js/employee/profil.js   Profilseite
-  js/employee/schichtplan.js   Schichtplan-Ansicht (Mitarbeiter)
-  js/employee/stunden.js  Stundenübersicht (Mitarbeiter)
-  js/employee/trinkgeld.js     Trinkgeld-Ansicht (Mitarbeiter)
-  js/employee/payroll.js  Lohnzettel-Ansicht (Mitarbeiter)
-  js/employee/temperature.js   Temperaturkontrolle (Mitarbeiter):
-                          — Tagesansicht mit Eingabefeld pro Gerät
-                          — Nur sichtbar wenn can_do_temperature = true
+  js/admin/hours.js
+  ─────────────────────────────────────────────────────────────
+    — Stundenkonto Auto-Übertrag: Vormonat-Saldo wird automatisch als
+      carry_over_minutes berechnet — nur wenn kein manueller Eintrag
+      existiert und der Vormonat Daten hat.
 
-  pos.html                POS-Kiosk vollständig (Shell + Styles)
-  js/pos/clock.js         PIN-Login, Ein-/Ausstempeln, Kommentar, Logout
-                          — Zeitanzeige: laufende Arbeitszeit und Pausenzeit
-                            im Employee-Screen (wird sekündlich aktualisiert)
-  js/pos/breaks.js        Pause starten / beenden (gh_breaks)
+  js/employee/overview.js
+  ─────────────────────────────────────────────────────────────
+    — Mobile Zeiterfassung: Mitarbeiter mit can_do_timeclock = true
+      sehen Zeiterfassungs-Button zu #tab-timeclock-emp. Identische
+      Ansicht zur POS-Mitarbeiter-Seite.
+
+  js/admin/statistiken.js
+  ─────────────────────────────────────────────────────────────
+    — Fehlzeiten-Tab: Monats- und Jahresübersicht.
+    — Krankheitsverlauf als Balkendiagramm (Chart.js) mit Jahrswechsler.
+    — Trinkgeld-Verlauf als Balkendiagramm pro Jahr.
+
+  js/admin/team.js
+  ─────────────────────────────────────────────────────────────
+    — Archiv: Alte Mitarbeiter klappbar, sortiert nach Kündigungsdatum
+      absteigend. toggleArchive() (nicht toggleTasksArchive() — Konflikt
+      mit tasks.js).
+
+  js/admin/margincalc.js
+  ─────────────────────────────────────────────────────────────
+    — Kalkulations-Bug behoben: Container-ID-Mismatch (margincalc-root
+      vs. margincalc-app) korrigiert.
+
+  Arbeitszeitbericht
+  ─────────────────────────────────────────────────────────────
+    — Neuer Tab "Berichte" unter Analyse & Reports. Filter: Mitarbeiter,
+      Zeitraum. PDF-Download via downloadArbeitszeitbericht().
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ DATEI-ÜBERSICHT (FERTIG ✓)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  index.html / register.html / admin.html / employee.html
+  js/shared/       db.js, auth.js, utils.js
+  js/admin/        init.js, branches.js, shifts.js, team.js, vacation.js,
+                   hours.js, tips.js, inventory.js, hygiene.js, tasks.js,
+                   terminations.js, margincalc.js, payroll.js, restaurant.js,
+                   time_entries.js, temperature.js, notify.js, statistiken.js
+  js/employee/     init.js, overview.js, vacation.js, availability.js,
+                   swaps.js, inventory.js, profil.js, schichtplan.js,
+                   stunden.js, trinkgeld.js, payroll.js, temperature.js
+  pos.html / js/pos/clock.js / js/pos/breaks.js
 
   OFFEN ✗
   ─────────────────────────────────────────────────────────────
-  js/pos/pos.js           POS-Hauptlogik (Kassensystem, noch nicht begonnen)
-
-  CSS (alle leer):
-  css/base.css, css/components.css, css/admin.css, css/employee.css, css/pos.css
+  js/pos/pos.js    POS-Kassensystem (noch nicht begonnen)
+  css/             Alle CSS-Dateien leer (Styles inline in HTML)
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  ARBEITSREGELN FÜR CLAUDE CODE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Diese Regeln gelten für alle Aufträge an Claude Code in diesem Projekt und
-sollen eine konsistente, nachvollziehbare Zusammenarbeit sicherstellen.
-
 Aufträge werden als zusammenhängender Fließtext auf Deutsch formuliert —
 keine Aufzählungslisten, keine Codeblöcke im Auftragstext. Der Auftragstext
-nennt immer den Dateinamen und den Funktionsnamen, der geändert werden soll,
-damit Claude Code ohne Rückfragen an die richtige Stelle navigieren kann.
+nennt immer den Dateinamen und den Funktionsnamen, der geändert werden soll.
 
 Pro Auftrag wird genau eine inhaltliche Änderung beschrieben. Mehrere
-unabhängige Änderungen werden als separate Aufträge gestellt, nicht
-zusammengefasst, um Verwechslungen beim Commit-Text zu vermeiden und die
-Git-Historie übersichtlich zu halten.
+unabhängige Änderungen werden als separate Aufträge gestellt.
 
-Mobile und Desktop werden immer gleichzeitig berücksichtigt. Wann immer eine
-UI-Änderung in einer Ansicht gemacht wird, muss geprüft werden ob dieselbe
-Änderung auch für die andere Bildschirmgröße passt oder angepasst werden muss.
+Mobile und Desktop werden immer gleichzeitig berücksichtigt.
 
-Nach jedem abgeschlossenen Feature oder jeder Änderung wird der Stand sofort
-committed und zu GitHub gepusht. Es wird nicht auf mehrere fertige Aufgaben
-gewartet — jede Änderung erhält ihren eigenen Commit mit aussagekräftigem
-Commit-Text auf Deutsch.
+Nach jedem abgeschlossenen Feature wird sofort committed und gepusht.
+Nach jedem Commit wird sofort ohne Nachfrage gepusht.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -304,20 +323,8 @@ Commit-Text auf Deutsch.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Ein Pre-Commit-Hook aktualisiert automatisch die ?v=-Query-Parameter aller
-<script src="...?v=...">-Tags in den HTML-Dateien (admin.html, employee.html,
-pos.html). Dadurch werden Browser-Caches bei jedem Deploy zuverlässig
-invalidiert ohne manuellen Eingriff.
-
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- MIGRATIONS-PRINZIP
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Logik aus PlanIt/js/admin.js (~7100 Zeilen) wird aufgeteilt in die 12
-Admin-Module. Logik aus PlanIt/js/employee.js (~2400 Zeilen) wird aufgeteilt
-in die 7 Mitarbeiter-Module. Funktionen die in beiden PlanIt-Dateien identisch
-vorhanden waren landen in js/shared/utils.js. Keine inhaltlichen Änderungen
-an der Logik während der Migration — erst migrieren, dann verbessern.
+<script src="...?v=...">-Tags in admin.html, employee.html und pos.html.
+Dadurch werden Browser-Caches bei jedem Deploy invalidiert.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
