@@ -279,7 +279,9 @@ async function loadTrinkgeld() {
                 const dayRows      = allDates.filter(dateStr => Object.values(dayResults[dateStr].empResults).some(r => r.empId === empId)).map(dateStr => {
                     const d           = dayResults[dateStr];
                     const dateLabel   = new Date(dateStr + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
-                    const dayEmpTotal = Object.values(d.empResults).filter(r => r.empId === empId).reduce((sum, r) => sum + r.card + r.cash, 0);
+                    const dayEmpCard  = Object.values(d.empResults).filter(r => r.empId === empId).reduce((sum, r) => sum + r.card, 0);
+                    const dayEmpCash  = Object.values(d.empResults).filter(r => r.empId === empId).reduce((sum, r) => sum + r.cash, 0);
+                    const dayEmpTotal = dayEmpCard + dayEmpCash;
                     let dayHoursStr;
                     if (avgDayMins !== null) {
                         const ah = Math.floor(avgDayMins / 60);
@@ -289,7 +291,7 @@ async function loadTrinkgeld() {
                         const dayEmpMins = d.hours.filter(h => h.employee_id === empId).reduce((sum, h) => sum + h.minutes, 0);
                         dayHoursStr = dayEmpMins > 0 ? `${Math.floor(dayEmpMins / 60)}h ${String(dayEmpMins % 60).padStart(2, '0')}m` : '';
                     }
-                    return `<div style="display:flex; justify-content:space-between; align-items:center; font-size:0.82rem; padding:0.25rem 0; border-bottom:1px solid var(--color-border);"><span style="color:var(--color-text-light);">${dateLabel}</span><div style="display:flex; gap:1rem; align-items:center;">${dayHoursStr ? `<span style="color:var(--color-text-light);">${dayHoursStr}</span>` : ''}<span style="font-weight:600; min-width:4rem; text-align:right;">${dayEmpTotal.toFixed(2)} €</span></div></div>`;
+                    return `<div style="display:flex; justify-content:space-between; align-items:center; font-size:0.82rem; padding:0.25rem 0; border-bottom:1px solid var(--color-border);"><span style="flex:1; color:var(--color-text-light);">${dateLabel}</span><div style="display:flex; gap:0.75rem; align-items:center;">${dayHoursStr ? `<span style="color:var(--color-text-light);">${dayHoursStr}</span>` : ''}<span class="tip-emp-col" style="color:var(--color-text-light); min-width:3.5rem; text-align:right; font-size:0.75rem;">${dayEmpCard.toFixed(2)} €</span><span class="tip-emp-col" style="color:var(--color-text-light); min-width:3.5rem; text-align:right; font-size:0.75rem;">${dayEmpCash.toFixed(2)} €</span><span class="tip-emp-total" style="font-weight:600; min-width:4rem; text-align:right;">${dayEmpTotal.toFixed(2)} €</span><div class="tip-emp-split" style="display:none; text-align:right; min-width:90px;"><div style="font-weight:600;">${dayEmpTotal.toFixed(2)} €</div><div style="font-size:0.75rem; color:var(--color-text-light);">Karte: ${dayEmpCard.toFixed(2)} €</div><div style="font-size:0.75rem; color:var(--color-text-light);">Bar: ${dayEmpCash.toFixed(2)} €</div></div></div></div>`;
                 }).join('');
                 return `${deptHeader}
                 <div style="background:white; border-radius:10px; margin-bottom:0.5rem; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.06);">
