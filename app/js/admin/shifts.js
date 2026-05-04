@@ -798,6 +798,7 @@ async function saveEditTimeEntry(id, employeeId, dateStr, entryDate) {
     const cinVal   = document.getElementById('ete-cin').value;
     const coutVal  = document.getElementById('ete-cout').value;
     const pauseVal = parseInt(document.getElementById('ete-pause').value, 10) || 0;
+    console.log('pauseVal parsed', pauseVal);
     const errEl    = document.getElementById('ete-error');
     errEl.textContent = '';
 
