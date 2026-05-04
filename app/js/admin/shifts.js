@@ -596,7 +596,7 @@ async function loadAndRenderClockList(employeeId, dateStr) {
                         <div style="font-size:0.95rem; font-weight:600; color:var(--color-text);">${netto}</div>
                     </div>
                 </div>
-                <button onclick="openEditTimeEntry('${te.id}','${employeeId}','${dateStr}','${cin}','${coutEdit}','${pauseStart}','${pauseEnd}')"
+                <button onclick="openEditTimeEntry('${te.id}','${employeeId}','${dateStr}','${cin}','${coutEdit}','${pauseMin}')"
                     style="flex-shrink:0; background:none; border:none; cursor:pointer; color:#B28A6E; font-size:1.1rem; padding:0.25rem;" title="Eintrag bearbeiten">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
@@ -751,7 +751,7 @@ async function deleteTimeEntry(id, employeeId, dateStr) {
     await loadAndRenderClockList(employeeId, dateStr);
 }
 
-function openEditTimeEntry(id, employeeId, dateStr, cin, cout, pauseStart, pauseEnd) {
+function openEditTimeEntry(id, employeeId, dateStr, cin, cout, pauseMin) {
     const existing = document.getElementById('edit-time-entry-modal');
     if (existing) existing.remove();
 
@@ -760,7 +760,9 @@ function openEditTimeEntry(id, employeeId, dateStr, cin, cout, pauseStart, pause
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;';
 
     overlay.innerHTML = `
-    <div style="background:var(--color-bg,#fff);border-radius:14px;padding:1.25rem 1.25rem 1rem;width:100%;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+    <div style="background:var(--color-bg,#fff);border-radius:14px;padding:1.25rem 1.25rem 1.25rem;width:100%;max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.18);position:relative;">
+        <button onclick="document.getElementById('edit-time-entry-modal').remove()"
+            style="position:absolute;top:0.75rem;right:0.75rem;background:none;border:none;cursor:pointer;color:var(--color-text-light);font-size:1.1rem;line-height:1;padding:0.25rem;">✕</button>
         <div style="font-size:1rem;font-weight:700;margin-bottom:1rem;">Eintrag bearbeiten</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:0.6rem;">
             <div>
@@ -773,28 +775,17 @@ function openEditTimeEntry(id, employeeId, dateStr, cin, cout, pauseStart, pause
                 <input id="ete-cout" type="time" value="${cout}"
                     style="width:100%;padding:0.4rem 0.5rem;border:1px solid #ddd;border-radius:7px;font-size:0.95rem;">
             </div>
-            <div>
-                <div style="font-size:0.7rem;color:var(--color-text-light);margin-bottom:0.2rem;">Pausenbeginn</div>
-                <input id="ete-pstart" type="time" value="${pauseStart}"
-                    style="width:100%;padding:0.4rem 0.5rem;border:1px solid #ddd;border-radius:7px;font-size:0.95rem;">
-            </div>
-            <div>
-                <div style="font-size:0.7rem;color:var(--color-text-light);margin-bottom:0.2rem;">Pausenende</div>
-                <input id="ete-pend" type="time" value="${pauseEnd}"
+            <div style="grid-column:1/-1;">
+                <div style="font-size:0.7rem;color:var(--color-text-light);margin-bottom:0.2rem;">Pausendauer (Min)</div>
+                <input id="ete-pause" type="number" min="0" placeholder="0" value="${pauseMin || ''}"
                     style="width:100%;padding:0.4rem 0.5rem;border:1px solid #ddd;border-radius:7px;font-size:0.95rem;">
             </div>
         </div>
         <div id="ete-error" style="color:#E05555;font-size:0.8rem;min-height:1rem;margin-bottom:0.5rem;"></div>
-        <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
-            <button onclick="document.getElementById('edit-time-entry-modal').remove()"
-                style="background:none;border:1px solid #ccc;border-radius:8px;padding:0.4rem 1rem;font-size:0.85rem;cursor:pointer;">
-                Abbrechen
-            </button>
-            <button onclick="saveEditTimeEntry('${id}','${employeeId}','${dateStr}')"
-                style="background:#B28A6E;color:white;border:none;border-radius:8px;padding:0.4rem 1rem;font-size:0.85rem;font-weight:600;cursor:pointer;">
-                Speichern
-            </button>
-        </div>
+        <button onclick="saveEditTimeEntry('${id}','${employeeId}','${dateStr}')"
+            style="width:48px;height:48px;background:#B28A6E;border:none;border-radius:50%;cursor:pointer;display:block;margin:0 auto;color:white;display:flex;align-items:center;justify-content:center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
     </div>`;
 
     document.body.appendChild(overlay);
@@ -802,16 +793,15 @@ function openEditTimeEntry(id, employeeId, dateStr, cin, cout, pauseStart, pause
 }
 
 async function saveEditTimeEntry(id, employeeId, dateStr) {
-    const cinVal    = document.getElementById('ete-cin').value;
-    const coutVal   = document.getElementById('ete-cout').value;
-    const pStartVal = document.getElementById('ete-pstart').value;
-    const pEndVal   = document.getElementById('ete-pend').value;
-    const errEl     = document.getElementById('ete-error');
+    const cinVal   = document.getElementById('ete-cin').value;
+    const coutVal  = document.getElementById('ete-cout').value;
+    const pauseVal = parseInt(document.getElementById('ete-pause').value, 10) || 0;
+    const errEl    = document.getElementById('ete-error');
     errEl.textContent = '';
 
     if (!cinVal) { errEl.textContent = 'Einstempelzeit ist erforderlich.'; return; }
 
-    const toISO = (timeStr) => timeStr ? `${dateStr}T${timeStr}:00` : null;
+    const toISO  = (timeStr) => timeStr ? `${dateStr}T${timeStr}:00` : null;
     const cinISO  = toISO(cinVal);
     const coutISO = toISO(coutVal) || null;
 
@@ -822,11 +812,13 @@ async function saveEditTimeEntry(id, employeeId, dateStr) {
 
     await db.from('gh_breaks').delete().eq('time_entry_id', id);
 
-    if (pStartVal && pEndVal) {
+    if (pauseVal > 0) {
+        const bStart = new Date(cinISO);
+        const bEnd   = new Date(bStart.getTime() + pauseVal * 60000);
         const { error: bErr } = await db.from('gh_breaks').insert({
             time_entry_id: id,
-            break_start: toISO(pStartVal),
-            break_end: toISO(pEndVal)
+            break_start:   bStart.toISOString(),
+            break_end:     bEnd.toISOString()
         });
         if (bErr) { errEl.textContent = 'Fehler beim Speichern der Pause: ' + bErr.message; return; }
     }
