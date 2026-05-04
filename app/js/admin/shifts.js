@@ -824,6 +824,7 @@ async function saveEditTimeEntry(id, employeeId, dateStr, entryDate) {
             break_start:   bStart.toISOString(),
             break_end:     bEnd.toISOString()
         });
+        console.log('break insert result', bErr);
         if (bErr) { errEl.textContent = 'Fehler beim Speichern der Pause: ' + bErr.message; return; }
     }
 
