@@ -76,6 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadTeam(),
         loadDepartments(),
         loadAdminAvailability(),
+        loadAvailDeadline(),
         loadAdminVacationCalendar(),
         loadArchiveBadge(),
         loadSickLeaves(),

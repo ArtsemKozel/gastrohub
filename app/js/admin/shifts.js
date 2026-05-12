@@ -1432,9 +1432,55 @@ async function deleteOpenShift() {
 }
 
 // ── ADMIN-VERFÜGBARKEITSANSICHT ───────────────────────────
+function updateAvailDeadlineMax() {
+    const input = document.getElementById('avail-deadline-input');
+    if (!input) return;
+    const lastDayOfPrevMonth = new Date(adminAvailDate.getFullYear(), adminAvailDate.getMonth(), 0);
+    input.max = lastDayOfPrevMonth.toISOString().split('T')[0];
+}
+
 function changeAdminAvailMonth(dir) {
     adminAvailDate.setMonth(adminAvailDate.getMonth() + dir);
+    updateAvailDeadlineMax();
     loadAdminAvailability();
+}
+
+async function loadAvailDeadline() {
+    const { data } = await db.from('planit_restaurants').select('availability_deadline')
+        .eq('user_id', adminSession.user.id).maybeSingle();
+    const input = document.getElementById('avail-deadline-input');
+    if (input) {
+        input.value = data?.availability_deadline || '';
+        updateAvailDeadlineMax();
+    }
+}
+
+async function saveAvailDeadline() {
+    const value    = document.getElementById('avail-deadline-input').value || null;
+    const monthStr = `${adminAvailDate.getFullYear()}-${String(adminAvailDate.getMonth()+1).padStart(2,'0')}`;
+    const payload  = { availability_deadline: value, availability_deadline_month: value ? monthStr : null };
+    const { data: existing } = await db.from('planit_restaurants').select('id')
+        .eq('user_id', adminSession.user.id).maybeSingle();
+    if (existing) {
+        await db.from('planit_restaurants').update(payload).eq('user_id', adminSession.user.id);
+    } else {
+        await db.from('planit_restaurants').insert({ user_id: adminSession.user.id, ...payload });
+    }
+    showAdminToast('Deadline gespeichert');
+}
+
+function showAdminToast(msg) {
+    let el = document.getElementById('admin-toast');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'admin-toast';
+        el.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#3a7d44;color:white;padding:0.6rem 1.25rem;border-radius:999px;font-size:0.9rem;font-weight:600;z-index:9999;opacity:0;transition:opacity 0.25s;pointer-events:none;white-space:nowrap;';
+        document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.style.opacity = '1';
+    clearTimeout(el._hideTimer);
+    el._hideTimer = setTimeout(() => { el.style.opacity = '0'; }, 2500);
 }
 
 async function loadAdminAvailability() {

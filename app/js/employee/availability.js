@@ -153,12 +153,46 @@ async function loadAvailability() {
                         'Juli','August','September','Oktober','November','Dezember'];
     document.getElementById('avail-month-label').textContent = `${monthNames[month]} ${year}`;
 
-    const { data } = await db
-        .from('availability')
-        .select('*')
-        .eq('employee_id', currentEmployee.id)
-        .eq('month', monthStr)
-        .maybeSingle();
+    const currentMonth = `${year}-${String(month+1).padStart(2,'0')}`;
+
+    const [{ data }, { data: restaurant }] = await Promise.all([
+        db.from('availability').select('*')
+            .eq('employee_id', currentEmployee.id)
+            .eq('month', monthStr)
+            .maybeSingle(),
+        db.from('planit_restaurants').select('availability_deadline, availability_deadline_month')
+            .eq('user_id', currentEmployee.user_id)
+            .maybeSingle(),
+    ]);
+
+    const today         = new Date().toISOString().split('T')[0];
+    const todayMonth    = today.slice(0, 7);
+    const deadline      = restaurant?.availability_deadline      || null;
+    const deadlineMonth = restaurant?.availability_deadline_month || null;
+    const isPast        = currentMonth < todayMonth;
+    const isDeadlineLocked = deadline && deadlineMonth === currentMonth && today > deadline;
+    const isLocked      = isPast || isDeadlineLocked;
+
+    let lockMsg = '';
+    if (isPast) {
+        if (deadline && deadlineMonth === currentMonth) {
+            const [dy, dm, dd] = deadline.split('-');
+            lockMsg = `Verfügbarkeit für diesen Monat ist gesperrt — Deadline war der ${dd}.${dm}.${dy}.`;
+        } else {
+            lockMsg = 'Dieser Monat liegt in der Vergangenheit.';
+        }
+    } else if (isDeadlineLocked) {
+        const [dy, dm, dd] = deadline.split('-');
+        lockMsg = `Verfügbarkeit für diesen Monat ist gesperrt — Deadline war der ${dd}.${dm}.${dy}.`;
+    }
+
+    const msgEl   = document.getElementById('avail-deadline-msg');
+    const saveBtn = document.getElementById('avail-save-btn');
+    const gridEl  = document.getElementById('avail-grid');
+
+    if (msgEl) { msgEl.textContent = lockMsg; msgEl.style.display = isLocked ? 'block' : 'none'; }
+    if (saveBtn) saveBtn.style.display = isLocked ? 'none' : 'block';
+    if (gridEl) { gridEl.style.opacity = isLocked ? '0.4' : ''; gridEl.style.pointerEvents = isLocked ? 'none' : ''; }
 
     selectedAvailDays = (data && !Array.isArray(data.available_days)) ? data.available_days : {};
     await renderAvailGrid(year, month);
