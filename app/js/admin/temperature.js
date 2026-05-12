@@ -168,11 +168,15 @@ function closeTemperaturePdfModal() {
 }
 
 async function downloadTemperaturePdf() {
-    const firstDay  = document.getElementById('temperature-pdf-from')?.value;
-    const lastDay   = document.getElementById('temperature-pdf-to')?.value;
+    const firstDay = document.getElementById('temperature-pdf-from')?.value;
+    const lastDay  = document.getElementById('temperature-pdf-to')?.value;
     if (!firstDay || !lastDay || firstDay > lastDay) { alert('Bitte gültigen Zeitraum auswählen.'); return; }
 
-    const rangeLabel = `${new Date(firstDay + 'T12:00:00').toLocaleDateString('de-DE')} – ${new Date(lastDay + 'T12:00:00').toLocaleDateString('de-DE')}`;
+    const dateObj     = new Date(firstDay + 'T12:00:00');
+    const year        = dateObj.getFullYear();
+    const month       = dateObj.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const monthLabel  = dateObj.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
 
     const [{ data: devices }, { data: logs }] = await Promise.all([
         db.from('temperature_devices').select('*').eq('user_id', adminSession.user.id).order('created_at', { ascending: true }),
@@ -181,54 +185,108 @@ async function downloadTemperaturePdf() {
 
     if (!devices || devices.length === 0) { alert('Keine Geräte konfiguriert.'); return; }
 
-    // Build list of all dates in range
-    const allDates = [];
-    for (let d = new Date(firstDay + 'T12:00:00'); d.toISOString().split('T')[0] <= lastDay; d.setDate(d.getDate() + 1)) {
-        allDates.push(d.toISOString().split('T')[0]);
-    }
-
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-    doc.setFontSize(14);
+    const marginL = 10;
+    const tableW  = 190;
+    const dayColW = 10;
+    const devColW = (tableW - dayColW) / devices.length;
+    const fontSize = devColW >= 30 ? 9 : devColW >= 20 ? 8 : devColW >= 14 ? 7 : 6;
+    const smallFs  = Math.max(fontSize - 1, 6);
+
+    const tableY  = 26;
+    const hRow1   = 6.5;
+    const hRow2   = 4.5;
+    const hRow3   = 4.5;
+    const headerH = hRow1 + hRow2 + hRow3;
+    const rowH    = (283 - tableY - headerH) / 31;
+
+    doc.setFontSize(13);
     doc.setFont('helvetica', 'bold');
-    doc.text('Temperaturkontrolle', 15, 20);
+    doc.text('Temperaturprotokoll', marginL, 18);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text(rangeLabel, 190, 20, { align: 'right' });
+    doc.text(monthLabel, 200, 18, { align: 'right' });
 
-    let y = 35;
+    const tx = marginL;
+    const ty = tableY;
 
-    for (const dev of devices) {
-        if (y > 260) { doc.addPage(); y = 20; }
-        doc.setFontSize(11);
+    // Day column header (spans all 3 header rows)
+    doc.rect(tx, ty, dayColW, headerH);
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Tag', tx + dayColW / 2, ty + headerH / 2 + fontSize * 0.175, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+
+    for (let i = 0; i < devices.length; i++) {
+        const dev = devices[i];
+        const cx  = tx + dayColW + i * devColW;
+
+        doc.rect(cx, ty, devColW, hRow1);
+        doc.setFontSize(fontSize);
         doc.setFont('helvetica', 'bold');
-        const rangeStr = (dev.temp_min !== null || dev.temp_max !== null)
-            ? ` (Soll: ${dev.temp_min ?? '–'}°C – ${dev.temp_max ?? '–'}°C)` : '';
-        doc.text(`${dev.name}${rangeStr}`, 15, y);
-        y += 7;
-
+        const nameLine = doc.splitTextToSize(dev.name, devColW - 1.5)[0] || '';
+        doc.text(nameLine, cx + devColW / 2, ty + hRow1 / 2 + fontSize * 0.175, { align: 'center' });
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        for (const dateStr of allDates) {
-            const dateLabel = new Date(dateStr + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'numeric' });
-            const log = (logs || []).find(l => l.device_id === dev.id && l.log_date === dateStr);
-            const tempStr = log?.temperature !== null && log?.temperature !== undefined ? `${log.temperature}°C` : '–';
-            const noteStr = log?.note ? `  (${log.note})` : '';
-            const outOfRange = log && log.temperature !== null && (
-                (dev.temp_min !== null && log.temperature < dev.temp_min) ||
-                (dev.temp_max !== null && log.temperature > dev.temp_max)
-            );
-            if (outOfRange) doc.setTextColor(200, 50, 50);
-            doc.text(`${dateLabel}   ${tempStr}${noteStr}`, 20, y);
-            if (outOfRange) doc.setTextColor(0, 0, 0);
-            y += 5;
-            if (y > 275) { doc.addPage(); y = 20; }
+
+        doc.rect(cx, ty + hRow1, devColW, hRow2);
+        if (dev.description) {
+            doc.setFontSize(smallFs);
+            const descLine = doc.splitTextToSize(dev.description, devColW - 1.5)[0] || '';
+            doc.text(descLine, cx + devColW / 2, ty + hRow1 + hRow2 / 2 + smallFs * 0.175, { align: 'center' });
         }
-        y += 5;
+
+        doc.rect(cx, ty + hRow1 + hRow2, devColW, hRow3);
+        const maxStr = (dev.temp_max !== null && dev.temp_max !== undefined)
+            ? (dev.temp_max >= 0 ? '+' : '') + dev.temp_max + '°C'
+            : '–';
+        doc.setFontSize(smallFs);
+        doc.text(maxStr, cx + devColW / 2, ty + hRow1 + hRow2 + hRow3 / 2 + smallFs * 0.175, { align: 'center' });
     }
 
-    doc.save(`Temperaturkontrolle_${firstDay}_${lastDay}.pdf`);
+    for (let day = 1; day <= 31; day++) {
+        const ry      = ty + headerH + (day - 1) * rowH;
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const isValid = day <= daysInMonth;
+
+        if (!isValid) {
+            doc.setFillColor(245, 245, 245);
+            doc.rect(tx, ry, tableW, rowH, 'F');
+        }
+
+        doc.rect(tx, ry, dayColW, rowH);
+        doc.setFontSize(fontSize);
+        doc.setFont('helvetica', isValid ? 'bold' : 'normal');
+        doc.setTextColor(isValid ? 0 : 190, isValid ? 0 : 190, isValid ? 0 : 190);
+        doc.text(String(day), tx + dayColW / 2, ry + rowH / 2 + fontSize * 0.175, { align: 'center' });
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('helvetica', 'normal');
+
+        for (let i = 0; i < devices.length; i++) {
+            const dev = devices[i];
+            const cx  = tx + dayColW + i * devColW;
+            doc.rect(cx, ry, devColW, rowH);
+            if (!isValid) continue;
+
+            const log = (logs || []).find(l => l.device_id === dev.id && l.log_date === dateStr);
+            if (!log || log.temperature === null || log.temperature === undefined) continue;
+
+            const outOfRange = (
+                (dev.temp_min !== null && dev.temp_min !== undefined && log.temperature < dev.temp_min) ||
+                (dev.temp_max !== null && dev.temp_max !== undefined && log.temperature > dev.temp_max)
+            );
+            doc.setFontSize(fontSize);
+            doc.setFont('helvetica', outOfRange ? 'bold' : 'normal');
+            if (outOfRange) doc.setTextColor(200, 50, 50);
+            doc.text(log.temperature + '°C', cx + devColW / 2, ry + rowH / 2 + fontSize * 0.175, { align: 'center' });
+            doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'normal');
+        }
+    }
+
+    const fileMonth = `${year}-${String(month + 1).padStart(2, '0')}`;
+    doc.save(`Temperaturprotokoll_${fileMonth}.pdf`);
     closeTemperaturePdfModal();
 }
 
