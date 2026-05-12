@@ -188,19 +188,28 @@ async function downloadTemperaturePdf() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-    const marginL = 10;
-    const tableW  = 190;
-    const dayColW = 10;
-    const devColW = (tableW - dayColW) / devices.length;
+    const marginL  = 10;
+    const tableW   = 190;
+    const dayColW  = 10;
+    const devColW  = (tableW - dayColW) / devices.length;
     const fontSize = devColW >= 30 ? 9 : devColW >= 20 ? 8 : devColW >= 14 ? 7 : 6;
     const smallFs  = Math.max(fontSize - 1, 6);
+    const lineH    = fontSize * 0.45; // mm per wrapped line
 
-    const tableY  = 26;
-    const hRow1   = 6.5;
-    const hRow2   = 4.5;
+    // Dynamic hRow1: tall enough for the longest wrapped device name
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', 'bold');
+    const maxNameLines = Math.max(...devices.map(d => doc.splitTextToSize(d.name, devColW - 1.5).length));
+    const hRow1 = maxNameLines * lineH + 2;
+
+    // hRow2 only when at least one device has a description
+    const hasDesc = devices.some(d => d.description);
+    const hRow2   = hasDesc ? 4.5 : 0;
     const hRow3   = 4.5;
     const headerH = hRow1 + hRow2 + hRow3;
-    const rowH    = (283 - tableY - headerH) / 31;
+
+    const tableY = 26;
+    const rowH   = (283 - tableY - headerH) / 31;
 
     doc.setFontSize(13);
     doc.setFont('helvetica', 'bold');
@@ -212,31 +221,39 @@ async function downloadTemperaturePdf() {
     const tx = marginL;
     const ty = tableY;
 
-    // Day column header (spans all 3 header rows)
+    // Day column header (spans all header rows)
     doc.rect(tx, ty, dayColW, headerH);
     doc.setFontSize(fontSize);
     doc.setFont('helvetica', 'bold');
     doc.text('Tag', tx + dayColW / 2, ty + headerH / 2 + fontSize * 0.175, { align: 'center' });
     doc.setFont('helvetica', 'normal');
 
+    const lhFactor = lineH / (fontSize * 0.3528);
+
     for (let i = 0; i < devices.length; i++) {
         const dev = devices[i];
         const cx  = tx + dayColW + i * devColW;
 
+        // Row 1: device name, multi-line, centered vertically
         doc.rect(cx, ty, devColW, hRow1);
         doc.setFontSize(fontSize);
         doc.setFont('helvetica', 'bold');
-        const nameLine = doc.splitTextToSize(dev.name, devColW - 1.5)[0] || '';
-        doc.text(nameLine, cx + devColW / 2, ty + hRow1 / 2 + fontSize * 0.175, { align: 'center' });
+        const nameLines = doc.splitTextToSize(dev.name, devColW - 1.5);
+        const firstLineY = ty + hRow1 / 2 - (nameLines.length - 1) * lineH / 2 + fontSize * 0.175;
+        doc.text(nameLines, cx + devColW / 2, firstLineY, { align: 'center', lineHeightFactor: lhFactor });
         doc.setFont('helvetica', 'normal');
 
-        doc.rect(cx, ty + hRow1, devColW, hRow2);
-        if (dev.description) {
-            doc.setFontSize(smallFs);
-            const descLine = doc.splitTextToSize(dev.description, devColW - 1.5)[0] || '';
-            doc.text(descLine, cx + devColW / 2, ty + hRow1 + hRow2 / 2 + smallFs * 0.175, { align: 'center' });
+        // Row 2: description (only rendered when at least one device has a description)
+        if (hasDesc) {
+            doc.rect(cx, ty + hRow1, devColW, hRow2);
+            if (dev.description) {
+                doc.setFontSize(smallFs);
+                const descLine = doc.splitTextToSize(dev.description, devColW - 1.5)[0] || '';
+                doc.text(descLine, cx + devColW / 2, ty + hRow1 + hRow2 / 2 + smallFs * 0.175, { align: 'center' });
+            }
         }
 
+        // Row 3: target temp (max with explicit sign)
         doc.rect(cx, ty + hRow1 + hRow2, devColW, hRow3);
         const maxStr = (dev.temp_max !== null && dev.temp_max !== undefined)
             ? (dev.temp_max >= 0 ? '+' : '') + dev.temp_max + '°C'
