@@ -69,22 +69,22 @@ async function loadTemperature() {
 
             return `
             <div style="margin-bottom:0.75rem;">
-                <div style="font-size:0.85rem;font-weight:600;margin-bottom:0.3rem;color:${outOfRange ? '#E57373' : 'var(--color-text)'};">
-                    ${dev.name}${rangeHint}
+                <div style="margin-bottom:0.3rem;">
+                    <span style="font-size:0.85rem;font-weight:600;color:${outOfRange ? '#E57373' : 'var(--color-text)'};">${dev.name}</span>${rangeHint}
+                    ${dev.description ? `<div style="font-size:0.75rem;color:#888;">${dev.description}</div>` : ''}
                 </div>
                 <div style="display:flex;gap:0.5rem;align-items:center;">
                     <input type="number" step="0.1"
                         id="temp-input-${dev.id}-${dateStr}"
                         value="${temp}"
                         placeholder="°C"
-                        style="width:90px;padding:0.4rem 0.6rem;border:1.5px solid ${outOfRange ? '#E57373' : 'var(--color-border)'};border-radius:8px;font-size:0.9rem;background:${outOfRange ? '#FFF0F0' : 'white'};"
-                        onchange="saveTemperatureLog('${dev.id}','${dateStr}',this.value,document.getElementById('temp-note-${dev.id}-${dateStr}').value,'${logId}')">
+                        data-log-id="${logId}"
+                        style="width:90px;padding:0.4rem 0.6rem;border:1.5px solid ${outOfRange ? '#E57373' : 'var(--color-border)'};border-radius:8px;font-size:0.9rem;background:${outOfRange ? '#FFF0F0' : 'white'};">
                     <input type="text"
                         id="temp-note-${dev.id}-${dateStr}"
                         value="${note}"
                         placeholder="Notiz (optional)"
-                        style="flex:1;padding:0.4rem 0.6rem;border:1.5px solid var(--color-border);border-radius:8px;font-size:0.9rem;"
-                        onchange="saveTemperatureLog('${dev.id}','${dateStr}',document.getElementById('temp-input-${dev.id}-${dateStr}').value,this.value,'${logId}')">
+                        style="flex:1;padding:0.4rem 0.6rem;border:1.5px solid var(--color-border);border-radius:8px;font-size:0.9rem;">
                 </div>
             </div>`;
         }).join('');
@@ -97,6 +97,11 @@ async function loadTemperature() {
             </div>
             <div id="temperature-day-body-${dateStr}" style="display:none;padding:0.75rem 1rem 1rem;background:white;border-top:1px solid var(--color-border);">
                 ${deviceRows}
+                <div style="display:flex;justify-content:center;margin-top:0.5rem;">
+                    <button onclick="saveDayTemperatureLogs('${dateStr}')" style="width:40px;height:40px;border-radius:50%;border:none;background:#B28A6E;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </button>
+                </div>
             </div>
         </div>`;
     }).join('');
@@ -110,38 +115,38 @@ function toggleTemperatureDay(dateStr) {
     toggle.textContent = isOpen ? '▶' : '▼';
 }
 
-async function saveTemperatureLog(deviceId, dateStr, tempValue, noteValue, logId) {
-    const temp = tempValue !== '' && tempValue !== null ? parseFloat(tempValue) : null;
-    const note = noteValue || null;
+async function saveDayTemperatureLogs(dateStr) {
+    for (const dev of temperatureDevices) {
+        const inputEl = document.getElementById(`temp-input-${dev.id}-${dateStr}`);
+        const noteEl  = document.getElementById(`temp-note-${dev.id}-${dateStr}`);
+        if (!inputEl) continue;
 
-    if (logId) {
-        await db.from('temperature_logs').update({ temperature: temp, note }).eq('id', logId);
-    } else {
-        const { data } = await db.from('temperature_logs').insert({
-            user_id:   adminSession.user.id,
-            device_id: deviceId,
-            log_date:  dateStr,
-            temperature: temp,
-            note,
-        }).select().maybeSingle();
-        if (data) {
-            const inputEl = document.getElementById(`temp-input-${deviceId}-${dateStr}`);
-            const noteEl  = document.getElementById(`temp-note-${deviceId}-${dateStr}`);
-            if (inputEl) inputEl.setAttribute('onchange', `saveTemperatureLog('${deviceId}','${dateStr}',this.value,document.getElementById('temp-note-${deviceId}-${dateStr}').value,'${data.id}')`);
-            if (noteEl)  noteEl.setAttribute('onchange',  `saveTemperatureLog('${deviceId}','${dateStr}',document.getElementById('temp-input-${deviceId}-${dateStr}').value,this.value,'${data.id}')`);
+        const tempValue = inputEl.value;
+        const temp = tempValue !== '' ? parseFloat(tempValue) : null;
+        const note = noteEl?.value || null;
+        const logId = inputEl.dataset.logId;
+
+        if (logId) {
+            await db.from('temperature_logs').update({ temperature: temp, note }).eq('id', logId);
+        } else {
+            const { data } = await db.from('temperature_logs').insert({
+                user_id:     adminSession.user.id,
+                device_id:   dev.id,
+                log_date:    dateStr,
+                temperature: temp,
+                note,
+            }).select().maybeSingle();
+            if (data) inputEl.dataset.logId = data.id;
         }
-    }
 
-    const dev = temperatureDevices.find(d => d.id === deviceId);
-    if (dev && temp !== null) {
-        const outOfRange = (dev.temp_min !== null && temp < dev.temp_min) ||
-                           (dev.temp_max !== null && temp > dev.temp_max);
-        const inputEl = document.getElementById(`temp-input-${deviceId}-${dateStr}`);
-        if (inputEl) {
+        if (temp !== null) {
+            const outOfRange = (dev.temp_min !== null && temp < dev.temp_min) ||
+                               (dev.temp_max !== null && temp > dev.temp_max);
             inputEl.style.borderColor = outOfRange ? '#E57373' : 'var(--color-border)';
             inputEl.style.background  = outOfRange ? '#FFF0F0' : 'white';
         }
     }
+    showAdminToast('Gespeichert');
 }
 
 // ── PDF EXPORT ────────────────────────────────────────────
@@ -255,10 +260,11 @@ function renderTemperatureDevices(devices) {
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <div>
                     <div style="font-weight:600;">${d.name}</div>
+                    ${d.description ? `<div style="font-size:0.8rem;color:#888;margin-top:0.1rem;">${d.description}</div>` : ''}
                     <div style="font-size:0.8rem;color:var(--color-text-light);margin-top:0.2rem;">Soll: ${rangeStr}</div>
                 </div>
                 <div style="display:flex;gap:0.4rem;">
-                    <button class="btn-small btn-pdf-view btn-icon" onclick="openEditTemperatureDeviceModal('${d.id}','${d.name.replace(/'/g,"\\'")}',${d.temp_min ?? ''},${d.temp_max ?? ''})" title="Bearbeiten">
+                    <button class="btn-small btn-pdf-view btn-icon" onclick="openEditTemperatureDeviceModal('${d.id}','${d.name.replace(/'/g,"\\'")}',${d.temp_min ?? ''},${d.temp_max ?? ''},'${(d.description||'').replace(/'/g,"\\'")}')" title="Bearbeiten">
                         <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
                     <button class="btn-small btn-pdf-view btn-icon" onclick="deleteTemperatureDevice('${d.id}')" title="Löschen">
@@ -270,11 +276,12 @@ function renderTemperatureDevices(devices) {
     }).join('');
 }
 
-function openEditTemperatureDeviceModal(id, name, min, max) {
-    document.getElementById('edit-device-id').value   = id;
-    document.getElementById('edit-device-name').value = name;
-    document.getElementById('edit-device-min').value  = min !== undefined && min !== '' ? min : '';
-    document.getElementById('edit-device-max').value  = max !== undefined && max !== '' ? max : '';
+function openEditTemperatureDeviceModal(id, name, min, max, description) {
+    document.getElementById('edit-device-id').value          = id;
+    document.getElementById('edit-device-name').value        = name;
+    document.getElementById('edit-device-min').value         = min !== undefined && min !== '' ? min : '';
+    document.getElementById('edit-device-max').value         = max !== undefined && max !== '' ? max : '';
+    document.getElementById('edit-device-description').value = description || '';
     document.getElementById('temperature-device-modal').classList.add('open');
 }
 
@@ -288,10 +295,12 @@ async function saveEditTemperatureDevice() {
     if (!name) { alert('Bitte Gerätename eingeben.'); return; }
     const minVal = document.getElementById('edit-device-min').value;
     const maxVal = document.getElementById('edit-device-max').value;
+    const desc   = document.getElementById('edit-device-description').value.trim();
     await db.from('temperature_devices').update({
         name,
-        temp_min: minVal !== '' ? parseFloat(minVal) : null,
-        temp_max: maxVal !== '' ? parseFloat(maxVal) : null,
+        temp_min:    minVal !== '' ? parseFloat(minVal) : null,
+        temp_max:    maxVal !== '' ? parseFloat(maxVal) : null,
+        description: desc || null,
     }).eq('id', id);
     closeEditTemperatureDeviceModal();
     loadTemperatureConfig();
@@ -301,19 +310,22 @@ async function addTemperatureDevice() {
     const nameInput = document.getElementById('new-device-name');
     const minInput  = document.getElementById('new-device-min');
     const maxInput  = document.getElementById('new-device-max');
+    const descInput = document.getElementById('new-device-description');
     const name = nameInput?.value.trim();
     if (!name) { alert('Bitte Gerätename eingeben.'); return; }
 
     await db.from('temperature_devices').insert({
-        user_id:  adminSession.user.id,
+        user_id:     adminSession.user.id,
         name,
-        temp_min: minInput?.value !== '' ? parseFloat(minInput.value) : null,
-        temp_max: maxInput?.value !== '' ? parseFloat(maxInput.value) : null,
+        temp_min:    minInput?.value !== '' ? parseFloat(minInput.value) : null,
+        temp_max:    maxInput?.value !== '' ? parseFloat(maxInput.value) : null,
+        description: descInput?.value.trim() || null,
     });
 
     if (nameInput) nameInput.value = '';
     if (minInput)  minInput.value  = '';
     if (maxInput)  maxInput.value  = '';
+    if (descInput) descInput.value = '';
     loadTemperatureConfig();
 }
 
