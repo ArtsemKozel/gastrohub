@@ -718,9 +718,9 @@ async function calculateTrinkgeld() {
     if (!entries || entries.length === 0) { alert('Keine Einträge für diesen Monat.'); return; }
 
     const { data: emps }        = await db.from('employees_planit').select('*').eq('user_id', adminSession.user.id).eq('is_active', true);
-    const { data: actualHours } = await db.from('actual_hours').select('*').eq('user_id', adminSession.user.id).eq('month', monthStr);
+    const { data: actualHours } = await db.from('actual_hours').select('*').eq('user_id', adminSession.user.id).eq('branch_id', activeBranchId).eq('month', monthStr);
     const { data: vacations }   = await db.from('vacation_requests').select('*').eq('user_id', adminSession.user.id).eq('status', 'approved').or(`start_date.lte.${lastDay},end_date.gte.${firstDay}`);
-    const { data: sickLeaves }  = await db.from('sick_leaves').select('*').eq('user_id', adminSession.user.id).lte('start_date', lastDay).gte('end_date', firstDay);
+    const { data: sickLeaves }  = await db.from('sick_leaves').select('*').eq('user_id', adminSession.user.id).eq('branch_id', activeBranchId).lte('start_date', lastDay).gte('end_date', firstDay);
 
     let totalCard = 0, totalCash = 0;
     entries.forEach(e => { totalCard += parseFloat(e.amount_card); totalCash += parseFloat(e.amount_cash); });
@@ -773,12 +773,13 @@ async function calculateMonthly(monthStr, totalCard, totalCash, depts, emps, act
 
     for (const r of results) {
         await db.from('tip_results').upsert({
-            user_id: (await db.auth.getUser()).data.user.id,
+            user_id:     (await db.auth.getUser()).data.user.id,
+            branch_id:   activeBranchId,
             employee_id: r.employee_id,
-            month: monthStr,
+            month:       monthStr,
             amount_card: Math.round(r.amount_card * 100) / 100,
             amount_cash: Math.round(r.amount_cash * 100) / 100
-        }, { onConflict: 'user_id,employee_id,month' });
+        }, { onConflict: 'user_id,employee_id,month,branch_id' });
     }
 }
 
@@ -839,12 +840,13 @@ async function calculateDaily(monthStr, firstDay, lastDay, daysInMonth, totalCar
     for (const [empId, totals] of Object.entries(empTotals)) {
         if (totals.card === 0 && totals.cash === 0) continue;
         await db.from('tip_results').upsert({
-            user_id: userId,
+            user_id:     userId,
+            branch_id:   activeBranchId,
             employee_id: empId,
-            month: monthStr,
+            month:       monthStr,
             amount_card: Math.round(totals.card * 100) / 100,
             amount_cash: Math.round(totals.cash * 100) / 100
-        }, { onConflict: 'user_id,employee_id,month' });
+        }, { onConflict: 'user_id,employee_id,month,branch_id' });
     }
 }
 
@@ -906,12 +908,13 @@ async function saveTrinkgeldResults() {
     const userId = (await db.auth.getUser()).data.user.id;
     for (const [empId, totals] of Object.entries(empMonthTotals)) {
         await db.from('tip_results').upsert({
-            user_id: userId,
+            user_id:     userId,
+            branch_id:   activeBranchId,
             employee_id: empId,
-            month: monthStr,
+            month:       monthStr,
             amount_card: Math.round(totals.card * 100) / 100,
             amount_cash: Math.round(totals.cash * 100) / 100
-        }, { onConflict: 'user_id,employee_id,month' });
+        }, { onConflict: 'user_id,employee_id,month,branch_id' });
     }
 }
 
